@@ -29,11 +29,11 @@ Copy `.env.example` to `.env.local` and fill in:
 | `MONGODB_URI` | Yes | MongoDB Atlas connection string |
 | `AUTH_SECRET` | Yes | Random secret (`openssl rand -base64 32`) |
 | `NEXT_PUBLIC_APP_URL` | Yes | App URL (e.g. `https://fun-school-eight.vercel.app`) |
-| `RESEND_API_KEY` | For email | Resend API key for verification emails |
-| `EMAIL_FROM` | For email | Sender address (must be verified in Resend) |
+| `BREVO_API_KEY` | For email | Brevo API key for verification emails |
+| `EMAIL_FROM` | For email | Sender address (must be verified in Brevo) |
 | `OPENAI_API_KEY` | Optional | Enables AI-powered learning feedback |
 
-Without `RESEND_API_KEY`, verification links are printed to the server console (dev mode).
+Without `BREVO_API_KEY`, verification links are printed to the server console (dev mode).
 
 ### 2. MongoDB Atlas
 
@@ -61,6 +61,6 @@ Live app: [fun-school-eight.vercel.app](https://fun-school-eight.vercel.app)
 - [Next.js 16](https://nextjs.org/) (App Router)
 - [NextAuth.js](https://authjs.dev/) — authentication
 - [MongoDB](https://mongodb.com/) + Mongoose — user data & progress
-- [Resend](https://resend.com/) — email verification
+- [Brevo](https://www.brevo.com/) — email verification
 - [OpenAI](https://openai.com/) — optional AI analytics
 - [Tailwind CSS 4](https://tailwindcss.com/)
