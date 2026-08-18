@@ -13,7 +13,7 @@ export function BackButton({ href, label }: BackButtonProps) {
   return (
     <Link
       href={href}
-      className="inline-flex items-center gap-2 text-indigo-600 hover:text-indigo-800 font-semibold transition-colors mb-4"
+      className="inline-flex items-center gap-2 text-indigo-600 hover:text-indigo-800 font-semibold transition-colors mb-2"
     >
       <span className="text-xl">{dir === "rtl" ? "→" : "←"}</span>
       {label ?? t("common.back")}

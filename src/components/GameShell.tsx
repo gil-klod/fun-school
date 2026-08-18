@@ -14,9 +14,9 @@ export function GameShell({ title, emoji, children, contentDir }: GameShellProps
 
   return (
     <div className="max-w-2xl mx-auto" dir={contentDir ?? dir}>
-      <div className="text-center mb-6">
-        <span className="text-5xl">{emoji}</span>
-        <h1 className="text-3xl font-bold text-gray-800 mt-2">{title}</h1>
+      <div className="text-center mb-3">
+        <span className="text-3xl">{emoji}</span>
+        <h1 className="text-xl font-bold text-gray-800">{title}</h1>
       </div>
       {children}
     </div>

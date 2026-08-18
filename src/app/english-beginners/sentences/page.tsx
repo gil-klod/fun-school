@@ -4,9 +4,8 @@ import { useState, useCallback } from "react";
 import { useGameResume } from "@/hooks/useGameResume";
 import { BackButton } from "@/components/BackButton";
 import { GameShell } from "@/components/GameShell";
-import { GameProgressBar } from "@/components/GameProgressBar";
+import { GameStatus } from "@/components/GameStatus";
 import { Feedback } from "@/components/Feedback";
-import { ResumeNotice } from "@/components/ResumeNotice";
 import { useGameProgress } from "@/hooks/useGameProgress";
 import { useLocale } from "@/i18n/LocaleProvider";
 import { SENTENCE_CHALLENGES, shuffleArray } from "@/lib/data/english-beginners";
@@ -124,27 +123,17 @@ export default function SentencesPage() {
     }
   };
 
-  if (!progress.loaded) {
-    return (
-      <main className="flex-1 px-4 py-8 max-w-2xl mx-auto text-center">
-        <p className="text-gray-500">{t("common.loading")}</p>
-      </main>
-    );
-  }
-
   return (
-    <main className="flex-1 px-4 py-8 max-w-2xl mx-auto w-full">
+    <main className="flex-1 px-4 py-3 max-w-2xl mx-auto w-full">
       <BackButton href="/english-beginners" />
 
       <GameShell title={gameTitle("english-beginners", "sentences")} emoji="🧩">
-        {progress.resumed && <ResumeNotice onDismiss={progress.dismissResume} />}
-
-        <GameProgressBar
-          score={progress.score}
-          streak={progress.streak}
-          round={progress.round}
+        <GameStatus
+          current={index + 1}
+          total={SENTENCE_CHALLENGES.length}
           correct={progress.correct}
           wrong={progress.wrong}
+          score={progress.score}
         />
 
         <p className="text-center text-gray-600 mb-4" dir="rtl">
@@ -172,7 +161,7 @@ export default function SentencesPage() {
           )}
         </div>
 
-        <div className="flex flex-wrap gap-2 justify-center mb-6">
+        <div className="flex flex-wrap gap-2 justify-center mb-4">
           {unusedWords.map((word, i) => (
             <button
               key={`${word}-${i}`}

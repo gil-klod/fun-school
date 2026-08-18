@@ -4,9 +4,8 @@ import { useState, useCallback } from "react";
 import { useGameResume } from "@/hooks/useGameResume";
 import { BackButton } from "@/components/BackButton";
 import { GameShell } from "@/components/GameShell";
-import { GameProgressBar } from "@/components/GameProgressBar";
+import { GameStatus } from "@/components/GameStatus";
 import { Feedback } from "@/components/Feedback";
-import { ResumeNotice } from "@/components/ResumeNotice";
 import { useGameProgress } from "@/hooks/useGameProgress";
 import { useLocale } from "@/i18n/LocaleProvider";
 import type { QuizQuestion } from "@/lib/types";
@@ -128,42 +127,32 @@ export function QuizGame({
     }
   };
 
-  if (!progress.loaded) {
-    return (
-      <main className="flex-1 px-4 py-8 max-w-2xl mx-auto text-center">
-        <p className="text-gray-500">{t("common.loading")}</p>
-      </main>
-    );
-  }
-
   return (
-    <main className="flex-1 px-4 py-8 max-w-2xl mx-auto w-full">
+    <main className="flex-1 px-4 py-3 max-w-2xl mx-auto w-full">
       <BackButton href={backHref} />
 
       <GameShell title={gameTitle(subjectId, gameId)} emoji={emoji}>
-        {progress.resumed && <ResumeNotice onDismiss={progress.dismissResume} />}
-
-        <GameProgressBar
-          score={progress.score}
-          streak={progress.streak}
-          round={index + 1}
+        <GameStatus
+          current={index + 1}
+          total={questions.length}
           correct={progress.correct}
           wrong={progress.wrong}
+          score={progress.score}
         />
 
         {!finished ? (
           <>
-            <div className="bg-white/90 rounded-3xl p-8 shadow-lg border-2 border-pink-100 mb-6">
-              <p className="text-xl font-bold text-gray-800">{question.question}</p>
+            <div className="bg-white/90 rounded-2xl p-4 shadow border-2 border-pink-100 mb-3">
+              <p className="text-lg font-bold text-gray-800">{question.question}</p>
             </div>
 
-            <div className="grid grid-cols-1 gap-3 mb-6">
+            <div className="grid grid-cols-1 gap-2 mb-3">
               {question.options.map((opt, i) => (
                 <button
                   key={i}
                   onClick={() => handleAnswer(i)}
                   disabled={answered}
-                  className={`game-btn-option text-lg py-4 text-left ${answered && i === question.correctIndex ? "correct" : ""} ${answered && i !== question.correctIndex ? "opacity-50" : ""}`}
+                  className={`game-btn-option text-base py-3 text-left ${answered && i === question.correctIndex ? "correct" : ""} ${answered && i !== question.correctIndex ? "opacity-50" : ""}`}
                 >
                   {opt}
                 </button>
@@ -171,7 +160,7 @@ export function QuizGame({
             </div>
 
             {feedback && (
-              <div className="mb-4">
+              <div className="mb-3">
                 <Feedback
                   type={feedback.type}
                   message={feedback.message}

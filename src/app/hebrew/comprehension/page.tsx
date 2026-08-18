@@ -4,9 +4,8 @@ import { useState } from "react";
 import { useGameResume } from "@/hooks/useGameResume";
 import { BackButton } from "@/components/BackButton";
 import { GameShell } from "@/components/GameShell";
-import { GameProgressBar } from "@/components/GameProgressBar";
+import { GameStatus } from "@/components/GameStatus";
 import { Feedback } from "@/components/Feedback";
-import { ResumeNotice } from "@/components/ResumeNotice";
 import { useGameProgress } from "@/hooks/useGameProgress";
 import { useLocale } from "@/i18n/LocaleProvider";
 import { HEBREW_STORIES } from "@/lib/data/hebrew";
@@ -120,30 +119,20 @@ export default function HebrewComprehensionPage() {
     });
   };
 
-  if (!progress.loaded) {
-    return (
-      <main className="flex-1 px-4 py-8 max-w-2xl mx-auto text-center">
-        <p className="text-gray-500">{t("common.loading")}</p>
-      </main>
-    );
-  }
-
   return (
-    <main className="flex-1 px-4 py-8 max-w-2xl mx-auto w-full">
+    <main className="flex-1 px-4 py-3 max-w-2xl mx-auto w-full">
       <BackButton href="/hebrew" />
 
       <GameShell title={gameTitle("hebrew", "comprehension")} emoji="🕵️" contentDir="rtl">
-        {progress.resumed && <ResumeNotice onDismiss={progress.dismissResume} />}
-
-        <GameProgressBar
-          score={progress.score}
-          streak={progress.streak}
-          round={questionIndex + 1}
+        <GameStatus
+          current={questionIndex + 1}
+          total={story.questions.length}
           correct={progress.correct}
           wrong={progress.wrong}
+          score={progress.score}
         />
 
-        <div className="bg-white/90 rounded-3xl p-6 shadow-lg border-2 border-blue-100 mb-6">
+        <div className="bg-white/90 rounded-3xl p-6 shadow-lg border-2 border-blue-100 mb-4">
           <h2 className="text-xl font-bold text-blue-700 mb-3">{story.title}</h2>
           <p className="text-lg leading-relaxed text-gray-800">{story.text}</p>
         </div>
@@ -154,7 +143,7 @@ export default function HebrewComprehensionPage() {
               {question.question}
             </p>
 
-            <div className="grid grid-cols-1 gap-3 mb-6">
+            <div className="grid grid-cols-1 gap-3 mb-4">
               {question.options.map((opt, i) => (
                 <button
                   key={i}

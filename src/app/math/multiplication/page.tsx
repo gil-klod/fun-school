@@ -4,9 +4,9 @@ import { useState, useCallback } from "react";
 import { useGameResume } from "@/hooks/useGameResume";
 import { BackButton } from "@/components/BackButton";
 import { GameShell } from "@/components/GameShell";
-import { GameProgressBar } from "@/components/GameProgressBar";
+import { GameStatus } from "@/components/GameStatus";
 import { Feedback } from "@/components/Feedback";
-import { ResumeNotice } from "@/components/ResumeNotice";
+import { SESSION_SIZE, sessionQuestion } from "@/lib/session";
 import { useGameProgress } from "@/hooks/useGameProgress";
 import { useLocale } from "@/i18n/LocaleProvider";
 import {
@@ -108,22 +108,12 @@ export default function MultiplicationPage() {
     }
   };
 
-  if (!progress.loaded) {
-    return (
-      <main className="flex-1 px-4 py-8 max-w-2xl mx-auto text-center">
-        <p className="text-gray-500">{t("common.loading")}</p>
-      </main>
-    );
-  }
-
   return (
-    <main className="flex-1 px-4 py-8 max-w-2xl mx-auto w-full">
+    <main className="flex-1 px-4 py-3 max-w-2xl mx-auto w-full">
       <BackButton href="/math" />
 
       <GameShell title={gameTitle("math", "multiplication")} emoji="⚔️">
-        {progress.resumed && <ResumeNotice onDismiss={progress.dismissResume} />}
-
-        <div className="flex flex-wrap gap-2 justify-center mb-6">
+        <div className="flex gap-2 overflow-x-auto pb-1 mb-2 scrollbar-none">
           <button
             onClick={() => { setTable(undefined); nextQuestion(undefined); }}
             className={`px-4 py-2 rounded-xl font-semibold text-sm transition-all ${!table ? "bg-indigo-500 text-white" : "bg-white border-2 border-indigo-200"}`}
@@ -141,27 +131,27 @@ export default function MultiplicationPage() {
           ))}
         </div>
 
-        <GameProgressBar
-          score={progress.score}
-          streak={progress.streak}
-          round={progress.round}
+        <GameStatus
+          current={sessionQuestion(progress.round)}
+          total={SESSION_SIZE}
           correct={progress.correct}
           wrong={progress.wrong}
+          score={progress.score}
         />
 
-        <div className="bg-white/90 rounded-3xl p-8 shadow-lg border-2 border-indigo-100 text-center mb-6">
-          <p className="text-5xl font-extrabold text-indigo-700">
+        <div className="bg-white/90 rounded-2xl p-4 shadow border-2 border-indigo-100 text-center mb-3">
+          <p className="text-4xl font-extrabold text-indigo-700">
             {question.a} × {question.b} = ?
           </p>
         </div>
 
-        <div className="grid grid-cols-2 gap-3 mb-6">
+        <div className="grid grid-cols-2 gap-2 mb-3">
           {options.map((opt) => (
             <button
               key={opt}
               onClick={() => handleAnswer(opt)}
               disabled={answered}
-              className={`game-btn-option text-2xl py-5 ${answered && opt === correct ? "correct" : ""} ${answered && opt !== correct ? "opacity-50" : ""}`}
+              className={`game-btn-option text-xl py-4 ${answered && opt === correct ? "correct" : ""} ${answered && opt !== correct ? "opacity-50" : ""}`}
             >
               {opt}
             </button>

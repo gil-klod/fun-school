@@ -20,13 +20,11 @@ const emojis = {
 
 export function Feedback({ type, message, explanation }: FeedbackProps) {
   return (
-    <div
-      className={`animate-bounce-in rounded-2xl border-2 px-6 py-4 text-center ${styles[type]}`}
-    >
-      <p className="text-xl font-bold">
+    <div className={`rounded-xl border px-4 py-3 text-center ${styles[type]}`}>
+      <p className="text-base font-bold">
         {emojis[type]} {message}
       </p>
-      {explanation && <p className="mt-2 text-sm opacity-80">{explanation}</p>}
+      {explanation && <p className="mt-1 text-sm opacity-80">{explanation}</p>}
     </div>
   );
 }

@@ -4,9 +4,9 @@ import { useState, useCallback } from "react";
 import { useGameResume } from "@/hooks/useGameResume";
 import { BackButton } from "@/components/BackButton";
 import { GameShell } from "@/components/GameShell";
-import { GameProgressBar } from "@/components/GameProgressBar";
+import { GameStatus } from "@/components/GameStatus";
 import { Feedback } from "@/components/Feedback";
-import { ResumeNotice } from "@/components/ResumeNotice";
+import { SESSION_SIZE, sessionQuestion } from "@/lib/session";
 import { useGameProgress } from "@/hooks/useGameProgress";
 import { useLocale } from "@/i18n/LocaleProvider";
 import {
@@ -112,39 +112,26 @@ export default function ScramblePage() {
     }
   };
 
-  if (!progress.loaded) {
-    return (
-      <main className="flex-1 px-4 py-8 max-w-2xl mx-auto text-center">
-        <p className="text-gray-500">{t("common.loading")}</p>
-      </main>
-    );
-  }
-
   return (
-    <main className="flex-1 px-4 py-8 max-w-2xl mx-auto w-full">
+    <main className="flex-1 px-4 py-3 max-w-2xl mx-auto w-full">
       <BackButton href="/hebrew" />
 
       <GameShell title={gameTitle("hebrew", "scramble")} emoji="🔤" contentDir="rtl">
-        {progress.resumed && <ResumeNotice onDismiss={progress.dismissResume} />}
-
-        <GameProgressBar
-          score={progress.score}
-          streak={progress.streak}
-          round={progress.round}
+        <GameStatus
+          current={sessionQuestion(progress.round)}
+          total={SESSION_SIZE}
           correct={progress.correct}
           wrong={progress.wrong}
+          score={progress.score}
         />
 
-        <div className="bg-white/90 rounded-3xl p-8 shadow-lg border-2 border-blue-100 mb-6 text-center">
-          <p className="text-sm text-blue-500 font-medium mb-2">{t("games.unscramble")}</p>
-          <p className="text-5xl font-extrabold text-blue-700 tracking-widest mb-4">
+        <div className="bg-white/90 rounded-2xl p-4 shadow border-2 border-blue-100 mb-3 text-center">
+          <p className="text-sm text-blue-500 font-medium mb-1">{t("games.unscramble")}</p>
+          <p className="text-4xl font-extrabold text-blue-700 tracking-widest mb-2">
             {wordData.scrambled.split("").join(" ")}
           </p>
-          <p className="text-gray-500">
-            {t("games.hint")}: {getWordHint(wordData, locale)}
-          </p>
-          <p className="text-sm text-gray-400 mt-1">
-            {t("games.category")}: {getWordCategory(wordData, locale)}
+          <p className="text-sm text-gray-500">
+            {t("games.hint")}: {getWordHint(wordData, locale)} · {t("games.category")}: {getWordCategory(wordData, locale)}
           </p>
         </div>
 
@@ -156,17 +143,17 @@ export default function ScramblePage() {
           disabled={answered}
           placeholder={t("games.writeWord")}
           dir="rtl"
-          className="w-full text-2xl text-center px-6 py-4 rounded-2xl border-2 border-blue-200 focus:border-blue-400 focus:outline-none mb-4 disabled:opacity-50"
+          className="w-full text-xl text-center px-4 py-3 rounded-xl border-2 border-blue-200 focus:border-blue-400 focus:outline-none mb-3 disabled:opacity-50"
         />
 
         {!answered && (
-          <button onClick={checkAnswer} className="game-btn game-btn-primary w-full mb-4">
+          <button onClick={checkAnswer} className="game-btn game-btn-primary w-full mb-3">
             {t("common.check")}
           </button>
         )}
 
         {feedback && (
-          <div className="mb-4">
+          <div className="mb-3">
             <Feedback type={feedback.type} message={feedback.message} />
           </div>
         )}

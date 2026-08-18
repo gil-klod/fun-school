@@ -4,9 +4,8 @@ import { useState, useCallback } from "react";
 import { useGameResume } from "@/hooks/useGameResume";
 import { BackButton } from "@/components/BackButton";
 import { GameShell } from "@/components/GameShell";
-import { GameProgressBar } from "@/components/GameProgressBar";
+import { GameStatus } from "@/components/GameStatus";
 import { Feedback } from "@/components/Feedback";
-import { ResumeNotice } from "@/components/ResumeNotice";
 import { useGameProgress } from "@/hooks/useGameProgress";
 import { useLocale } from "@/i18n/LocaleProvider";
 import { FIX_SENTENCES } from "@/lib/data/hebrew";
@@ -97,30 +96,20 @@ export default function FixSentencePage() {
     }
   };
 
-  if (!progress.loaded) {
-    return (
-      <main className="flex-1 px-4 py-8 max-w-2xl mx-auto text-center">
-        <p className="text-gray-500">{t("common.loading")}</p>
-      </main>
-    );
-  }
-
   return (
-    <main className="flex-1 px-4 py-8 max-w-2xl mx-auto w-full">
+    <main className="flex-1 px-4 py-3 max-w-2xl mx-auto w-full">
       <BackButton href="/hebrew" />
 
       <GameShell title={gameTitle("hebrew", "fix-sentence")} emoji="✏️" contentDir="rtl">
-        {progress.resumed && <ResumeNotice onDismiss={progress.dismissResume} />}
-
-        <GameProgressBar
-          score={progress.score}
-          streak={progress.streak}
-          round={progress.round}
+        <GameStatus
+          current={index + 1}
+          total={FIX_SENTENCES.length}
           correct={progress.correct}
           wrong={progress.wrong}
+          score={progress.score}
         />
 
-        <div className="bg-white/90 rounded-3xl p-8 shadow-lg border-2 border-blue-100 mb-4 text-center">
+        <div className="bg-white/90 rounded-3xl p-5 shadow-lg border-2 border-blue-100 mb-4 text-center">
           <p className="text-sm text-blue-500 font-medium mb-3">{t("games.findMistake")}</p>
           <p className="text-2xl font-bold text-gray-800 leading-relaxed">{question.wrong}</p>
         </div>
@@ -129,7 +118,7 @@ export default function FixSentencePage() {
           {t("games.whichWordWrong")}
         </p>
 
-        <div className="grid grid-cols-2 gap-3 mb-6">
+        <div className="grid grid-cols-2 gap-3 mb-4">
           {question.options.map((opt) => (
             <button
               key={opt}

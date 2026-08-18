@@ -36,6 +36,9 @@ export interface Dictionary {
     correct: string;
     wrong: string;
     accuracy: string;
+    questionOf: string;
+    questionN: string;
+    points: string;
   };
   nav: {
     myProgress: string;
@@ -102,7 +105,6 @@ export interface Dictionary {
     storyComplete: string;
     readAnother: string;
     needHint: string;
-    resumed: string;
     mixed: string;
     howMuchChange: string;
     shoppingList: string;

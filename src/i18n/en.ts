@@ -23,6 +23,9 @@ export const en: Dictionary = {
     correct: "Correct",
     wrong: "Wrong",
     accuracy: "Accuracy",
+    questionOf: "Question {current} of {total}",
+    questionN: "Question {current}",
+    points: "{score} pts",
   },
   nav: {
     myProgress: "My Progress",
@@ -122,7 +125,6 @@ export const en: Dictionary = {
     storyComplete: "Story complete! Final score: {score} 🌟",
     readAnother: "Read Another Story",
     needHint: "💡 Need a hint?",
-    resumed: "📂 Resumed your last session!",
     mixed: "Mixed",
     howMuchChange: "How much change do you get? 💰",
     shoppingList: "Your shopping list:",

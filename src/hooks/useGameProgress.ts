@@ -20,7 +20,6 @@ interface UseGameProgressOptions {
 
 export function useGameProgress({ subjectId, gameId, defaultState = {} }: UseGameProgressOptions) {
   const [loaded, setLoaded] = useState(false);
-  const [resumed, setResumed] = useState(false);
   const [hasSavedProgress, setHasSavedProgress] = useState(false);
   const [score, setScore] = useState(0);
   const [streak, setStreak] = useState(0);
@@ -52,8 +51,6 @@ export function useGameProgress({ subjectId, gameId, defaultState = {} }: UseGam
             setWrong(progress.wrong ?? 0);
             setGameState(state);
             setHasSavedProgress(true);
-            // Only show "resumed" banner when mid-question (not after answering)
-            setResumed(state.answered !== true && Object.keys(state).length > 0);
           }
         }
       } catch (err) {
@@ -95,13 +92,9 @@ export function useGameProgress({ subjectId, gameId, defaultState = {} }: UseGam
     save({ status: "completed" });
   }, [save]);
 
-  const dismissResume = useCallback(() => setResumed(false), []);
-
   return {
     loaded,
-    resumed,
     hasSavedProgress,
-    dismissResume,
     score,
     setScore,
     streak,

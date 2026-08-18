@@ -4,9 +4,8 @@ import { useState, useCallback } from "react";
 import { useGameResume } from "@/hooks/useGameResume";
 import { BackButton } from "@/components/BackButton";
 import { GameShell } from "@/components/GameShell";
-import { GameProgressBar } from "@/components/GameProgressBar";
+import { GameStatus } from "@/components/GameStatus";
 import { Feedback } from "@/components/Feedback";
-import { ResumeNotice } from "@/components/ResumeNotice";
 import { useGameProgress } from "@/hooks/useGameProgress";
 import { useLocale } from "@/i18n/LocaleProvider";
 import { BEGINNER_VOCAB, shuffleArray } from "@/lib/data/english-beginners";
@@ -139,35 +138,25 @@ export default function VocabularyPage() {
     }
   };
 
-  if (!progress.loaded) {
-    return (
-      <main className="flex-1 px-4 py-8 max-w-2xl mx-auto text-center">
-        <p className="text-gray-500">{t("common.loading")}</p>
-      </main>
-    );
-  }
-
   return (
-    <main className="flex-1 px-4 py-8 max-w-2xl mx-auto w-full">
+    <main className="flex-1 px-4 py-3 max-w-2xl mx-auto w-full">
       <BackButton href="/english-beginners" />
 
       <GameShell title={gameTitle("english-beginners", "vocabulary")} emoji="🎯">
-        {progress.resumed && <ResumeNotice onDismiss={progress.dismissResume} />}
-
-        <GameProgressBar
-          score={progress.score}
-          streak={progress.streak}
-          round={progress.round}
+        <GameStatus
+          current={((progress.round - 1) % BEGINNER_VOCAB.length) + 1}
+          total={BEGINNER_VOCAB.length}
           correct={progress.correct}
           wrong={progress.wrong}
+          score={progress.score}
         />
 
-        <div className="bg-white/90 rounded-3xl p-8 shadow-lg border-2 border-green-100 mb-6 text-center">
+        <div className="bg-white/90 rounded-3xl p-5 shadow-lg border-2 border-green-100 mb-4 text-center">
           <span className="text-5xl">{question.emoji}</span>
           <p className="text-xl font-bold text-gray-800 mt-4">{question.prompt}</p>
         </div>
 
-        <div className="grid grid-cols-2 gap-3 mb-6">
+        <div className="grid grid-cols-2 gap-3 mb-4">
           {question.options.map((opt) => (
             <button
               key={opt}

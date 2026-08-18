@@ -23,6 +23,9 @@ export const he: Dictionary = {
     correct: "נכון",
     wrong: "שגוי",
     accuracy: "דיוק",
+    questionOf: "שאלה {current} מתוך {total}",
+    questionN: "שאלה {current}",
+    points: "{score} נקודות",
   },
   nav: {
     myProgress: "ההתקדמות שלי",
@@ -122,7 +125,6 @@ export const he: Dictionary = {
     storyComplete: "סיימת את הסיפור! ניקוד: {score} 🌟",
     readAnother: "קרא סיפור נוסף",
     needHint: "💡 צריך רמז?",
-    resumed: "📂 המשכנו מהסשן האחרון!",
     mixed: "מעורב",
     howMuchChange: "כמה עודף תקבל? 💰",
     shoppingList: "רשימת הקניות שלך:",
