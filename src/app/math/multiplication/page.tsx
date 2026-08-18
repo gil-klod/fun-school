@@ -8,6 +8,7 @@ import { ScoreBoard } from "@/components/ScoreBoard";
 import { Feedback } from "@/components/Feedback";
 import { ResumeNotice } from "@/components/ResumeNotice";
 import { useGameProgress } from "@/hooks/useGameProgress";
+import { useLocale } from "@/i18n/LocaleProvider";
 import {
   generateMultiplication,
   TABLES,
@@ -20,6 +21,7 @@ function newRound(table?: number) {
 }
 
 export default function MultiplicationPage() {
+  const { t, gameTitle } = useLocale();
   const progress = useGameProgress({ subjectId: "math", gameId: "multiplication" });
   const [table, setTable] = useState<number | undefined>(undefined);
   const [round, setRound] = useState(() => newRound());
@@ -64,7 +66,7 @@ export default function MultiplicationPage() {
       progress.setScore((s) => s + pts);
       progress.setStreak((s) => s + 1);
       progress.setCorrect((c) => c + 1);
-      const fb = { type: "correct" as const, message: "Awesome! Keep going!" };
+      const fb = { type: "correct" as const, message: t("games.multiplicationCorrect") };
       setFeedback(fb);
       progress.save({
         score: progress.score + pts,
@@ -77,7 +79,7 @@ export default function MultiplicationPage() {
       progress.setWrong((w) => w + 1);
       const fb = {
         type: "wrong" as const,
-        message: `The answer is ${correct}. Try the next one!`,
+        message: t("games.multiplicationWrong", { answer: correct }),
       };
       setFeedback(fb);
       progress.save({
@@ -91,7 +93,7 @@ export default function MultiplicationPage() {
   if (!progress.loaded) {
     return (
       <main className="flex-1 px-4 py-8 max-w-2xl mx-auto text-center">
-        <p className="text-gray-500">Loading...</p>
+        <p className="text-gray-500">{t("common.loading")}</p>
       </main>
     );
   }
@@ -100,7 +102,7 @@ export default function MultiplicationPage() {
     <main className="flex-1 px-4 py-8 max-w-2xl mx-auto w-full">
       <BackButton href="/math" />
 
-      <GameShell title="Multiplication Boss" titleHe="בוס הכפל" emoji="⚔️">
+      <GameShell title={gameTitle("math", "multiplication")} emoji="⚔️">
         {progress.resumed && <ResumeNotice onDismiss={progress.dismissResume} />}
 
         <div className="flex flex-wrap gap-2 justify-center mb-6">
@@ -108,7 +110,7 @@ export default function MultiplicationPage() {
             onClick={() => { setTable(undefined); nextQuestion(undefined); }}
             className={`px-4 py-2 rounded-xl font-semibold text-sm transition-all ${!table ? "bg-indigo-500 text-white" : "bg-white border-2 border-indigo-200"}`}
           >
-            Mixed
+            {t("games.mixed")}
           </button>
           {TABLES.map((t) => (
             <button
@@ -150,7 +152,7 @@ export default function MultiplicationPage() {
 
         {answered && (
           <button onClick={() => nextQuestion()} className="game-btn game-btn-primary w-full">
-            Next Question →
+            {t("common.nextQuestion")}
           </button>
         )}
       </GameShell>

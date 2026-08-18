@@ -9,8 +9,6 @@ export default function GrammarPage() {
       subjectId="english-natives"
       gameId="grammar"
       backHref="/english-natives"
-      title="Grammar Quest"
-      titleHe="משימת דקדוק"
       emoji="📝"
       questions={GRAMMAR_QUESTIONS}
     />

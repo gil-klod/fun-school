@@ -8,9 +8,11 @@ import { ScoreBoard } from "@/components/ScoreBoard";
 import { Feedback } from "@/components/Feedback";
 import { ResumeNotice } from "@/components/ResumeNotice";
 import { useGameProgress } from "@/hooks/useGameProgress";
+import { useLocale } from "@/i18n/LocaleProvider";
 import { FIX_SENTENCES } from "@/lib/data/hebrew";
 
 export default function FixSentencePage() {
+  const { t, gameTitle } = useLocale();
   const progress = useGameProgress({ subjectId: "hebrew", gameId: "fix-sentence" });
   const [index, setIndex] = useState(0);
   const [feedback, setFeedback] = useState<{
@@ -52,7 +54,7 @@ export default function FixSentencePage() {
       progress.setCorrect((c) => c + 1);
       const fb = {
         type: "correct" as const,
-        message: "נכון! Correct!",
+        message: t("games.fixCorrect"),
         explanation: question.explanation,
       };
       setFeedback(fb);
@@ -67,7 +69,7 @@ export default function FixSentencePage() {
       progress.setWrong((w) => w + 1);
       const fb = {
         type: "wrong" as const,
-        message: `The mistake was: "${question.mistake}"`,
+        message: t("games.fixWrong", { mistake: question.mistake }),
         explanation: question.explanation,
       };
       setFeedback(fb);
@@ -82,7 +84,7 @@ export default function FixSentencePage() {
   if (!progress.loaded) {
     return (
       <main className="flex-1 px-4 py-8 max-w-2xl mx-auto text-center">
-        <p className="text-gray-500">Loading...</p>
+        <p className="text-gray-500">{t("common.loading")}</p>
       </main>
     );
   }
@@ -91,18 +93,18 @@ export default function FixSentencePage() {
     <main className="flex-1 px-4 py-8 max-w-2xl mx-auto w-full">
       <BackButton href="/hebrew" />
 
-      <GameShell title="Fix the Sentence" titleHe="תקן את המשפט" emoji="✏️" dir="rtl">
+      <GameShell title={gameTitle("hebrew", "fix-sentence")} emoji="✏️" contentDir="rtl">
         {progress.resumed && <ResumeNotice onDismiss={progress.dismissResume} />}
 
         <ScoreBoard score={progress.score} streak={progress.streak} total={progress.round} />
 
         <div className="bg-white/90 rounded-3xl p-8 shadow-lg border-2 border-blue-100 mb-4 text-center">
-          <p className="text-sm text-blue-500 font-medium mb-3">Find the mistake:</p>
+          <p className="text-sm text-blue-500 font-medium mb-3">{t("games.findMistake")}</p>
           <p className="text-2xl font-bold text-gray-800 leading-relaxed">{question.wrong}</p>
         </div>
 
         <p className="text-center text-lg font-semibold text-gray-600 mb-4">
-          Which word is wrong?
+          {t("games.whichWordWrong")}
         </p>
 
         <div className="grid grid-cols-2 gap-3 mb-6">
@@ -120,7 +122,7 @@ export default function FixSentencePage() {
 
         {answered && (
           <div className="bg-green-50 rounded-2xl p-4 mb-4 border-2 border-green-200" dir="rtl">
-            <p className="text-sm text-green-600 font-medium">Correct sentence:</p>
+            <p className="text-sm text-green-600 font-medium">{t("games.correctSentence")}</p>
             <p className="text-xl font-bold text-green-800">{question.correct}</p>
           </div>
         )}
@@ -137,7 +139,7 @@ export default function FixSentencePage() {
 
         {answered && (
           <button onClick={nextQuestion} className="game-btn game-btn-primary w-full">
-            Next Sentence →
+            {t("games.nextSentence")}
           </button>
         )}
       </GameShell>

@@ -8,6 +8,7 @@ import { ScoreBoard } from "@/components/ScoreBoard";
 import { Feedback } from "@/components/Feedback";
 import { ResumeNotice } from "@/components/ResumeNotice";
 import { useGameProgress } from "@/hooks/useGameProgress";
+import { useLocale } from "@/i18n/LocaleProvider";
 import { generateMystery, buildOptions } from "@/lib/data/math";
 
 function newRound() {
@@ -16,6 +17,7 @@ function newRound() {
 }
 
 export default function MysteryPage() {
+  const { t, gameTitle } = useLocale();
   const progress = useGameProgress({ subjectId: "math", gameId: "mystery" });
   const [round, setRound] = useState(() => newRound());
   const { question, options } = round;
@@ -59,7 +61,7 @@ export default function MysteryPage() {
       progress.setScore((s) => s + pts);
       progress.setStreak((s) => s + 1);
       progress.setCorrect((c) => c + 1);
-      const fb = { type: "correct" as const, message: "You found it! 🕵️" };
+      const fb = { type: "correct" as const, message: t("games.mysteryCorrect") };
       setFeedback(fb);
       progress.save({
         score: progress.score + pts,
@@ -72,7 +74,7 @@ export default function MysteryPage() {
       progress.setWrong((w) => w + 1);
       const fb = {
         type: "wrong" as const,
-        message: `The answer was ${correct}.`,
+        message: t("games.mysteryWrong", { answer: correct }),
         explanation: question.hint,
       };
       setFeedback(fb);
@@ -87,7 +89,7 @@ export default function MysteryPage() {
   if (!progress.loaded) {
     return (
       <main className="flex-1 px-4 py-8 max-w-2xl mx-auto text-center">
-        <p className="text-gray-500">Loading...</p>
+        <p className="text-gray-500">{t("common.loading")}</p>
       </main>
     );
   }
@@ -96,7 +98,7 @@ export default function MysteryPage() {
     <main className="flex-1 px-4 py-8 max-w-2xl mx-auto w-full">
       <BackButton href="/math" />
 
-      <GameShell title="Mystery Number" titleHe="מספר מסתורי" emoji="🔍">
+      <GameShell title={gameTitle("math", "mystery")} emoji="🔍">
         {progress.resumed && <ResumeNotice onDismiss={progress.dismissResume} />}
 
         <ScoreBoard score={progress.score} streak={progress.streak} total={progress.round} />
@@ -116,7 +118,7 @@ export default function MysteryPage() {
             }}
             className="text-indigo-500 font-semibold mb-4 hover:text-indigo-700 transition-colors"
           >
-            💡 Need a hint?
+            {t("games.needHint")}
           </button>
         )}
         {showHint && !answered && (
@@ -150,7 +152,7 @@ export default function MysteryPage() {
 
         {answered && (
           <button onClick={nextQuestion} className="game-btn game-btn-primary w-full">
-            Next Mystery →
+            {t("games.nextMystery")}
           </button>
         )}
       </GameShell>

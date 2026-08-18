@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Rubik } from "next/font/google";
 import { AuthProvider } from "@/components/AuthProvider";
+import { LocaleProvider } from "@/i18n/LocaleProvider";
 import { NavBar } from "@/components/NavBar";
 import "./globals.css";
 
@@ -17,12 +18,14 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="he" className={`${rubik.variable} h-full antialiased`}>
+    <html lang="he" dir="rtl" className={`${rubik.variable} h-full antialiased`}>
       <body className="min-h-full flex flex-col">
-        <AuthProvider>
-          <NavBar />
-          {children}
-        </AuthProvider>
+        <LocaleProvider>
+          <AuthProvider>
+            <NavBar />
+            {children}
+          </AuthProvider>
+        </LocaleProvider>
       </body>
     </html>
   );

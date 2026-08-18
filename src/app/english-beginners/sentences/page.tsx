@@ -8,9 +8,11 @@ import { ScoreBoard } from "@/components/ScoreBoard";
 import { Feedback } from "@/components/Feedback";
 import { ResumeNotice } from "@/components/ResumeNotice";
 import { useGameProgress } from "@/hooks/useGameProgress";
+import { useLocale } from "@/i18n/LocaleProvider";
 import { SENTENCE_CHALLENGES, shuffleArray } from "@/lib/data/english-beginners";
 
 export default function SentencesPage() {
+  const { t, gameTitle } = useLocale();
   const progress = useGameProgress({ subjectId: "english-beginners", gameId: "sentences" });
   const [index, setIndex] = useState(0);
   const [selected, setSelected] = useState<string[]>([]);
@@ -78,7 +80,7 @@ export default function SentencesPage() {
       progress.setScore((s) => s + pts);
       progress.setStreak((s) => s + 1);
       progress.setCorrect((c) => c + 1);
-      const fb = { type: "correct" as const, message: "Perfect sentence! 🧩" };
+      const fb = { type: "correct" as const, message: t("games.sentenceCorrect") };
       setFeedback(fb);
       progress.save({
         score: progress.score + pts,
@@ -91,7 +93,10 @@ export default function SentencesPage() {
       progress.setWrong((w) => w + 1);
       const fb = {
         type: "wrong" as const,
-        message: `Correct: "${challenge.correct}" (${challenge.translation})`,
+        message: t("games.sentenceWrong", {
+          answer: challenge.correct,
+          translation: challenge.translation,
+        }),
       };
       setFeedback(fb);
       progress.save({
@@ -105,7 +110,7 @@ export default function SentencesPage() {
   if (!progress.loaded) {
     return (
       <main className="flex-1 px-4 py-8 max-w-2xl mx-auto text-center">
-        <p className="text-gray-500">Loading...</p>
+        <p className="text-gray-500">{t("common.loading")}</p>
       </main>
     );
   }
@@ -114,7 +119,7 @@ export default function SentencesPage() {
     <main className="flex-1 px-4 py-8 max-w-2xl mx-auto w-full">
       <BackButton href="/english-beginners" />
 
-      <GameShell title="Build a Sentence" titleHe="בנה משפט" emoji="🧩">
+      <GameShell title={gameTitle("english-beginners", "sentences")} emoji="🧩">
         {progress.resumed && <ResumeNotice onDismiss={progress.dismissResume} />}
 
         <ScoreBoard score={progress.score} streak={progress.streak} total={progress.round} />
@@ -130,7 +135,7 @@ export default function SentencesPage() {
           }}
         >
           {selected.length === 0 ? (
-            <span className="text-gray-400">Tap words below...</span>
+            <span className="text-gray-400">{t("games.tapWords")}</span>
           ) : (
             selected.map((word, i) => (
               <span
@@ -163,7 +168,7 @@ export default function SentencesPage() {
             disabled={selected.length !== challenge.words.length}
             className="game-btn game-btn-primary w-full mb-4 disabled:opacity-40"
           >
-            Check Sentence ✓
+            {t("games.checkSentence")}
           </button>
         )}
 
@@ -175,7 +180,7 @@ export default function SentencesPage() {
 
         {answered && (
           <button onClick={nextChallenge} className="game-btn game-btn-primary w-full">
-            Next Sentence →
+            {t("games.nextSentence")}
           </button>
         )}
       </GameShell>

@@ -8,6 +8,7 @@ import { ScoreBoard } from "@/components/ScoreBoard";
 import { Feedback } from "@/components/Feedback";
 import { ResumeNotice } from "@/components/ResumeNotice";
 import { useGameProgress } from "@/hooks/useGameProgress";
+import { useLocale } from "@/i18n/LocaleProvider";
 import { BEGINNER_VOCAB, shuffleArray } from "@/lib/data/english-beginners";
 
 function generateQuestion() {
@@ -32,6 +33,7 @@ function generateQuestion() {
 }
 
 export default function VocabularyPage() {
+  const { t, gameTitle } = useLocale();
   const progress = useGameProgress({ subjectId: "english-beginners", gameId: "vocabulary" });
   const [question, setQuestion] = useState(() => generateQuestion());
   const [feedback, setFeedback] = useState<{
@@ -68,7 +70,7 @@ export default function VocabularyPage() {
       progress.setScore((s) => s + pts);
       progress.setStreak((s) => s + 1);
       progress.setCorrect((c) => c + 1);
-      const fb = { type: "correct" as const, message: "Great job! 🎯" };
+      const fb = { type: "correct" as const, message: t("games.vocabCorrect") };
       setFeedback(fb);
       progress.save({
         score: progress.score + pts,
@@ -81,7 +83,7 @@ export default function VocabularyPage() {
       progress.setWrong((w) => w + 1);
       const fb = {
         type: "wrong" as const,
-        message: `The answer was: ${question.correct}`,
+        message: t("games.vocabWrong", { answer: question.correct }),
       };
       setFeedback(fb);
       progress.save({
@@ -95,7 +97,7 @@ export default function VocabularyPage() {
   if (!progress.loaded) {
     return (
       <main className="flex-1 px-4 py-8 max-w-2xl mx-auto text-center">
-        <p className="text-gray-500">Loading...</p>
+        <p className="text-gray-500">{t("common.loading")}</p>
       </main>
     );
   }
@@ -104,7 +106,7 @@ export default function VocabularyPage() {
     <main className="flex-1 px-4 py-8 max-w-2xl mx-auto w-full">
       <BackButton href="/english-beginners" />
 
-      <GameShell title="Word Match" titleHe="התאמת מילים" emoji="🎯">
+      <GameShell title={gameTitle("english-beginners", "vocabulary")} emoji="🎯">
         {progress.resumed && <ResumeNotice onDismiss={progress.dismissResume} />}
 
         <ScoreBoard score={progress.score} streak={progress.streak} total={progress.round} />
@@ -138,7 +140,7 @@ export default function VocabularyPage() {
 
         {answered && (
           <button onClick={nextQuestion} className="game-btn game-btn-primary w-full">
-            Next Word →
+            {t("games.nextWord")}
           </button>
         )}
       </GameShell>

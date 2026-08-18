@@ -8,6 +8,7 @@ import { ScoreBoard } from "@/components/ScoreBoard";
 import { Feedback } from "@/components/Feedback";
 import { ResumeNotice } from "@/components/ResumeNotice";
 import { useGameProgress } from "@/hooks/useGameProgress";
+import { useLocale } from "@/i18n/LocaleProvider";
 import { HEBREW_WORDS, scrambleWord } from "@/lib/data/hebrew";
 
 function pickWord() {
@@ -20,6 +21,7 @@ function newWordData() {
 }
 
 export default function ScramblePage() {
+  const { t, gameTitle } = useLocale();
   const progress = useGameProgress({ subjectId: "hebrew", gameId: "scramble" });
   const [wordData, setWordData] = useState(() => newWordData());
   const [guess, setGuess] = useState("");
@@ -59,7 +61,7 @@ export default function ScramblePage() {
       progress.setScore((s) => s + pts);
       progress.setStreak((s) => s + 1);
       progress.setCorrect((c) => c + 1);
-      const fb = { type: "correct" as const, message: "מצוין! Excellent!" };
+      const fb = { type: "correct" as const, message: t("games.scrambleCorrect") };
       setFeedback(fb);
       progress.save({
         score: progress.score + pts,
@@ -72,7 +74,7 @@ export default function ScramblePage() {
       progress.setWrong((w) => w + 1);
       const fb = {
         type: "wrong" as const,
-        message: `The word was: ${wordData.word}`,
+        message: t("games.scrambleWrong", { word: wordData.word }),
       };
       setFeedback(fb);
       progress.save({
@@ -86,7 +88,7 @@ export default function ScramblePage() {
   if (!progress.loaded) {
     return (
       <main className="flex-1 px-4 py-8 max-w-2xl mx-auto text-center">
-        <p className="text-gray-500">Loading...</p>
+        <p className="text-gray-500">{t("common.loading")}</p>
       </main>
     );
   }
@@ -95,13 +97,13 @@ export default function ScramblePage() {
     <main className="flex-1 px-4 py-8 max-w-2xl mx-auto w-full">
       <BackButton href="/hebrew" />
 
-      <GameShell title="Word Scramble" titleHe="ערבוב אותיות" emoji="🔤" dir="rtl">
+      <GameShell title={gameTitle("hebrew", "scramble")} emoji="🔤" contentDir="rtl">
         {progress.resumed && <ResumeNotice onDismiss={progress.dismissResume} />}
 
         <ScoreBoard score={progress.score} streak={progress.streak} total={progress.round} />
 
         <div className="bg-white/90 rounded-3xl p-8 shadow-lg border-2 border-blue-100 mb-6 text-center">
-          <p className="text-sm text-blue-500 font-medium mb-2">Unscramble this word:</p>
+          <p className="text-sm text-blue-500 font-medium mb-2">{t("games.unscramble")}</p>
           <p className="text-5xl font-extrabold text-blue-700 tracking-widest mb-4">
             {wordData.scrambled.split("").join(" ")}
           </p>
@@ -115,14 +117,14 @@ export default function ScramblePage() {
           onChange={(e) => setGuess(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && checkAnswer()}
           disabled={answered}
-          placeholder="כתוב את המילה..."
+          placeholder={t("games.writeWord")}
           dir="rtl"
           className="w-full text-2xl text-center px-6 py-4 rounded-2xl border-2 border-blue-200 focus:border-blue-400 focus:outline-none mb-4 disabled:opacity-50"
         />
 
         {!answered && (
           <button onClick={checkAnswer} className="game-btn game-btn-primary w-full mb-4">
-            Check ✓
+            {t("common.check")}
           </button>
         )}
 
@@ -134,7 +136,7 @@ export default function ScramblePage() {
 
         {answered && (
           <button onClick={nextWord} className="game-btn game-btn-primary w-full">
-            Next Word →
+            {t("games.nextWord")}
           </button>
         )}
       </GameShell>

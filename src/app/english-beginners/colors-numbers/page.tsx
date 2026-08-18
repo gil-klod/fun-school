@@ -8,9 +8,11 @@ import { ScoreBoard } from "@/components/ScoreBoard";
 import { Feedback } from "@/components/Feedback";
 import { ResumeNotice } from "@/components/ResumeNotice";
 import { useGameProgress } from "@/hooks/useGameProgress";
+import { useLocale } from "@/i18n/LocaleProvider";
 import { COLORS_NUMBERS, shuffleArray } from "@/lib/data/english-beginners";
 
 export default function ColorsNumbersPage() {
+  const { t, gameTitle } = useLocale();
   const progress = useGameProgress({ subjectId: "english-beginners", gameId: "colors-numbers" });
   const [index, setIndex] = useState(0);
   const [options, setOptions] = useState<string[]>(() =>
@@ -55,7 +57,7 @@ export default function ColorsNumbersPage() {
       progress.setScore((s) => s + pts);
       progress.setStreak((s) => s + 1);
       progress.setCorrect((c) => c + 1);
-      const fb = { type: "correct" as const, message: "Yes! 🌈" };
+      const fb = { type: "correct" as const, message: t("games.colorsCorrect") };
       setFeedback(fb);
       progress.save({
         score: progress.score + pts,
@@ -68,7 +70,7 @@ export default function ColorsNumbersPage() {
       progress.setWrong((w) => w + 1);
       const fb = {
         type: "wrong" as const,
-        message: `The answer was: ${item.answer}`,
+        message: t("games.colorsWrong", { answer: item.answer }),
       };
       setFeedback(fb);
       progress.save({
@@ -82,7 +84,7 @@ export default function ColorsNumbersPage() {
   if (!progress.loaded) {
     return (
       <main className="flex-1 px-4 py-8 max-w-2xl mx-auto text-center">
-        <p className="text-gray-500">Loading...</p>
+        <p className="text-gray-500">{t("common.loading")}</p>
       </main>
     );
   }
@@ -91,7 +93,7 @@ export default function ColorsNumbersPage() {
     <main className="flex-1 px-4 py-8 max-w-2xl mx-auto w-full">
       <BackButton href="/english-beginners" />
 
-      <GameShell title="Colors & Numbers" titleHe="צבעים ומספרים" emoji="🌈">
+      <GameShell title={gameTitle("english-beginners", "colors-numbers")} emoji="🌈">
         {progress.resumed && <ResumeNotice onDismiss={progress.dismissResume} />}
 
         <ScoreBoard score={progress.score} streak={progress.streak} total={progress.round} />
@@ -125,7 +127,7 @@ export default function ColorsNumbersPage() {
 
         {answered && (
           <button onClick={nextQuestion} className="game-btn game-btn-primary w-full">
-            Next →
+            {t("common.continue")}
           </button>
         )}
       </GameShell>

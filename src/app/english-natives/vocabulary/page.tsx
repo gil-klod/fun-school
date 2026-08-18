@@ -9,8 +9,6 @@ export default function VocabularyPage() {
       subjectId="english-natives"
       gameId="vocabulary"
       backHref="/english-natives"
-      title="Word Wizard"
-      titleHe="קוסם המילים"
       emoji="🧙"
       questions={VOCAB_QUESTIONS}
     />

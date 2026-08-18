@@ -8,9 +8,11 @@ import { ScoreBoard } from "@/components/ScoreBoard";
 import { Feedback } from "@/components/Feedback";
 import { ResumeNotice } from "@/components/ResumeNotice";
 import { useGameProgress } from "@/hooks/useGameProgress";
+import { useLocale } from "@/i18n/LocaleProvider";
 import { ENGLISH_STORIES } from "@/lib/data/english-natives";
 
 export default function EnglishComprehensionPage() {
+  const { t, gameTitle } = useLocale();
   const progress = useGameProgress({ subjectId: "english-natives", gameId: "comprehension" });
   const [storyIndex, setStoryIndex] = useState(() =>
     Math.floor(Math.random() * ENGLISH_STORIES.length)
@@ -43,7 +45,7 @@ export default function EnglishComprehensionPage() {
       progress.setScore((s) => s + pts);
       progress.setStreak((s) => s + 1);
       progress.setCorrect((c) => c + 1);
-      const fb = { type: "correct" as const, message: "Excellent reading! 📚" };
+      const fb = { type: "correct" as const, message: t("games.storyCorrect") };
       setFeedback(fb);
       progress.save({
         score: progress.score + pts,
@@ -56,7 +58,7 @@ export default function EnglishComprehensionPage() {
       progress.setWrong((w) => w + 1);
       const fb = {
         type: "wrong" as const,
-        message: `Answer: ${question.options[question.correctIndex]}`,
+        message: t("games.storyWrong", { answer: question.options[question.correctIndex] }),
         explanation: question.explanation,
       };
       setFeedback(fb);
@@ -92,7 +94,7 @@ export default function EnglishComprehensionPage() {
   if (!progress.loaded) {
     return (
       <main className="flex-1 px-4 py-8 max-w-2xl mx-auto text-center">
-        <p className="text-gray-500">Loading...</p>
+        <p className="text-gray-500">{t("common.loading")}</p>
       </main>
     );
   }
@@ -101,7 +103,7 @@ export default function EnglishComprehensionPage() {
     <main className="flex-1 px-4 py-8 max-w-2xl mx-auto w-full">
       <BackButton href="/english-natives" />
 
-      <GameShell title="Reading Challenge" titleHe="אתגר קריאה" emoji="📚">
+      <GameShell title={gameTitle("english-natives", "comprehension")} emoji="📚">
         {progress.resumed && <ResumeNotice onDismiss={progress.dismissResume} />}
 
         <ScoreBoard score={progress.score} streak={progress.streak} total={questionIndex + 1} />
@@ -142,7 +144,7 @@ export default function EnglishComprehensionPage() {
 
             {answered && (
               <button onClick={nextQuestion} className="game-btn game-btn-primary w-full">
-                {questionIndex + 1 >= story.questions.length ? "See Results →" : "Next Question →"}
+                {questionIndex + 1 >= story.questions.length ? t("common.seeResults") : t("common.nextQuestion")}
               </button>
             )}
           </>
@@ -150,13 +152,13 @@ export default function EnglishComprehensionPage() {
           <div className="text-center">
             <Feedback
               type="correct"
-              message={`Story complete! Final score: ${progress.score} 🏆`}
+              message={t("games.storyComplete", { score: progress.score })}
             />
             <button
               onClick={() => window.location.reload()}
               className="game-btn game-btn-primary w-full mt-4"
             >
-              Read Another Story
+              {t("games.readAnother")}
             </button>
           </div>
         )}

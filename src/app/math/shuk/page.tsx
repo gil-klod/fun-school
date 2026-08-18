@@ -8,6 +8,7 @@ import { ScoreBoard } from "@/components/ScoreBoard";
 import { Feedback } from "@/components/Feedback";
 import { ResumeNotice } from "@/components/ResumeNotice";
 import { useGameProgress } from "@/hooks/useGameProgress";
+import { useLocale } from "@/i18n/LocaleProvider";
 import { generateShukChallenge, buildOptions } from "@/lib/data/math";
 
 function newChallenge() {
@@ -16,6 +17,7 @@ function newChallenge() {
 }
 
 export default function ShukPage() {
+  const { t, gameTitle } = useLocale();
   const progress = useGameProgress({ subjectId: "math", gameId: "shuk" });
   const [round, setRound] = useState(() => newChallenge());
   const { challenge, options } = round;
@@ -55,7 +57,7 @@ export default function ShukPage() {
       progress.setScore((s) => s + pts);
       progress.setStreak((s) => s + 1);
       progress.setCorrect((c) => c + 1);
-      const fb = { type: "correct" as const, message: "Perfect change! 🛒" };
+      const fb = { type: "correct" as const, message: t("games.shukCorrect") };
       setFeedback(fb);
       progress.save({
         score: progress.score + pts,
@@ -68,7 +70,11 @@ export default function ShukPage() {
       progress.setWrong((w) => w + 1);
       const fb = {
         type: "wrong" as const,
-        message: `Change is ₪${correct}. Total was ₪${challenge.total}, paid ₪${challenge.paid}.`,
+        message: t("games.shukWrong", {
+          change: correct,
+          total: challenge.total,
+          paid: challenge.paid,
+        }),
       };
       setFeedback(fb);
       progress.save({
@@ -82,7 +88,7 @@ export default function ShukPage() {
   if (!progress.loaded) {
     return (
       <main className="flex-1 px-4 py-8 max-w-2xl mx-auto text-center">
-        <p className="text-gray-500">Loading...</p>
+        <p className="text-gray-500">{t("common.loading")}</p>
       </main>
     );
   }
@@ -91,13 +97,13 @@ export default function ShukPage() {
     <main className="flex-1 px-4 py-8 max-w-2xl mx-auto w-full">
       <BackButton href="/math" />
 
-      <GameShell title="Shuk Challenge" titleHe="אתגר השוק" emoji="🛒">
+      <GameShell title={gameTitle("math", "shuk")} emoji="🛒">
         {progress.resumed && <ResumeNotice onDismiss={progress.dismissResume} />}
 
         <ScoreBoard score={progress.score} streak={progress.streak} total={progress.round} />
 
         <div className="bg-white/90 rounded-3xl p-6 shadow-lg border-2 border-amber-100 mb-6">
-          <p className="text-lg font-semibold text-amber-700 mb-4">Your shopping list:</p>
+          <p className="text-lg font-semibold text-amber-700 mb-4">{t("games.shoppingList")}</p>
           <div className="space-y-3">
             {challenge.items.map((item, i) => (
               <div
@@ -116,17 +122,17 @@ export default function ShukPage() {
             ))}
           </div>
           <div className="border-t-2 border-amber-200 mt-4 pt-4 flex justify-between text-lg">
-            <span className="font-semibold">Total:</span>
+            <span className="font-semibold">{t("games.total")}</span>
             <span className="font-bold text-amber-800">₪{challenge.total}</span>
           </div>
           <div className="flex justify-between text-lg mt-2">
-            <span className="font-semibold">You pay:</span>
+            <span className="font-semibold">{t("games.youPay")}</span>
             <span className="font-bold text-green-700">₪{challenge.paid}</span>
           </div>
         </div>
 
         <p className="text-center text-xl font-bold text-gray-700 mb-4">
-          How much change do you get? 💰
+          {t("games.howMuchChange")}
         </p>
 
         <div className="grid grid-cols-2 gap-3 mb-6">
@@ -150,7 +156,7 @@ export default function ShukPage() {
 
         {answered && (
           <button onClick={nextChallenge} className="game-btn game-btn-primary w-full">
-            Next Shopping Trip →
+            {t("games.nextShopping")}
           </button>
         )}
       </GameShell>

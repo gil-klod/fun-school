@@ -1,24 +1,22 @@
 "use client";
 
+import { useLocale } from "@/i18n/LocaleProvider";
+
 interface GameShellProps {
   title: string;
-  titleHe?: string;
   emoji: string;
   children: React.ReactNode;
-  dir?: "ltr" | "rtl";
+  contentDir?: "ltr" | "rtl";
 }
 
-export function GameShell({ title, titleHe, emoji, children, dir = "ltr" }: GameShellProps) {
+export function GameShell({ title, emoji, children, contentDir }: GameShellProps) {
+  const { dir } = useLocale();
+
   return (
-    <div className="max-w-2xl mx-auto" dir={dir}>
+    <div className="max-w-2xl mx-auto" dir={contentDir ?? dir}>
       <div className="text-center mb-6">
         <span className="text-5xl">{emoji}</span>
         <h1 className="text-3xl font-bold text-gray-800 mt-2">{title}</h1>
-        {titleHe && (
-          <p className="text-xl text-gray-600" dir="rtl">
-            {titleHe}
-          </p>
-        )}
       </div>
       {children}
     </div>

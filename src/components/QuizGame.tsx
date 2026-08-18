@@ -7,14 +7,13 @@ import { ScoreBoard } from "@/components/ScoreBoard";
 import { Feedback } from "@/components/Feedback";
 import { ResumeNotice } from "@/components/ResumeNotice";
 import { useGameProgress } from "@/hooks/useGameProgress";
+import { useLocale } from "@/i18n/LocaleProvider";
 import type { QuizQuestion } from "@/lib/types";
 
 interface QuizGameProps {
   subjectId: string;
   gameId: string;
   backHref: string;
-  title: string;
-  titleHe: string;
   emoji: string;
   questions: QuizQuestion[];
 }
@@ -23,11 +22,10 @@ export function QuizGame({
   subjectId,
   gameId,
   backHref,
-  title,
-  titleHe,
   emoji,
   questions,
 }: QuizGameProps) {
+  const { t, gameTitle } = useLocale();
   const progress = useGameProgress({ subjectId, gameId });
   const [index, setIndex] = useState(0);
   const [feedback, setFeedback] = useState<{
@@ -68,14 +66,14 @@ export function QuizGame({
         correct: progress.correct + 1,
         state: { index },
       });
-      setFeedback({ type: "correct", message: "Correct! 🌟" });
+      setFeedback({ type: "correct", message: t("games.correct") });
     } else {
       progress.setStreak(0);
       progress.setWrong((w) => w + 1);
       progress.save({ streak: 0, wrong: progress.wrong + 1, state: { index } });
       setFeedback({
         type: "wrong",
-        message: `Answer: ${question.options[question.correctIndex]}`,
+        message: t("games.wrongAnswer", { answer: question.options[question.correctIndex] }),
         explanation: question.explanation,
       });
     }
@@ -84,7 +82,7 @@ export function QuizGame({
   if (!progress.loaded) {
     return (
       <main className="flex-1 px-4 py-8 max-w-2xl mx-auto text-center">
-        <p className="text-gray-500">Loading...</p>
+        <p className="text-gray-500">{t("common.loading")}</p>
       </main>
     );
   }
@@ -93,7 +91,7 @@ export function QuizGame({
     <main className="flex-1 px-4 py-8 max-w-2xl mx-auto w-full">
       <BackButton href={backHref} />
 
-      <GameShell title={title} titleHe={titleHe} emoji={emoji}>
+      <GameShell title={gameTitle(subjectId, gameId)} emoji={emoji}>
         {progress.resumed && <ResumeNotice onDismiss={progress.dismissResume} />}
         <ScoreBoard score={progress.score} streak={progress.streak} total={index + 1} />
 
@@ -128,7 +126,7 @@ export function QuizGame({
 
             {answered && (
               <button onClick={nextQuestion} className="game-btn game-btn-primary w-full">
-                {index + 1 >= questions.length ? "See Results →" : "Next Question →"}
+                {index + 1 >= questions.length ? t("common.seeResults") : t("common.nextQuestion")}
               </button>
             )}
           </>
@@ -136,7 +134,7 @@ export function QuizGame({
           <div className="text-center">
             <Feedback
               type="correct"
-              message={`All done! Final score: ${progress.score} 🏆`}
+              message={t("games.allDone", { score: progress.score })}
             />
             <button
               onClick={() => {
@@ -151,7 +149,7 @@ export function QuizGame({
               }}
               className="game-btn game-btn-primary w-full mt-4"
             >
-              Play Again
+              {t("common.playAgain")}
             </button>
           </div>
         )}
