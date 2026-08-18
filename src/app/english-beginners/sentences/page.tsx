@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { useGameResume } from "@/hooks/useGameResume";
 import { BackButton } from "@/components/BackButton";
 import { GameShell } from "@/components/GameShell";
@@ -8,26 +8,89 @@ import { GameStatus } from "@/components/GameStatus";
 import { Feedback } from "@/components/Feedback";
 import { useGameProgress } from "@/hooks/useGameProgress";
 import { useLocale } from "@/i18n/LocaleProvider";
-import { SENTENCE_CHALLENGES, shuffleArray } from "@/lib/data/english-beginners";
+import { SENTENCE_CHALLENGES } from "@/lib/data/english-beginners";
+
+interface WordToken {
+  id: string;
+  word: string;
+}
+
+function seededShuffle<T>(items: T[], seed: number): T[] {
+  const copy = [...items];
+  let state = seed;
+  for (let i = copy.length - 1; i > 0; i--) {
+    state = (state * 1103515245 + 12345) & 0x7fffffff;
+    const j = state % (i + 1);
+    [copy[i], copy[j]] = [copy[j], copy[i]];
+  }
+  return copy;
+}
+
+function buildWordBank(challengeIndex: number, words: string[]): WordToken[] {
+  return seededShuffle(
+    words.map((word, i) => ({ id: `${challengeIndex}-${i}`, word })),
+    challengeIndex + 1
+  );
+}
+
+function tokensFromSavedWords(saved: string[], bank: WordToken[]): WordToken[] {
+  const used = new Set<string>();
+  const tokens: WordToken[] = [];
+  for (const word of saved) {
+    const token = bank.find((t) => t.word === word && !used.has(t.id));
+    if (token) {
+      tokens.push(token);
+      used.add(token.id);
+    }
+  }
+  return tokens;
+}
 
 export default function SentencesPage() {
   const { t, gameTitle } = useLocale();
   const progress = useGameProgress({ subjectId: "english-beginners", gameId: "sentences" });
   const [index, setIndex] = useState(0);
-  const [selected, setSelected] = useState<string[]>([]);
+  const [selected, setSelected] = useState<WordToken[]>([]);
   const [feedback, setFeedback] = useState<{
     type: "correct" | "wrong";
     message: string;
   } | null>(null);
   const [answered, setAnswered] = useState(false);
+
+  const challenge = SENTENCE_CHALLENGES[index % SENTENCE_CHALLENGES.length];
+
+  const wordBank = useMemo(
+    () => buildWordBank(index, challenge.words),
+    [index, challenge.words]
+  );
+
+  const selectedIds = useMemo(() => new Set(selected.map((t) => t.id)), [selected]);
+  const availableWords = useMemo(
+    () => wordBank.filter((t) => !selectedIds.has(t.id)),
+    [wordBank, selectedIds]
+  );
+
   useGameResume(
     progress.loaded,
     progress.hasSavedProgress,
     progress.gameState,
     (s) => {
       if (s.index !== undefined) {
-        setIndex(s.index as number);
-        setSelected((s.selected as string[]) ?? []);
+        const savedIndex = s.index as number;
+        setIndex(savedIndex);
+        const savedChallenge =
+          SENTENCE_CHALLENGES[savedIndex % SENTENCE_CHALLENGES.length];
+        const bank = buildWordBank(savedIndex, savedChallenge.words);
+        const savedSelected = s.selected;
+        if (Array.isArray(savedSelected)) {
+          if (savedSelected.length > 0 && typeof savedSelected[0] === "object") {
+            setSelected(savedSelected as WordToken[]);
+          } else {
+            setSelected(tokensFromSavedWords(savedSelected as string[], bank));
+          }
+        } else {
+          setSelected([]);
+        }
         setAnswered(!!s.answered);
         if (s.feedback) setFeedback(s.feedback as typeof feedback);
       }
@@ -46,19 +109,6 @@ export default function SentencesPage() {
     }
   );
 
-  const challenge = SENTENCE_CHALLENGES[index % SENTENCE_CHALLENGES.length];
-
-  const unusedWords = (() => {
-    const counts: Record<string, number> = {};
-    challenge.words.forEach((w) => { counts[w] = (counts[w] || 0) + 1; });
-    selected.forEach((w) => { counts[w] = (counts[w] || 0) - 1; });
-    const result: string[] = [];
-    Object.entries(counts).forEach(([word, count]) => {
-      for (let i = 0; i < count; i++) result.push(word);
-    });
-    return shuffleArray(result);
-  })();
-
   const nextChallenge = useCallback(() => {
     const nextIndex = index + 1;
     setIndex(nextIndex);
@@ -72,9 +122,9 @@ export default function SentencesPage() {
     });
   }, [index, progress]);
 
-  const addWord = (word: string) => {
+  const addWord = (token: WordToken) => {
     if (answered) return;
-    const next = [...selected, word];
+    const next = [...selected, token];
     setSelected(next);
     progress.save({ state: { index, selected: next, answered, feedback } });
   };
@@ -89,7 +139,7 @@ export default function SentencesPage() {
   const checkAnswer = () => {
     if (answered || selected.length !== challenge.words.length) return;
     setAnswered(true);
-    const answer = selected.join(" ");
+    const answer = selected.map((t) => t.word).join(" ");
 
     if (answer === challenge.correct) {
       const pts = 10 + progress.streak;
@@ -149,27 +199,30 @@ export default function SentencesPage() {
           {selected.length === 0 ? (
             <span className="text-gray-400">{t("games.tapWords")}</span>
           ) : (
-            selected.map((word, i) => (
+            selected.map((token, i) => (
               <span
-                key={`${word}-${i}`}
+                key={token.id}
                 className="bg-green-100 text-green-800 px-4 py-2 rounded-xl font-semibold cursor-pointer hover:bg-green-200"
-                onClick={(e) => { e.stopPropagation(); removeWord(i); }}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  removeWord(i);
+                }}
               >
-                {word}
+                {token.word}
               </span>
             ))
           )}
         </div>
 
         <div className="flex flex-wrap gap-2 justify-center mb-4">
-          {unusedWords.map((word, i) => (
+          {availableWords.map((token) => (
             <button
-              key={`${word}-${i}`}
-              onClick={() => addWord(word)}
+              key={token.id}
+              onClick={() => addWord(token)}
               disabled={answered}
               className="game-btn-option py-3 px-5"
             >
-              {word}
+              {token.word}
             </button>
           ))}
         </div>
