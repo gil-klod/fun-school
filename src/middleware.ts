@@ -8,10 +8,11 @@ export default auth((req) => {
   const { pathname } = req.nextUrl;
   const isLoggedIn = !!req.auth;
 
-  const publicPaths = ["/login", "/register", "/verify-email"];
+  const publicPaths = ["/login", "/register", "/verify-email", "/admin"];
   const isPublic =
     publicPaths.some((p) => pathname.startsWith(p)) ||
-    pathname.startsWith("/api/auth");
+    pathname.startsWith("/api/auth") ||
+    pathname.startsWith("/api/admin");
 
   if (!isLoggedIn && !isPublic) {
     if (pathname.startsWith("/api/")) {
