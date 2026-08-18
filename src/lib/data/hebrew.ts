@@ -156,7 +156,7 @@ export const HEBREW_STORIES: HebrewStory[] = [
       },
       {
         question: "מה אמא אפתה?",
-        options: ["לחם", "עוגת שוקולד", "פizza", "סלט"],
+        options: ["לחם", "עוגת שוקולד", "פיצה", "סלט"],
         correctIndex: 1,
       },
       {
