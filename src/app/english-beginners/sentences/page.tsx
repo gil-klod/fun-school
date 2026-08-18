@@ -1,10 +1,10 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { useRestoreGameState } from "@/hooks/useRestoreGameState";
+import { useGameResume } from "@/hooks/useGameResume";
 import { BackButton } from "@/components/BackButton";
 import { GameShell } from "@/components/GameShell";
-import { ScoreBoard } from "@/components/ScoreBoard";
+import { GameProgressBar } from "@/components/GameProgressBar";
 import { Feedback } from "@/components/Feedback";
 import { ResumeNotice } from "@/components/ResumeNotice";
 import { useGameProgress } from "@/hooks/useGameProgress";
@@ -21,14 +21,31 @@ export default function SentencesPage() {
     message: string;
   } | null>(null);
   const [answered, setAnswered] = useState(false);
-  useRestoreGameState(progress.loaded, progress.resumed, progress.gameState, (s) => {
-    if (s.index !== undefined) {
-      setIndex(s.index as number);
-      setSelected((s.selected as string[]) ?? []);
-      setAnswered(!!s.answered);
-      if (s.feedback) setFeedback(s.feedback as typeof feedback);
+  useGameResume(
+    progress.loaded,
+    progress.hasSavedProgress,
+    progress.gameState,
+    (s) => {
+      if (s.index !== undefined) {
+        setIndex(s.index as number);
+        setSelected((s.selected as string[]) ?? []);
+        setAnswered(!!s.answered);
+        if (s.feedback) setFeedback(s.feedback as typeof feedback);
+      }
+    },
+    () => {
+      const nextIndex = (progress.gameState.index as number) + 1;
+      setIndex(nextIndex);
+      setSelected([]);
+      setFeedback(null);
+      setAnswered(false);
+      progress.setRound((r) => r + 1);
+      progress.save({
+        round: progress.round + 1,
+        state: { index: nextIndex, selected: [], answered: false, feedback: null },
+      });
     }
-  });
+  );
 
   const challenge = SENTENCE_CHALLENGES[index % SENTENCE_CHALLENGES.length];
 
@@ -122,7 +139,13 @@ export default function SentencesPage() {
       <GameShell title={gameTitle("english-beginners", "sentences")} emoji="🧩">
         {progress.resumed && <ResumeNotice onDismiss={progress.dismissResume} />}
 
-        <ScoreBoard score={progress.score} streak={progress.streak} total={progress.round} />
+        <GameProgressBar
+          score={progress.score}
+          streak={progress.streak}
+          round={progress.round}
+          correct={progress.correct}
+          wrong={progress.wrong}
+        />
 
         <p className="text-center text-gray-600 mb-4" dir="rtl">
           {challenge.translation}

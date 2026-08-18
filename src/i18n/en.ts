@@ -19,6 +19,11 @@ export const en: Dictionary = {
     refresh: "Refresh Analysis",
     updating: "Updating...",
   },
+  progress: {
+    correct: "Correct",
+    wrong: "Wrong",
+    accuracy: "Accuracy",
+  },
   nav: {
     myProgress: "My Progress",
     hi: "Hi",
@@ -128,6 +133,8 @@ export const en: Dictionary = {
     correctSentence: "Correct sentence:",
     unscramble: "Unscramble this word:",
     writeWord: "Write the word...",
+    hint: "Hint",
+    category: "Category",
     tapWords: "Tap words below...",
     checkSentence: "Check Sentence ✓",
     whichIsWrong: "Which word is wrong?",
@@ -153,5 +160,7 @@ export const en: Dictionary = {
     colorsWrong: "The answer was: {answer}",
     storyCorrect: "Well done!",
     storyWrong: "The answer was: {answer}",
+    vocabPromptHeToEn: "What is \"{word}\" in English?",
+    vocabPromptEnToHe: "What is \"{word}\" in Hebrew?",
   },
 };

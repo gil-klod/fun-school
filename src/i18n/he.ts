@@ -19,6 +19,11 @@ export const he: Dictionary = {
     refresh: "רענן ניתוח",
     updating: "מעדכן...",
   },
+  progress: {
+    correct: "נכון",
+    wrong: "שגוי",
+    accuracy: "דיוק",
+  },
   nav: {
     myProgress: "ההתקדמות שלי",
     hi: "שלום",
@@ -128,6 +133,8 @@ export const he: Dictionary = {
     correctSentence: "משפט נכון:",
     unscramble: "סדר את המילה:",
     writeWord: "כתוב את המילה...",
+    hint: "רמז",
+    category: "קטגוריה",
     tapWords: "לחץ על מילים למטה...",
     checkSentence: "בדוק משפט ✓",
     whichIsWrong: "איזו מילה שגויה?",
@@ -153,5 +160,7 @@ export const he: Dictionary = {
     colorsWrong: "התשובה הייתה: {answer}",
     storyCorrect: "כל הכבוד!",
     storyWrong: "התשובה: {answer}",
+    vocabPromptHeToEn: "מה זה \"{word}\" באנגלית?",
+    vocabPromptEnToHe: "מה זה \"{word}\" בעברית?",
   },
 };

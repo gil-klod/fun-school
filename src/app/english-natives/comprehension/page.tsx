@@ -1,10 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { useRestoreGameState } from "@/hooks/useRestoreGameState";
+import { useGameResume } from "@/hooks/useGameResume";
 import { BackButton } from "@/components/BackButton";
 import { GameShell } from "@/components/GameShell";
-import { ScoreBoard } from "@/components/ScoreBoard";
+import { GameProgressBar } from "@/components/GameProgressBar";
 import { Feedback } from "@/components/Feedback";
 import { ResumeNotice } from "@/components/ResumeNotice";
 import { useGameProgress } from "@/hooks/useGameProgress";
@@ -25,13 +25,44 @@ export default function EnglishComprehensionPage() {
   } | null>(null);
   const [answered, setAnswered] = useState(false);
   const [finished, setFinished] = useState(false);
-  useRestoreGameState(progress.loaded, progress.resumed, progress.gameState, (s) => {
-    if (s.storyIndex !== undefined) setStoryIndex(s.storyIndex as number);
-    if (s.questionIndex !== undefined) setQuestionIndex(s.questionIndex as number);
-    setFinished(!!s.finished);
-    setAnswered(!!s.answered);
-    if (s.feedback) setFeedback(s.feedback as typeof feedback);
-  });
+  useGameResume(
+    progress.loaded,
+    progress.hasSavedProgress,
+    progress.gameState,
+    (s) => {
+      if (s.storyIndex !== undefined) setStoryIndex(s.storyIndex as number);
+      if (s.questionIndex !== undefined) setQuestionIndex(s.questionIndex as number);
+      setFinished(!!s.finished);
+      setAnswered(!!s.answered);
+      if (s.feedback) setFeedback(s.feedback as typeof feedback);
+    },
+    () => {
+      const s = progress.gameState;
+      const storyIdx = s.storyIndex as number;
+      const qIdx = s.questionIndex as number;
+      const story = ENGLISH_STORIES[storyIdx];
+      if (qIdx + 1 >= story.questions.length) {
+        setFinished(true);
+        progress.markCompleted();
+        progress.save({
+          state: { storyIndex: storyIdx, questionIndex: qIdx, finished: true, answered: false, feedback: null },
+          status: "completed",
+        });
+      } else {
+        const nextIdx = qIdx + 1;
+        setStoryIndex(storyIdx);
+        setQuestionIndex(nextIdx);
+        setFeedback(null);
+        setAnswered(false);
+        setFinished(false);
+        progress.setRound((r) => r + 1);
+        progress.save({
+          round: progress.round + 1,
+          state: { storyIndex: storyIdx, questionIndex: nextIdx, finished: false, answered: false, feedback: null },
+        });
+      }
+    }
+  );
 
   const story = ENGLISH_STORIES[storyIndex];
   const question = story.questions[questionIndex];
@@ -106,7 +137,13 @@ export default function EnglishComprehensionPage() {
       <GameShell title={gameTitle("english-natives", "comprehension")} emoji="📚">
         {progress.resumed && <ResumeNotice onDismiss={progress.dismissResume} />}
 
-        <ScoreBoard score={progress.score} streak={progress.streak} total={questionIndex + 1} />
+        <GameProgressBar
+          score={progress.score}
+          streak={progress.streak}
+          round={questionIndex + 1}
+          correct={progress.correct}
+          wrong={progress.wrong}
+        />
 
         <div className="bg-white/90 rounded-3xl p-6 shadow-lg border-2 border-pink-100 mb-6">
           <h2 className="text-xl font-bold text-pink-700 mb-3">{story.title}</h2>

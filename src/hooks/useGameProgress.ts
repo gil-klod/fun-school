@@ -21,6 +21,7 @@ interface UseGameProgressOptions {
 export function useGameProgress({ subjectId, gameId, defaultState = {} }: UseGameProgressOptions) {
   const [loaded, setLoaded] = useState(false);
   const [resumed, setResumed] = useState(false);
+  const [hasSavedProgress, setHasSavedProgress] = useState(false);
   const [score, setScore] = useState(0);
   const [streak, setStreak] = useState(0);
   const [round, setRound] = useState(1);
@@ -43,13 +44,16 @@ export function useGameProgress({ subjectId, gameId, defaultState = {} }: UseGam
         if (res.ok) {
           const { progress } = await res.json();
           if (progress && progress.status === "in_progress") {
+            const state = (progress.state ?? {}) as Record<string, unknown>;
             setScore(progress.score ?? 0);
             setStreak(progress.streak ?? 0);
             setRound(progress.round ?? 1);
             setCorrect(progress.correct ?? 0);
             setWrong(progress.wrong ?? 0);
-            setGameState(progress.state ?? defaultState);
-            setResumed(true);
+            setGameState(state);
+            setHasSavedProgress(true);
+            // Only show "resumed" banner when mid-question (not after answering)
+            setResumed(state.answered !== true && Object.keys(state).length > 0);
           }
         }
       } catch (err) {
@@ -82,47 +86,9 @@ export function useGameProgress({ subjectId, gameId, defaultState = {} }: UseGam
         } catch (err) {
           console.error("Failed to save progress:", err);
         }
-      }, 800);
+      }, 500);
     },
     [loaded, subjectId, gameId]
-  );
-
-  const recordCorrect = useCallback(
-    (points: number, newState?: Record<string, unknown>) => {
-      setScore((s) => s + points);
-      setStreak((s) => s + 1);
-      setCorrect((c) => c + 1);
-      if (newState) setGameState(newState);
-      save({
-        score: latest.current.score + points,
-        streak: latest.current.streak + 1,
-        correct: latest.current.correct + 1,
-        state: newState ?? latest.current.state,
-      });
-    },
-    [save]
-  );
-
-  const recordWrong = useCallback(
-    (newState?: Record<string, unknown>) => {
-      setStreak(0);
-      setWrong((w) => w + 1);
-      if (newState) setGameState(newState);
-      save({
-        streak: 0,
-        wrong: latest.current.wrong + 1,
-        state: newState ?? latest.current.state,
-      });
-    },
-    [save]
-  );
-
-  const updateState = useCallback(
-    (newState: Record<string, unknown>, extra?: Partial<ProgressData>) => {
-      setGameState(newState);
-      save({ state: newState, ...extra });
-    },
-    [save]
   );
 
   const markCompleted = useCallback(() => {
@@ -134,6 +100,7 @@ export function useGameProgress({ subjectId, gameId, defaultState = {} }: UseGam
   return {
     loaded,
     resumed,
+    hasSavedProgress,
     dismissResume,
     score,
     setScore,
@@ -148,9 +115,6 @@ export function useGameProgress({ subjectId, gameId, defaultState = {} }: UseGam
     gameState,
     setGameState,
     save,
-    recordCorrect,
-    recordWrong,
-    updateState,
     markCompleted,
   };
 }

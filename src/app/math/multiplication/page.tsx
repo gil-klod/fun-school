@@ -1,10 +1,10 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { useRestoreGameState } from "@/hooks/useRestoreGameState";
+import { useGameResume } from "@/hooks/useGameResume";
 import { BackButton } from "@/components/BackButton";
 import { GameShell } from "@/components/GameShell";
-import { ScoreBoard } from "@/components/ScoreBoard";
+import { GameProgressBar } from "@/components/GameProgressBar";
 import { Feedback } from "@/components/Feedback";
 import { ResumeNotice } from "@/components/ResumeNotice";
 import { useGameProgress } from "@/hooks/useGameProgress";
@@ -31,14 +31,32 @@ export default function MultiplicationPage() {
     message: string;
   } | null>(null);
   const [answered, setAnswered] = useState(false);
-  useRestoreGameState(progress.loaded, progress.resumed, progress.gameState, (s) => {
-    if (s.round) {
-      setTable(s.table as number | undefined);
-      setRound(s.round as ReturnType<typeof newRound>);
-      setAnswered(!!s.answered);
-      if (s.feedback) setFeedback(s.feedback as typeof feedback);
+  useGameResume(
+    progress.loaded,
+    progress.hasSavedProgress,
+    progress.gameState,
+    (s) => {
+      if (s.round) {
+        setTable(s.table as number | undefined);
+        setRound(s.round as ReturnType<typeof newRound>);
+        setAnswered(!!s.answered);
+        if (s.feedback) setFeedback(s.feedback as typeof feedback);
+      }
+    },
+    () => {
+      const savedTable = progress.gameState.table as number | undefined;
+      setTable(savedTable);
+      progress.setRound((r) => r + 1);
+      const newR = newRound(savedTable);
+      setRound(newR);
+      setFeedback(null);
+      setAnswered(false);
+      progress.save({
+        round: progress.round + 1,
+        state: { table: savedTable, round: newR, answered: false, feedback: null },
+      });
     }
-  });
+  );
 
   const correct = question.a * question.b;
 
@@ -123,7 +141,13 @@ export default function MultiplicationPage() {
           ))}
         </div>
 
-        <ScoreBoard score={progress.score} streak={progress.streak} total={progress.round} />
+        <GameProgressBar
+          score={progress.score}
+          streak={progress.streak}
+          round={progress.round}
+          correct={progress.correct}
+          wrong={progress.wrong}
+        />
 
         <div className="bg-white/90 rounded-3xl p-8 shadow-lg border-2 border-indigo-100 text-center mb-6">
           <p className="text-5xl font-extrabold text-indigo-700">

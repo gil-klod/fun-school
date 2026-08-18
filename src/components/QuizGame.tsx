@@ -1,9 +1,10 @@
 "use client";
 
 import { useState, useCallback } from "react";
+import { useGameResume } from "@/hooks/useGameResume";
 import { BackButton } from "@/components/BackButton";
 import { GameShell } from "@/components/GameShell";
-import { ScoreBoard } from "@/components/ScoreBoard";
+import { GameProgressBar } from "@/components/GameProgressBar";
 import { Feedback } from "@/components/Feedback";
 import { ResumeNotice } from "@/components/ResumeNotice";
 import { useGameProgress } from "@/hooks/useGameProgress";
@@ -42,14 +43,56 @@ export function QuizGame({
     if (index + 1 >= questions.length) {
       setFinished(true);
       progress.markCompleted();
+      progress.save({
+        state: { index, finished: true, answered: false, feedback: null },
+        status: "completed",
+      });
       return;
     }
-    setIndex((i) => i + 1);
+    const nextIdx = index + 1;
+    setIndex(nextIdx);
     setFeedback(null);
     setAnswered(false);
     progress.setRound((r) => r + 1);
-    progress.save({ round: progress.round + 1, state: { index: index + 1 } });
+    progress.save({
+      round: progress.round + 1,
+      state: { index: nextIdx, answered: false, feedback: null, finished: false },
+    });
   }, [index, questions.length, progress]);
+
+  useGameResume(
+    progress.loaded,
+    progress.hasSavedProgress,
+    progress.gameState,
+    (s) => {
+      if (s.index !== undefined) setIndex(s.index as number);
+      setFinished(!!s.finished);
+      setAnswered(!!s.answered);
+      if (s.feedback) setFeedback(s.feedback as typeof feedback);
+    },
+    () => {
+      const idx = progress.gameState.index as number;
+      if (idx + 1 >= questions.length) {
+        setFinished(true);
+        progress.markCompleted();
+        progress.save({
+          state: { index: idx, finished: true, answered: false, feedback: null },
+          status: "completed",
+        });
+      } else {
+        const nextIdx = idx + 1;
+        setIndex(nextIdx);
+        setFeedback(null);
+        setAnswered(false);
+        setFinished(false);
+        progress.setRound((r) => r + 1);
+        progress.save({
+          round: progress.round + 1,
+          state: { index: nextIdx, answered: false, feedback: null, finished: false },
+        });
+      }
+    }
+  );
 
   const handleAnswer = (optionIndex: number) => {
     if (answered) return;
@@ -60,21 +103,27 @@ export function QuizGame({
       progress.setScore((s) => s + pts);
       progress.setStreak((s) => s + 1);
       progress.setCorrect((c) => c + 1);
+      const fb = { type: "correct" as const, message: t("games.correct") };
+      setFeedback(fb);
       progress.save({
         score: progress.score + pts,
         streak: progress.streak + 1,
         correct: progress.correct + 1,
-        state: { index },
+        state: { index, answered: true, feedback: fb, finished: false },
       });
-      setFeedback({ type: "correct", message: t("games.correct") });
     } else {
       progress.setStreak(0);
       progress.setWrong((w) => w + 1);
-      progress.save({ streak: 0, wrong: progress.wrong + 1, state: { index } });
-      setFeedback({
-        type: "wrong",
+      const fb = {
+        type: "wrong" as const,
         message: t("games.wrongAnswer", { answer: question.options[question.correctIndex] }),
         explanation: question.explanation,
+      };
+      setFeedback(fb);
+      progress.save({
+        streak: 0,
+        wrong: progress.wrong + 1,
+        state: { index, answered: true, feedback: fb, finished: false },
       });
     }
   };
@@ -93,7 +142,14 @@ export function QuizGame({
 
       <GameShell title={gameTitle(subjectId, gameId)} emoji={emoji}>
         {progress.resumed && <ResumeNotice onDismiss={progress.dismissResume} />}
-        <ScoreBoard score={progress.score} streak={progress.streak} total={index + 1} />
+
+        <GameProgressBar
+          score={progress.score}
+          streak={progress.streak}
+          round={index + 1}
+          correct={progress.correct}
+          wrong={progress.wrong}
+        />
 
         {!finished ? (
           <>
@@ -142,10 +198,20 @@ export function QuizGame({
                 progress.setScore(0);
                 progress.setStreak(0);
                 progress.setRound(1);
+                progress.setCorrect(0);
+                progress.setWrong(0);
                 setFinished(false);
                 setFeedback(null);
                 setAnswered(false);
-                progress.save({ score: 0, streak: 0, round: 1, status: "in_progress", state: { index: 0 } });
+                progress.save({
+                  score: 0,
+                  streak: 0,
+                  round: 1,
+                  correct: 0,
+                  wrong: 0,
+                  status: "in_progress",
+                  state: { index: 0, answered: false, feedback: null, finished: false },
+                });
               }}
               className="game-btn game-btn-primary w-full mt-4"
             >

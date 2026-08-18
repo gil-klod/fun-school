@@ -1,10 +1,10 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { useRestoreGameState } from "@/hooks/useRestoreGameState";
+import { useGameResume } from "@/hooks/useGameResume";
 import { BackButton } from "@/components/BackButton";
 import { GameShell } from "@/components/GameShell";
-import { ScoreBoard } from "@/components/ScoreBoard";
+import { GameProgressBar } from "@/components/GameProgressBar";
 import { Feedback } from "@/components/Feedback";
 import { ResumeNotice } from "@/components/ResumeNotice";
 import { useGameProgress } from "@/hooks/useGameProgress";
@@ -23,14 +23,32 @@ export default function ColorsNumbersPage() {
     message: string;
   } | null>(null);
   const [answered, setAnswered] = useState(false);
-  useRestoreGameState(progress.loaded, progress.resumed, progress.gameState, (s) => {
-    if (s.index !== undefined) {
-      setIndex(s.index as number);
-      if (s.options) setOptions(s.options as string[]);
-      setAnswered(!!s.answered);
-      if (s.feedback) setFeedback(s.feedback as typeof feedback);
+  useGameResume(
+    progress.loaded,
+    progress.hasSavedProgress,
+    progress.gameState,
+    (s) => {
+      if (s.index !== undefined) {
+        setIndex(s.index as number);
+        if (s.options) setOptions(s.options as string[]);
+        setAnswered(!!s.answered);
+        if (s.feedback) setFeedback(s.feedback as typeof feedback);
+      }
+    },
+    () => {
+      const nextIndex = (progress.gameState.index as number) + 1;
+      const nextOptions = shuffleArray([...COLORS_NUMBERS[nextIndex % COLORS_NUMBERS.length].options]);
+      setIndex(nextIndex);
+      setOptions(nextOptions);
+      setFeedback(null);
+      setAnswered(false);
+      progress.setRound((r) => r + 1);
+      progress.save({
+        round: progress.round + 1,
+        state: { index: nextIndex, options: nextOptions, answered: false, feedback: null },
+      });
     }
-  });
+  );
 
   const item = COLORS_NUMBERS[index % COLORS_NUMBERS.length];
 
@@ -96,7 +114,13 @@ export default function ColorsNumbersPage() {
       <GameShell title={gameTitle("english-beginners", "colors-numbers")} emoji="🌈">
         {progress.resumed && <ResumeNotice onDismiss={progress.dismissResume} />}
 
-        <ScoreBoard score={progress.score} streak={progress.streak} total={progress.round} />
+        <GameProgressBar
+          score={progress.score}
+          streak={progress.streak}
+          round={progress.round}
+          correct={progress.correct}
+          wrong={progress.wrong}
+        />
 
         <div className="bg-white/90 rounded-3xl p-8 shadow-lg border-2 border-green-100 mb-6 text-center">
           <span className="text-6xl">{item.emoji}</span>

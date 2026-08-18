@@ -1,10 +1,10 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { useRestoreGameState } from "@/hooks/useRestoreGameState";
+import { useGameResume } from "@/hooks/useGameResume";
 import { BackButton } from "@/components/BackButton";
 import { GameShell } from "@/components/GameShell";
-import { ScoreBoard } from "@/components/ScoreBoard";
+import { GameProgressBar } from "@/components/GameProgressBar";
 import { Feedback } from "@/components/Feedback";
 import { ResumeNotice } from "@/components/ResumeNotice";
 import { useGameProgress } from "@/hooks/useGameProgress";
@@ -28,14 +28,31 @@ export default function MysteryPage() {
   } | null>(null);
   const [answered, setAnswered] = useState(false);
   const [showHint, setShowHint] = useState(false);
-  useRestoreGameState(progress.loaded, progress.resumed, progress.gameState, (s) => {
-    if (s.round) {
-      setRound(s.round as ReturnType<typeof newRound>);
-      setAnswered(!!s.answered);
-      setShowHint(!!s.showHint);
-      if (s.feedback) setFeedback(s.feedback as typeof feedback);
+  useGameResume(
+    progress.loaded,
+    progress.hasSavedProgress,
+    progress.gameState,
+    (s) => {
+      if (s.round) {
+        setRound(s.round as ReturnType<typeof newRound>);
+        setAnswered(!!s.answered);
+        setShowHint(!!s.showHint);
+        if (s.feedback) setFeedback(s.feedback as typeof feedback);
+      }
+    },
+    () => {
+      progress.setRound((r) => r + 1);
+      const newR = newRound();
+      setRound(newR);
+      setFeedback(null);
+      setAnswered(false);
+      setShowHint(false);
+      progress.save({
+        round: progress.round + 1,
+        state: { round: newR, answered: false, feedback: null, showHint: false },
+      });
     }
-  });
+  );
 
   const correct = question.answer;
 
@@ -101,7 +118,13 @@ export default function MysteryPage() {
       <GameShell title={gameTitle("math", "mystery")} emoji="🔍">
         {progress.resumed && <ResumeNotice onDismiss={progress.dismissResume} />}
 
-        <ScoreBoard score={progress.score} streak={progress.streak} total={progress.round} />
+        <GameProgressBar
+          score={progress.score}
+          streak={progress.streak}
+          round={progress.round}
+          correct={progress.correct}
+          wrong={progress.wrong}
+        />
 
         <div className="bg-white/90 rounded-3xl p-8 shadow-lg border-2 border-purple-100 mb-6">
           <p className="text-xl font-medium text-gray-800 mb-3">{question.text}</p>

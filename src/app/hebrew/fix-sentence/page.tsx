@@ -1,10 +1,10 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { useRestoreGameState } from "@/hooks/useRestoreGameState";
+import { useGameResume } from "@/hooks/useGameResume";
 import { BackButton } from "@/components/BackButton";
 import { GameShell } from "@/components/GameShell";
-import { ScoreBoard } from "@/components/ScoreBoard";
+import { GameProgressBar } from "@/components/GameProgressBar";
 import { Feedback } from "@/components/Feedback";
 import { ResumeNotice } from "@/components/ResumeNotice";
 import { useGameProgress } from "@/hooks/useGameProgress";
@@ -21,13 +21,29 @@ export default function FixSentencePage() {
     explanation?: string;
   } | null>(null);
   const [answered, setAnswered] = useState(false);
-  useRestoreGameState(progress.loaded, progress.resumed, progress.gameState, (s) => {
-    if (s.index !== undefined) {
-      setIndex(s.index as number);
-      setAnswered(!!s.answered);
-      if (s.feedback) setFeedback(s.feedback as typeof feedback);
+  useGameResume(
+    progress.loaded,
+    progress.hasSavedProgress,
+    progress.gameState,
+    (s) => {
+      if (s.index !== undefined) {
+        setIndex(s.index as number);
+        setAnswered(!!s.answered);
+        if (s.feedback) setFeedback(s.feedback as typeof feedback);
+      }
+    },
+    () => {
+      const nextIndex = (progress.gameState.index as number) + 1;
+      setIndex(nextIndex);
+      setFeedback(null);
+      setAnswered(false);
+      progress.setRound((r) => r + 1);
+      progress.save({
+        round: progress.round + 1,
+        state: { index: nextIndex, answered: false, feedback: null },
+      });
     }
-  });
+  );
 
   const question = FIX_SENTENCES[index % FIX_SENTENCES.length];
 
@@ -96,7 +112,13 @@ export default function FixSentencePage() {
       <GameShell title={gameTitle("hebrew", "fix-sentence")} emoji="✏️" contentDir="rtl">
         {progress.resumed && <ResumeNotice onDismiss={progress.dismissResume} />}
 
-        <ScoreBoard score={progress.score} streak={progress.streak} total={progress.round} />
+        <GameProgressBar
+          score={progress.score}
+          streak={progress.streak}
+          round={progress.round}
+          correct={progress.correct}
+          wrong={progress.wrong}
+        />
 
         <div className="bg-white/90 rounded-3xl p-8 shadow-lg border-2 border-blue-100 mb-4 text-center">
           <p className="text-sm text-blue-500 font-medium mb-3">{t("games.findMistake")}</p>

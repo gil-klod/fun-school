@@ -1,10 +1,10 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { useRestoreGameState } from "@/hooks/useRestoreGameState";
+import { useGameResume } from "@/hooks/useGameResume";
 import { BackButton } from "@/components/BackButton";
 import { GameShell } from "@/components/GameShell";
-import { ScoreBoard } from "@/components/ScoreBoard";
+import { GameProgressBar } from "@/components/GameProgressBar";
 import { Feedback } from "@/components/Feedback";
 import { ResumeNotice } from "@/components/ResumeNotice";
 import { useGameProgress } from "@/hooks/useGameProgress";
@@ -26,13 +26,29 @@ export default function ShukPage() {
     message: string;
   } | null>(null);
   const [answered, setAnswered] = useState(false);
-  useRestoreGameState(progress.loaded, progress.resumed, progress.gameState, (s) => {
-    if (s.round) {
-      setRound(s.round as ReturnType<typeof newChallenge>);
-      setAnswered(!!s.answered);
-      if (s.feedback) setFeedback(s.feedback as typeof feedback);
+  useGameResume(
+    progress.loaded,
+    progress.hasSavedProgress,
+    progress.gameState,
+    (s) => {
+      if (s.round) {
+        setRound(s.round as ReturnType<typeof newChallenge>);
+        setAnswered(!!s.answered);
+        if (s.feedback) setFeedback(s.feedback as typeof feedback);
+      }
+    },
+    () => {
+      progress.setRound((r) => r + 1);
+      const newR = newChallenge();
+      setRound(newR);
+      setFeedback(null);
+      setAnswered(false);
+      progress.save({
+        round: progress.round + 1,
+        state: { round: newR, answered: false, feedback: null },
+      });
     }
-  });
+  );
 
   const correct = challenge.change;
 
@@ -100,7 +116,13 @@ export default function ShukPage() {
       <GameShell title={gameTitle("math", "shuk")} emoji="🛒">
         {progress.resumed && <ResumeNotice onDismiss={progress.dismissResume} />}
 
-        <ScoreBoard score={progress.score} streak={progress.streak} total={progress.round} />
+        <GameProgressBar
+          score={progress.score}
+          streak={progress.streak}
+          round={progress.round}
+          correct={progress.correct}
+          wrong={progress.wrong}
+        />
 
         <div className="bg-white/90 rounded-3xl p-6 shadow-lg border-2 border-amber-100 mb-6">
           <p className="text-lg font-semibold text-amber-700 mb-4">{t("games.shoppingList")}</p>

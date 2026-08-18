@@ -1,23 +1,39 @@
 export interface HebrewWord {
   word: string;
-  hint: string;
-  category: string;
+  hintHe: string;
+  hintEn: string;
+  categoryHe: string;
+  categoryEn: string;
 }
 
 export const HEBREW_WORDS: HebrewWord[] = [
-  { word: "ספר", hint: "Something you read", category: "school" },
-  { word: "בית", hint: "Where you live", category: "home" },
-  { word: "כלב", hint: "A pet that barks", category: "animals" },
-  { word: "שמש", hint: "Shines in the sky", category: "nature" },
-  { word: "ילד", hint: "A young person", category: "people" },
-  { word: "מים", hint: "You drink this", category: "nature" },
-  { word: "פרח", hint: "Grows in a garden", category: "nature" },
-  { word: "עוגה", hint: "Sweet birthday food", category: "food" },
-  { word: "חלום", hint: "What you see when sleeping", category: "abstract" },
-  { word: "ידיד", hint: "Someone you play with", category: "people" },
-  { word: "כדור", hint: "Round thing you kick", category: "sports" },
-  { word: "מורה", hint: "Teaches at school", category: "school" },
+  { word: "ספר", hintHe: "משהו שקוראים", hintEn: "Something you read", categoryHe: "בית ספר", categoryEn: "school" },
+  { word: "בית", hintHe: "המקום שגרים בו", hintEn: "Where you live", categoryHe: "בית", categoryEn: "home" },
+  { word: "כלב", hintHe: "חיה שמנבחת", hintEn: "A pet that barks", categoryHe: "בעלי חיים", categoryEn: "animals" },
+  { word: "שמש", hintHe: "זורחת בשמיים", hintEn: "Shines in the sky", categoryHe: "טבע", categoryEn: "nature" },
+  { word: "ילד", hintHe: "אדם צעיר", hintEn: "A young person", categoryHe: "אנשים", categoryEn: "people" },
+  { word: "מים", hintHe: "שותים את זה", hintEn: "You drink this", categoryHe: "טבע", categoryEn: "nature" },
+  { word: "פרח", hintHe: "גדל בגינה", hintEn: "Grows in a garden", categoryHe: "טבע", categoryEn: "nature" },
+  { word: "עוגה", hintHe: "מאכל מתוק ליום הולדת", hintEn: "Sweet birthday food", categoryHe: "אוכל", categoryEn: "food" },
+  { word: "חלום", hintHe: "מה שרואים בשנת לילה", hintEn: "What you see when sleeping", categoryHe: "מחשבה", categoryEn: "abstract" },
+  { word: "ידיד", hintHe: "מישהו שמשחקים איתו", hintEn: "Someone you play with", categoryHe: "אנשים", categoryEn: "people" },
+  { word: "כדור", hintHe: "דבר עגול שבועטים", hintEn: "Round thing you kick", categoryHe: "ספורט", categoryEn: "sports" },
+  { word: "מורה", hintHe: "מלמד/ת בבית ספר", hintEn: "Teaches at school", categoryHe: "בית ספר", categoryEn: "school" },
 ];
+
+export function getWordHint(word: HebrewWord, locale: "he" | "en") {
+  return locale === "he" ? word.hintHe : word.hintEn;
+}
+
+export function getWordCategory(word: HebrewWord, locale: "he" | "en") {
+  return locale === "he" ? word.categoryHe : word.categoryEn;
+}
+
+export function pickWord(exclude: string[] = []): HebrewWord {
+  const pool = HEBREW_WORDS.filter((w) => !exclude.includes(w.word));
+  const list = pool.length > 0 ? pool : HEBREW_WORDS;
+  return list[Math.floor(Math.random() * list.length)];
+}
 
 export function scrambleWord(word: string): string {
   const chars = word.split("");
@@ -27,6 +43,11 @@ export function scrambleWord(word: string): string {
   }
   const scrambled = chars.join("");
   return scrambled === word ? scrambleWord(word) : scrambled;
+}
+
+export function newScrambleWord(exclude: string[] = []) {
+  const w = pickWord(exclude);
+  return { ...w, scrambled: scrambleWord(w.word) };
 }
 
 export interface FixSentenceQuestion {

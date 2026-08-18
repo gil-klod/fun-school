@@ -1,56 +1,83 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { useRestoreGameState } from "@/hooks/useRestoreGameState";
+import { useGameResume } from "@/hooks/useGameResume";
 import { BackButton } from "@/components/BackButton";
 import { GameShell } from "@/components/GameShell";
-import { ScoreBoard } from "@/components/ScoreBoard";
+import { GameProgressBar } from "@/components/GameProgressBar";
 import { Feedback } from "@/components/Feedback";
 import { ResumeNotice } from "@/components/ResumeNotice";
 import { useGameProgress } from "@/hooks/useGameProgress";
 import { useLocale } from "@/i18n/LocaleProvider";
-import { HEBREW_WORDS, scrambleWord } from "@/lib/data/hebrew";
+import {
+  newScrambleWord,
+  getWordHint,
+  getWordCategory,
+  type HebrewWord,
+} from "@/lib/data/hebrew";
 
-function pickWord() {
-  return HEBREW_WORDS[Math.floor(Math.random() * HEBREW_WORDS.length)];
-}
-
-function newWordData() {
-  const w = pickWord();
-  return { ...w, scrambled: scrambleWord(w.word) };
-}
+type WordData = HebrewWord & { scrambled: string };
 
 export default function ScramblePage() {
-  const { t, gameTitle } = useLocale();
+  const { t, gameTitle, locale } = useLocale();
   const progress = useGameProgress({ subjectId: "hebrew", gameId: "scramble" });
-  const [wordData, setWordData] = useState(() => newWordData());
+  const [usedWords, setUsedWords] = useState<string[]>([]);
+  const [wordData, setWordData] = useState<WordData>(() => newScrambleWord());
   const [guess, setGuess] = useState("");
   const [feedback, setFeedback] = useState<{
     type: "correct" | "wrong";
     message: string;
   } | null>(null);
   const [answered, setAnswered] = useState(false);
-  useRestoreGameState(progress.loaded, progress.resumed, progress.gameState, (s) => {
-    if (s.wordData) {
-      setWordData(s.wordData as ReturnType<typeof newWordData>);
-      setGuess((s.guess as string) ?? "");
-      setAnswered(!!s.answered);
-      if (s.feedback) setFeedback(s.feedback as typeof feedback);
-    }
-  });
+
+  const advanceToNext = useCallback(
+    (currentUsed: string[]) => {
+      const w = newScrambleWord(currentUsed);
+      setWordData(w);
+      setGuess("");
+      setFeedback(null);
+      setAnswered(false);
+      progress.save({
+        state: { wordData: w, usedWords: currentUsed, guess: "", answered: false, feedback: null },
+      });
+    },
+    [progress]
+  );
 
   const nextWord = useCallback(() => {
-    const w = newWordData();
-    setWordData(w);
-    setGuess("");
-    setFeedback(null);
-    setAnswered(false);
+    const used = usedWords.includes(wordData.word)
+      ? usedWords
+      : [...usedWords, wordData.word];
+    setUsedWords(used);
     progress.setRound((r) => r + 1);
-    progress.save({
-      round: progress.round + 1,
-      state: { wordData: w, guess: "", answered: false, feedback: null },
-    });
-  }, [progress]);
+    progress.save({ round: progress.round + 1 });
+    advanceToNext(used);
+  }, [usedWords, wordData.word, progress, advanceToNext]);
+
+  useGameResume(
+    progress.loaded,
+    progress.hasSavedProgress,
+    progress.gameState,
+    (s) => {
+      const used = (s.usedWords as string[]) ?? [];
+      setUsedWords(used);
+      if (s.wordData) {
+        setWordData(s.wordData as WordData);
+        setGuess((s.guess as string) ?? "");
+        setAnswered(!!s.answered);
+        if (s.feedback) setFeedback(s.feedback as typeof feedback);
+      }
+    },
+    () => {
+      const used = (progress.gameState.usedWords as string[]) ?? [];
+      const lastWord = (progress.gameState.wordData as WordData | undefined)?.word;
+      const updatedUsed =
+        lastWord && !used.includes(lastWord) ? [...used, lastWord] : used;
+      setUsedWords(updatedUsed);
+      progress.setRound((r) => r + 1);
+      advanceToNext(updatedUsed);
+    }
+  );
 
   const checkAnswer = () => {
     if (answered || !guess.trim()) return;
@@ -67,7 +94,7 @@ export default function ScramblePage() {
         score: progress.score + pts,
         streak: progress.streak + 1,
         correct: progress.correct + 1,
-        state: { wordData, guess, answered: true, feedback: fb },
+        state: { wordData, usedWords, guess, answered: true, feedback: fb },
       });
     } else {
       progress.setStreak(0);
@@ -80,7 +107,7 @@ export default function ScramblePage() {
       progress.save({
         streak: 0,
         wrong: progress.wrong + 1,
-        state: { wordData, guess, answered: true, feedback: fb },
+        state: { wordData, usedWords, guess, answered: true, feedback: fb },
       });
     }
   };
@@ -100,15 +127,25 @@ export default function ScramblePage() {
       <GameShell title={gameTitle("hebrew", "scramble")} emoji="🔤" contentDir="rtl">
         {progress.resumed && <ResumeNotice onDismiss={progress.dismissResume} />}
 
-        <ScoreBoard score={progress.score} streak={progress.streak} total={progress.round} />
+        <GameProgressBar
+          score={progress.score}
+          streak={progress.streak}
+          round={progress.round}
+          correct={progress.correct}
+          wrong={progress.wrong}
+        />
 
         <div className="bg-white/90 rounded-3xl p-8 shadow-lg border-2 border-blue-100 mb-6 text-center">
           <p className="text-sm text-blue-500 font-medium mb-2">{t("games.unscramble")}</p>
           <p className="text-5xl font-extrabold text-blue-700 tracking-widest mb-4">
             {wordData.scrambled.split("").join(" ")}
           </p>
-          <p className="text-gray-500">Hint: {wordData.hint}</p>
-          <p className="text-sm text-gray-400 mt-1">Category: {wordData.category}</p>
+          <p className="text-gray-500">
+            {t("games.hint")}: {getWordHint(wordData, locale)}
+          </p>
+          <p className="text-sm text-gray-400 mt-1">
+            {t("games.category")}: {getWordCategory(wordData, locale)}
+          </p>
         </div>
 
         <input

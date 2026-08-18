@@ -32,6 +32,11 @@ export interface Dictionary {
     refresh: string;
     updating: string;
   };
+  progress: {
+    correct: string;
+    wrong: string;
+    accuracy: string;
+  };
   nav: {
     myProgress: string;
     hi: string;
@@ -108,6 +113,8 @@ export interface Dictionary {
     correctSentence: string;
     unscramble: string;
     writeWord: string;
+    hint: string;
+    category: string;
     tapWords: string;
     checkSentence: string;
     whichIsWrong: string;
@@ -133,5 +140,7 @@ export interface Dictionary {
     colorsWrong: string;
     storyCorrect: string;
     storyWrong: string;
+    vocabPromptHeToEn: string;
+    vocabPromptEnToHe: string;
   };
 }
