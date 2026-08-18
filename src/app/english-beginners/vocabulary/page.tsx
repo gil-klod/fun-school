@@ -218,7 +218,7 @@ function VocabularyPlay({
 
 export default function VocabularyPage() {
   const session = useGameSession("english-beginners", "vocabulary");
-  const { ready, content, contentLoading, contentError, difficulty, changeDifficulty, progress } =
+  const { ready, content, contentError, difficulty, changeDifficulty, progress } =
     session;
 
   const vocab = useMemo(
@@ -231,7 +231,7 @@ export default function VocabularyPage() {
 
   if (!ready || vocab.length === 0) {
     return (
-      <GameContentGate loading={!ready || contentLoading || vocab.length === 0} error={contentError}>
+      <GameContentGate loading={!ready || vocab.length === 0} error={contentError}>
         {null}
       </GameContentGate>
     );

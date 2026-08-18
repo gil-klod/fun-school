@@ -198,7 +198,7 @@ function ScramblePlay({
 
 export default function ScramblePage() {
   const session = useGameSession("hebrew", "scramble");
-  const { ready, content, contentLoading, contentError, difficulty, changeDifficulty, progress } =
+  const { ready, content, contentError, difficulty, changeDifficulty, progress } =
     session;
 
   const words = useMemo(
@@ -211,7 +211,7 @@ export default function ScramblePage() {
 
   if (!ready || words.length === 0) {
     return (
-      <GameContentGate loading={!ready || contentLoading || words.length === 0} error={contentError}>
+      <GameContentGate loading={!ready || words.length === 0} error={contentError}>
         {null}
       </GameContentGate>
     );

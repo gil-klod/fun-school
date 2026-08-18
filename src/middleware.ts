@@ -12,7 +12,8 @@ export default auth((req) => {
   const isPublic =
     publicPaths.some((p) => pathname.startsWith(p)) ||
     pathname.startsWith("/api/auth") ||
-    pathname.startsWith("/api/admin");
+    pathname.startsWith("/api/admin") ||
+    pathname.startsWith("/api/content");
 
   if (!isLoggedIn && !isPublic) {
     if (pathname.startsWith("/api/")) {

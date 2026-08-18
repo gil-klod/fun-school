@@ -203,7 +203,7 @@ function ShukPlay({
 
 export default function ShukPage() {
   const session = useGameSession("math", "shuk");
-  const { ready, content, contentLoading, contentError, difficulty, changeDifficulty, progress } =
+  const { ready, content, contentError, difficulty, changeDifficulty, progress } =
     session;
 
   const items = useMemo(
@@ -222,7 +222,7 @@ export default function ShukPage() {
   if (!ready || !config || items.length === 0) {
     return (
       <GameContentGate
-        loading={!ready || contentLoading || !config || items.length === 0}
+        loading={!ready || !config || items.length === 0}
         error={contentError}
       >
         {null}

@@ -230,7 +230,7 @@ function QuizGamePlay({
 export function QuizGame(props: QuizGameProps) {
   const { subjectId, gameId } = props;
   const session = useGameSession(subjectId, gameId);
-  const { content, contentLoading, contentError, ready, difficulty, changeDifficulty, progress } =
+  const { content, contentError, ready, difficulty, changeDifficulty, progress } =
     session;
 
   const questions = useMemo(
@@ -244,7 +244,7 @@ export function QuizGame(props: QuizGameProps) {
   if (!ready || questions.length === 0) {
     return (
       <GameContentGate
-        loading={!ready || contentLoading || questions.length === 0}
+        loading={!ready || questions.length === 0}
         error={contentError}
       >
         {null}

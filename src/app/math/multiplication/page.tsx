@@ -207,7 +207,7 @@ function MultiplicationPlay({
 
 export default function MultiplicationPage() {
   const session = useGameSession("math", "multiplication");
-  const { ready, content, contentLoading, contentError, difficulty, changeDifficulty, progress } =
+  const { ready, content, contentError, difficulty, changeDifficulty, progress } =
     session;
 
   const config = useMemo(
@@ -217,7 +217,7 @@ export default function MultiplicationPage() {
 
   if (!ready || !config) {
     return (
-      <GameContentGate loading={!ready || contentLoading || !config} error={contentError}>
+      <GameContentGate loading={!ready || !config} error={contentError}>
         {null}
       </GameContentGate>
     );

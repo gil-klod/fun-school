@@ -26,6 +26,6 @@ export function useGameSession(subjectId: string, gameId: string) {
     content,
     contentLoading,
     contentError,
-    ready: progress.loaded && !contentLoading && !!content,
+    ready: progress.loaded && !!content,
   };
 }

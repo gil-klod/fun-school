@@ -34,7 +34,7 @@ export const he: Dictionary = {
     "3": "קשה",
   },
   content: {
-    seedHint: "מנהל המערכת צריך להריץ seed לתוכן המשחקים.",
+    seedHint: "לך ל-/admin ולחץ על \"טען משחקי ברירת מחדל\".",
   },
   nav: {
     myProgress: "ההתקדמות שלי",

@@ -34,7 +34,7 @@ export const en: Dictionary = {
     "3": "Hard",
   },
   content: {
-    seedHint: "An admin needs to run the content seed for game data.",
+    seedHint: "Go to /admin and click \"Load default games\".",
   },
   nav: {
     myProgress: "My Progress",

@@ -21,6 +21,8 @@ interface UseGameProgressOptions {
   defaultState?: Record<string, unknown>;
 }
 
+const EMPTY_GAME_STATE: Record<string, unknown> = {};
+
 const emptyProgress = (defaultState: Record<string, unknown>): ProgressData => ({
   score: 0,
   streak: 0,
@@ -35,7 +37,7 @@ export function useGameProgress({
   subjectId,
   gameId,
   difficulty,
-  defaultState = {},
+  defaultState = EMPTY_GAME_STATE,
 }: UseGameProgressOptions) {
   const [loaded, setLoaded] = useState(false);
   const [hasSavedProgress, setHasSavedProgress] = useState(false);
@@ -65,7 +67,6 @@ export function useGameProgress({
 
   useEffect(() => {
     let cancelled = false;
-    setLoaded(false);
 
     async function load() {
       try {

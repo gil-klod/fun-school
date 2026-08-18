@@ -266,7 +266,7 @@ function HebrewComprehensionPlay({
 
 export default function HebrewComprehensionPage() {
   const session = useGameSession("hebrew", "comprehension");
-  const { ready, content, contentLoading, contentError, difficulty, changeDifficulty, progress } =
+  const { ready, content, contentError, difficulty, changeDifficulty, progress } =
     session;
 
   const stories = useMemo(
@@ -279,7 +279,7 @@ export default function HebrewComprehensionPage() {
 
   if (!ready || stories.length === 0) {
     return (
-      <GameContentGate loading={!ready || contentLoading || stories.length === 0} error={contentError}>
+      <GameContentGate loading={!ready || stories.length === 0} error={contentError}>
         {null}
       </GameContentGate>
     );

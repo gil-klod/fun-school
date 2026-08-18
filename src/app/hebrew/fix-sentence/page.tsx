@@ -194,7 +194,7 @@ function FixSentencePlay({
 
 export default function FixSentencePage() {
   const session = useGameSession("hebrew", "fix-sentence");
-  const { ready, content, contentLoading, contentError, difficulty, changeDifficulty, progress } =
+  const { ready, content, contentError, difficulty, changeDifficulty, progress } =
     session;
 
   const sentences = useMemo(
@@ -208,7 +208,7 @@ export default function FixSentencePage() {
   if (!ready || sentences.length === 0) {
     return (
       <GameContentGate
-        loading={!ready || contentLoading || sentences.length === 0}
+        loading={!ready || sentences.length === 0}
         error={contentError}
       >
         {null}

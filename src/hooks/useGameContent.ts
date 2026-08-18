@@ -14,8 +14,8 @@ export function useGameContent(
 
   useEffect(() => {
     let cancelled = false;
-    setLoading(true);
     setError(null);
+    setLoading(true);
 
     fetch(
       `/api/content?subjectId=${encodeURIComponent(subjectId)}&gameId=${encodeURIComponent(gameId)}&difficulty=${difficulty}`

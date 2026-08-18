@@ -208,7 +208,7 @@ function MysteryPlay({
 
 export default function MysteryPage() {
   const session = useGameSession("math", "mystery");
-  const { ready, content, contentLoading, contentError, difficulty, changeDifficulty, progress } =
+  const { ready, content, contentError, difficulty, changeDifficulty, progress } =
     session;
 
   const templates = useMemo(
@@ -227,7 +227,7 @@ export default function MysteryPage() {
   if (!ready || !config || templates.length === 0) {
     return (
       <GameContentGate
-        loading={!ready || contentLoading || !config || templates.length === 0}
+        loading={!ready || !config || templates.length === 0}
         error={contentError}
       >
         {null}

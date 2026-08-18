@@ -283,7 +283,7 @@ function SentencesPlay({
 
 export default function SentencesPage() {
   const session = useGameSession("english-beginners", "sentences");
-  const { ready, content, contentLoading, contentError, difficulty, changeDifficulty, progress } =
+  const { ready, content, contentError, difficulty, changeDifficulty, progress } =
     session;
 
   const challenges = useMemo(
@@ -297,7 +297,7 @@ export default function SentencesPage() {
   if (!ready || challenges.length === 0) {
     return (
       <GameContentGate
-        loading={!ready || contentLoading || challenges.length === 0}
+        loading={!ready || challenges.length === 0}
         error={contentError}
       >
         {null}

@@ -23,7 +23,7 @@ interface ColorNumberItem {
 
 export default function ColorsNumbersPage() {
   const { t, gameTitle, locale } = useLocale();
-  const { difficulty, changeDifficulty, progress, content, contentLoading, contentError, ready } =
+  const { difficulty, changeDifficulty, progress, content, contentError, ready } =
     useGameSession("english-beginners", "colors-numbers");
 
   const items = useMemo(
@@ -133,7 +133,7 @@ export default function ColorsNumbersPage() {
   if (!ready || items.length === 0 || !item) {
     return (
       <GameContentGate
-        loading={!ready || contentLoading || items.length === 0}
+        loading={!ready || items.length === 0}
         error={contentError}
       >
         {null}
