@@ -110,7 +110,7 @@ export default function MultiplicationPage() {
         )}
 
         {answered && (
-          <button onClick={nextQuestion} className="game-btn game-btn-primary w-full">
+          <button onClick={() => nextQuestion()} className="game-btn game-btn-primary w-full">
             Next Question →
           </button>
         )}
