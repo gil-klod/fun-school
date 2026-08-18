@@ -47,6 +47,7 @@ export interface MysteryQuestion {
   textHe: string;
   answer: number;
   hint: string;
+  hintHe: string;
 }
 
 export const MYSTERY_TEMPLATES: Omit<MysteryQuestion, "answer">[] = [
@@ -54,18 +55,29 @@ export const MYSTERY_TEMPLATES: Omit<MysteryQuestion, "answer">[] = [
     text: "I multiplied a number by {n} and got {result}. What is the number?",
     textHe: "הכפלתי מספר ב-{n} וקיבלתי {result}. מה המספר?",
     hint: "Divide {result} by {n}",
+    hintHe: "חלק {result} ב-{n}",
   },
   {
     text: "I added {n} to a number and got {result}. What is the number?",
     textHe: "הוספתי {n} למספר וקיבלתי {result}. מה המספר?",
     hint: "Subtract {n} from {result}",
+    hintHe: "חסר {n} מ-{result}",
   },
   {
     text: "I subtracted {n} from a number and got {result}. What is the number?",
     textHe: "חיסרתי {n} ממספר וקיבלתי {result}. מה המספר?",
     hint: "Add {n} to {result}",
+    hintHe: "הוסף {n} ל-{result}",
   },
 ];
+
+export function getMysteryText(question: MysteryQuestion, locale: "he" | "en"): string {
+  return locale === "he" ? question.textHe : question.text;
+}
+
+export function getMysteryHint(question: MysteryQuestion, locale: "he" | "en"): string {
+  return locale === "he" ? (question.hintHe ?? question.hint) : question.hint;
+}
 
 export function generateMystery(): MysteryQuestion {
   const template = MYSTERY_TEMPLATES[Math.floor(Math.random() * MYSTERY_TEMPLATES.length)];
@@ -91,6 +103,7 @@ export function generateMystery(): MysteryQuestion {
     textHe: fill(template.textHe),
     answer,
     hint: fill(template.hint),
+    hintHe: fill(template.hintHe),
   };
 }
 

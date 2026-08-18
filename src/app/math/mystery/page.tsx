@@ -9,7 +9,7 @@ import { Feedback } from "@/components/Feedback";
 import { SESSION_SIZE, sessionQuestion } from "@/lib/session";
 import { useGameProgress } from "@/hooks/useGameProgress";
 import { useLocale } from "@/i18n/LocaleProvider";
-import { generateMystery, buildOptions } from "@/lib/data/math";
+import { generateMystery, buildOptions, getMysteryText, getMysteryHint } from "@/lib/data/math";
 
 function newRound() {
   const q = generateMystery();
@@ -17,7 +17,7 @@ function newRound() {
 }
 
 export default function MysteryPage() {
-  const { t, gameTitle } = useLocale();
+  const { t, gameTitle, locale } = useLocale();
   const progress = useGameProgress({ subjectId: "math", gameId: "mystery" });
   const [round, setRound] = useState(() => newRound());
   const { question, options } = round;
@@ -92,7 +92,7 @@ export default function MysteryPage() {
       const fb = {
         type: "wrong" as const,
         message: t("games.mysteryWrong", { answer: correct }),
-        explanation: question.hint,
+        explanation: getMysteryHint(question, locale),
       };
       setFeedback(fb);
       progress.save({
@@ -116,11 +116,8 @@ export default function MysteryPage() {
           score={progress.score}
         />
 
-        <div className="bg-white/90 rounded-3xl p-5 shadow-lg border-2 border-purple-100 mb-4">
-          <p className="text-xl font-medium text-gray-800 mb-3">{question.text}</p>
-          <p className="text-lg text-gray-600" dir="rtl">
-            {question.textHe}
-          </p>
+        <div className="bg-white/90 rounded-2xl p-4 shadow border-2 border-purple-100 mb-3">
+          <p className="text-lg font-medium text-gray-800">{getMysteryText(question, locale)}</p>
         </div>
 
         {!showHint && !answered && (
@@ -136,7 +133,7 @@ export default function MysteryPage() {
         )}
         {showHint && !answered && (
           <div className="mb-4">
-            <Feedback type="info" message={question.hint} />
+            <Feedback type="info" message={getMysteryHint(question, locale)} />
           </div>
         )}
 
