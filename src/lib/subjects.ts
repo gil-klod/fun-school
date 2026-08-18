@@ -1,0 +1,148 @@
+import type { SubjectInfo } from "./types";
+
+export const subjects: SubjectInfo[] = [
+  {
+    id: "math",
+    title: "Math",
+    titleHe: "חִשּׁוּב",
+    emoji: "🔢",
+    color: "bg-amber-100",
+    borderColor: "border-amber-400",
+    href: "/math",
+    games: [
+      {
+        id: "multiplication",
+        title: "Multiplication Boss",
+        titleHe: "בוס הכפל",
+        description: "Beat the times-table bosses!",
+        emoji: "⚔️",
+        href: "/math/multiplication",
+      },
+      {
+        id: "shuk",
+        title: "Shuk Challenge",
+        titleHe: "אתגר השוק",
+        description: "Shop with shekels and calculate change!",
+        emoji: "🛒",
+        href: "/math/shuk",
+      },
+      {
+        id: "mystery",
+        title: "Mystery Number",
+        titleHe: "מספר מסתורי",
+        description: "Find the hidden number!",
+        emoji: "🔍",
+        href: "/math/mystery",
+      },
+    ],
+  },
+  {
+    id: "hebrew",
+    title: "Hebrew",
+    titleHe: "עִבְרִית",
+    emoji: "📖",
+    color: "bg-blue-100",
+    borderColor: "border-blue-400",
+    href: "/hebrew",
+    games: [
+      {
+        id: "scramble",
+        title: "Word Scramble",
+        titleHe: "ערבוב אותיות",
+        description: "Unscramble Hebrew words!",
+        emoji: "🔤",
+        href: "/hebrew/scramble",
+      },
+      {
+        id: "fix-sentence",
+        title: "Fix the Sentence",
+        titleHe: "תקן את המשפט",
+        description: "Find and fix the mistake!",
+        emoji: "✏️",
+        href: "/hebrew/fix-sentence",
+      },
+      {
+        id: "comprehension",
+        title: "Story Detective",
+        titleHe: "בלש הסיפורים",
+        description: "Answer questions about a short story!",
+        emoji: "🕵️",
+        href: "/hebrew/comprehension",
+      },
+    ],
+  },
+  {
+    id: "english-beginners",
+    title: "English (Beginners)",
+    titleHe: "אַנְגְּלִית (מתחילים)",
+    emoji: "🌱",
+    color: "bg-green-100",
+    borderColor: "border-green-400",
+    href: "/english-beginners",
+    games: [
+      {
+        id: "vocabulary",
+        title: "Word Match",
+        titleHe: "התאמת מילים",
+        description: "Match English words to Hebrew!",
+        emoji: "🎯",
+        href: "/english-beginners/vocabulary",
+      },
+      {
+        id: "sentences",
+        title: "Build a Sentence",
+        titleHe: "בנה משפט",
+        description: "Put words in the right order!",
+        emoji: "🧩",
+        href: "/english-beginners/sentences",
+      },
+      {
+        id: "colors-numbers",
+        title: "Colors & Numbers",
+        titleHe: "צבעים ומספרים",
+        description: "Learn basic English words!",
+        emoji: "🌈",
+        href: "/english-beginners/colors-numbers",
+      },
+    ],
+  },
+  {
+    id: "english-natives",
+    title: "English (Advanced)",
+    titleHe: "אַנְגְּלִית (מתקדמים)",
+    emoji: "🚀",
+    color: "bg-pink-100",
+    borderColor: "border-pink-400",
+    href: "/english-natives",
+    games: [
+      {
+        id: "grammar",
+        title: "Grammar Quest",
+        titleHe: "משימת דקדוק",
+        description: "Tenses, plurals, and more!",
+        emoji: "📝",
+        href: "/english-natives/grammar",
+      },
+      {
+        id: "vocabulary",
+        title: "Word Wizard",
+        titleHe: "קוסם המילים",
+        description: "Synonyms, antonyms, and tricky words!",
+        emoji: "🧙",
+        href: "/english-natives/vocabulary",
+      },
+      {
+        id: "comprehension",
+        title: "Reading Challenge",
+        titleHe: "אתגר קריאה",
+        description: "Read and answer — level up!",
+        emoji: "📚",
+        href: "/english-natives/comprehension",
+      },
+    ],
+  },
+];
+
+export function getSubject(id: string): SubjectInfo | undefined {
+  return subjects.find((s) => s.id === id);
+}

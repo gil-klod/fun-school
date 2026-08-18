@@ -1,0 +1,91 @@
+@import "tailwindcss";
+
+:root {
+  --background: #fef9f0;
+  --foreground: #1a1a2e;
+  --primary: #6366f1;
+  --primary-dark: #4f46e5;
+  --success: #22c55e;
+  --warning: #f59e0b;
+  --error: #ef4444;
+  --card-math: #fef3c7;
+  --card-hebrew: #dbeafe;
+  --card-en-begin: #dcfce7;
+  --card-en-native: #fce7f3;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-rubik);
+}
+
+body {
+  background: linear-gradient(135deg, #fef9f0 0%, #e0e7ff 50%, #fef3c7 100%);
+  background-attachment: fixed;
+  color: var(--foreground);
+  font-family: var(--font-rubik), Arial, Helvetica, sans-serif;
+  min-height: 100vh;
+}
+
+[dir="rtl"] {
+  font-family: var(--font-rubik), Arial, Helvetica, sans-serif;
+}
+
+@keyframes bounce-in {
+  0% { transform: scale(0.8); opacity: 0; }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-6px); }
+  75% { transform: translateX(6px); }
+}
+
+@keyframes pop {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.15); }
+  100% { transform: scale(1); }
+}
+
+.animate-bounce-in {
+  animation: bounce-in 0.4s ease-out;
+}
+
+.animate-shake {
+  animation: shake 0.4s ease-in-out;
+}
+
+.animate-pop {
+  animation: pop 0.3s ease-out;
+}
+
+.game-btn {
+  @apply px-6 py-4 rounded-2xl font-bold text-lg transition-all duration-200 shadow-md hover:shadow-lg hover:scale-105 active:scale-95 cursor-pointer;
+}
+
+.game-btn-primary {
+  @apply bg-indigo-500 text-white hover:bg-indigo-600;
+}
+
+.game-btn-success {
+  @apply bg-green-500 text-white hover:bg-green-600;
+}
+
+.game-btn-option {
+  @apply bg-white border-2 border-indigo-200 text-indigo-900 hover:border-indigo-400 hover:bg-indigo-50 px-5 py-3 rounded-xl font-semibold text-base transition-all duration-200 cursor-pointer;
+}
+
+.game-btn-option.selected {
+  @apply border-indigo-500 bg-indigo-100;
+}
+
+.game-btn-option.correct {
+  @apply border-green-500 bg-green-100 text-green-800;
+}
+
+.game-btn-option.wrong {
+  @apply border-red-400 bg-red-50 text-red-800;
+}
