@@ -55,7 +55,15 @@ export interface FixSentenceQuestion {
   correct: string;
   mistake: string;
   options: string[];
-  explanation: string;
+  explanationHe: string;
+  explanationEn: string;
+}
+
+export function getFixSentenceExplanation(
+  question: FixSentenceQuestion,
+  locale: "he" | "en"
+): string {
+  return locale === "he" ? question.explanationHe : question.explanationEn;
 }
 
 export const FIX_SENTENCES: FixSentenceQuestion[] = [
@@ -64,42 +72,48 @@ export const FIX_SENTENCES: FixSentenceQuestion[] = [
     correct: "הילדה אכלה תפוח.",
     mistake: "אכלת",
     options: ["אכלת", "אכל", "אוכל", "אוכלת"],
-    explanation: "אכלת = you (f.) ate. The subject is הילדה (she), so we need אכלה.",
+    explanationHe: "אכלת = את אכלת (לשון נקבה). הנושא הוא הילדה, לכן צריך אכלה.",
+    explanationEn: "אכלת = you (f.) ate. The subject is הילדה (she), so we need אכלה.",
   },
   {
     wrong: "הכלבים רץ בגינה.",
     correct: "הכלבים רצים בגינה.",
     mistake: "רץ",
     options: ["רץ", "רצים", "רצה", "רצות"],
-    explanation: "כלבים is plural, so the verb needs plural form: רצים.",
+    explanationHe: "כלבים הוא רבים, לכן הפועל צריך להיות ברבים: רצים.",
+    explanationEn: "כלבים is plural, so the verb needs plural form: רצים.",
   },
   {
     wrong: "יש לי שלושה ספר.",
     correct: "יש לי שלושה ספרים.",
     mistake: "ספר",
     options: ["ספר", "ספרים", "ספריה", "ספרון"],
-    explanation: "After a number greater than 1, nouns are usually plural: ספרים.",
+    explanationHe: "אחרי מספר גדול מ-1, שם העצם בדרך כלל ברבים: ספרים.",
+    explanationEn: "After a number greater than 1, nouns are usually plural: ספרים.",
   },
   {
     wrong: "אני הולכת לבית הספר אתמול.",
     correct: "אני הלכתי לבית הספר אתמול.",
     mistake: "הולכת",
     options: ["הולכת", "הלכתי", "הולך", "ילך"],
-    explanation: "אתמול = yesterday, so we need past tense: הלכתי.",
+    explanationHe: "אתמול = אתמול, לכן צריך זמן עבר: הלכתי.",
+    explanationEn: "אתמול = yesterday, so we need past tense: הלכתי.",
   },
   {
     wrong: "השמש ירוקה.",
     correct: "השמש צהובה.",
     mistake: "ירוקה",
     options: ["ירוקה", "צהובה", "כחולה", "אדומה"],
-    explanation: "The sun is yellow (צהובה), not green!",
+    explanationHe: "השמש צהובה, לא ירוקה!",
+    explanationEn: "The sun is yellow (צהובה), not green!",
   },
   {
     wrong: "הוא שתית מים.",
     correct: "הוא שתה מים.",
     mistake: "שתית",
     options: ["שתית", "שתה", "שותה", "ישתה"],
-    explanation: "שתית = you drank. For he (הוא) we say שתה.",
+    explanationHe: "שתית = את שתית. עבור הוא (זכר) אומרים שתה.",
+    explanationEn: "שתית = you drank. For he (הוא) we say שתה.",
   },
 ];
 

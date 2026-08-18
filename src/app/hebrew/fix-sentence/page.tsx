@@ -8,10 +8,10 @@ import { GameStatus } from "@/components/GameStatus";
 import { Feedback } from "@/components/Feedback";
 import { useGameProgress } from "@/hooks/useGameProgress";
 import { useLocale } from "@/i18n/LocaleProvider";
-import { FIX_SENTENCES } from "@/lib/data/hebrew";
+import { FIX_SENTENCES, getFixSentenceExplanation } from "@/lib/data/hebrew";
 
 export default function FixSentencePage() {
-  const { t, gameTitle } = useLocale();
+  const { t, gameTitle, locale } = useLocale();
   const progress = useGameProgress({ subjectId: "hebrew", gameId: "fix-sentence" });
   const [index, setIndex] = useState(0);
   const [feedback, setFeedback] = useState<{
@@ -70,7 +70,6 @@ export default function FixSentencePage() {
       const fb = {
         type: "correct" as const,
         message: t("games.fixCorrect"),
-        explanation: question.explanation,
       };
       setFeedback(fb);
       progress.save({
@@ -85,7 +84,6 @@ export default function FixSentencePage() {
       const fb = {
         type: "wrong" as const,
         message: t("games.fixWrong", { mistake: question.mistake }),
-        explanation: question.explanation,
       };
       setFeedback(fb);
       progress.save({
@@ -143,7 +141,7 @@ export default function FixSentencePage() {
             <Feedback
               type={feedback.type}
               message={feedback.message}
-              explanation={feedback.explanation}
+              explanation={getFixSentenceExplanation(question, locale)}
             />
           </div>
         )}
