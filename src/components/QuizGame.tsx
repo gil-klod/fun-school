@@ -5,9 +5,13 @@ import { BackButton } from "@/components/BackButton";
 import { GameShell } from "@/components/GameShell";
 import { ScoreBoard } from "@/components/ScoreBoard";
 import { Feedback } from "@/components/Feedback";
+import { ResumeNotice } from "@/components/ResumeNotice";
+import { useGameProgress } from "@/hooks/useGameProgress";
 import type { QuizQuestion } from "@/lib/types";
 
 interface QuizGameProps {
+  subjectId: string;
+  gameId: string;
   backHref: string;
   title: string;
   titleHe: string;
@@ -15,10 +19,17 @@ interface QuizGameProps {
   questions: QuizQuestion[];
 }
 
-export function QuizGame({ backHref, title, titleHe, emoji, questions }: QuizGameProps) {
+export function QuizGame({
+  subjectId,
+  gameId,
+  backHref,
+  title,
+  titleHe,
+  emoji,
+  questions,
+}: QuizGameProps) {
+  const progress = useGameProgress({ subjectId, gameId });
   const [index, setIndex] = useState(0);
-  const [score, setScore] = useState(0);
-  const [streak, setStreak] = useState(0);
   const [feedback, setFeedback] = useState<{
     type: "correct" | "wrong";
     message: string;
@@ -32,23 +43,36 @@ export function QuizGame({ backHref, title, titleHe, emoji, questions }: QuizGam
   const nextQuestion = useCallback(() => {
     if (index + 1 >= questions.length) {
       setFinished(true);
+      progress.markCompleted();
       return;
     }
     setIndex((i) => i + 1);
     setFeedback(null);
     setAnswered(false);
-  }, [index, questions.length]);
+    progress.setRound((r) => r + 1);
+    progress.save({ round: progress.round + 1, state: { index: index + 1 } });
+  }, [index, questions.length, progress]);
 
   const handleAnswer = (optionIndex: number) => {
     if (answered) return;
     setAnswered(true);
 
     if (optionIndex === question.correctIndex) {
-      setScore((s) => s + 10 + streak);
-      setStreak((s) => s + 1);
+      const pts = 10 + progress.streak;
+      progress.setScore((s) => s + pts);
+      progress.setStreak((s) => s + 1);
+      progress.setCorrect((c) => c + 1);
+      progress.save({
+        score: progress.score + pts,
+        streak: progress.streak + 1,
+        correct: progress.correct + 1,
+        state: { index },
+      });
       setFeedback({ type: "correct", message: "Correct! 🌟" });
     } else {
-      setStreak(0);
+      progress.setStreak(0);
+      progress.setWrong((w) => w + 1);
+      progress.save({ streak: 0, wrong: progress.wrong + 1, state: { index } });
       setFeedback({
         type: "wrong",
         message: `Answer: ${question.options[question.correctIndex]}`,
@@ -57,12 +81,21 @@ export function QuizGame({ backHref, title, titleHe, emoji, questions }: QuizGam
     }
   };
 
+  if (!progress.loaded) {
+    return (
+      <main className="flex-1 px-4 py-8 max-w-2xl mx-auto text-center">
+        <p className="text-gray-500">Loading...</p>
+      </main>
+    );
+  }
+
   return (
     <main className="flex-1 px-4 py-8 max-w-2xl mx-auto w-full">
       <BackButton href={backHref} />
 
       <GameShell title={title} titleHe={titleHe} emoji={emoji}>
-        <ScoreBoard score={score} streak={streak} total={index + 1} />
+        {progress.resumed && <ResumeNotice onDismiss={progress.dismissResume} />}
+        <ScoreBoard score={progress.score} streak={progress.streak} total={index + 1} />
 
         {!finished ? (
           <>
@@ -103,16 +136,18 @@ export function QuizGame({ backHref, title, titleHe, emoji, questions }: QuizGam
           <div className="text-center">
             <Feedback
               type="correct"
-              message={`All done! Final score: ${score} 🏆`}
+              message={`All done! Final score: ${progress.score} 🏆`}
             />
             <button
               onClick={() => {
                 setIndex(0);
-                setScore(0);
-                setStreak(0);
+                progress.setScore(0);
+                progress.setStreak(0);
+                progress.setRound(1);
                 setFinished(false);
                 setFeedback(null);
                 setAnswered(false);
+                progress.save({ score: 0, streak: 0, round: 1, status: "in_progress", state: { index: 0 } });
               }}
               className="game-btn game-btn-primary w-full mt-4"
             >

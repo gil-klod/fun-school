@@ -1,63 +1,104 @@
 "use client";
 
 import { useState, useCallback } from "react";
+import { useRestoreGameState } from "@/hooks/useRestoreGameState";
 import { BackButton } from "@/components/BackButton";
 import { GameShell } from "@/components/GameShell";
 import { ScoreBoard } from "@/components/ScoreBoard";
 import { Feedback } from "@/components/Feedback";
+import { ResumeNotice } from "@/components/ResumeNotice";
+import { useGameProgress } from "@/hooks/useGameProgress";
 import { HEBREW_WORDS, scrambleWord } from "@/lib/data/hebrew";
 
 function pickWord() {
   return HEBREW_WORDS[Math.floor(Math.random() * HEBREW_WORDS.length)];
 }
 
+function newWordData() {
+  const w = pickWord();
+  return { ...w, scrambled: scrambleWord(w.word) };
+}
+
 export default function ScramblePage() {
-  const [wordData, setWordData] = useState(() => {
-    const w = pickWord();
-    return { ...w, scrambled: scrambleWord(w.word) };
-  });
+  const progress = useGameProgress({ subjectId: "hebrew", gameId: "scramble" });
+  const [wordData, setWordData] = useState(() => newWordData());
   const [guess, setGuess] = useState("");
-  const [score, setScore] = useState(0);
-  const [streak, setStreak] = useState(0);
-  const [round, setRound] = useState(1);
   const [feedback, setFeedback] = useState<{
     type: "correct" | "wrong";
     message: string;
   } | null>(null);
   const [answered, setAnswered] = useState(false);
+  useRestoreGameState(progress.loaded, progress.resumed, progress.gameState, (s) => {
+    if (s.wordData) {
+      setWordData(s.wordData as ReturnType<typeof newWordData>);
+      setGuess((s.guess as string) ?? "");
+      setAnswered(!!s.answered);
+      if (s.feedback) setFeedback(s.feedback as typeof feedback);
+    }
+  });
 
   const nextWord = useCallback(() => {
-    const w = pickWord();
-    setWordData({ ...w, scrambled: scrambleWord(w.word) });
+    const w = newWordData();
+    setWordData(w);
     setGuess("");
     setFeedback(null);
     setAnswered(false);
-    setRound((r) => r + 1);
-  }, []);
+    progress.setRound((r) => r + 1);
+    progress.save({
+      round: progress.round + 1,
+      state: { wordData: w, guess: "", answered: false, feedback: null },
+    });
+  }, [progress]);
 
   const checkAnswer = () => {
     if (answered || !guess.trim()) return;
     setAnswered(true);
 
     if (guess.trim() === wordData.word) {
-      setScore((s) => s + 10 + streak);
-      setStreak((s) => s + 1);
-      setFeedback({ type: "correct", message: "מצוין! Excellent!" });
+      const pts = 10 + progress.streak;
+      progress.setScore((s) => s + pts);
+      progress.setStreak((s) => s + 1);
+      progress.setCorrect((c) => c + 1);
+      const fb = { type: "correct" as const, message: "מצוין! Excellent!" };
+      setFeedback(fb);
+      progress.save({
+        score: progress.score + pts,
+        streak: progress.streak + 1,
+        correct: progress.correct + 1,
+        state: { wordData, guess, answered: true, feedback: fb },
+      });
     } else {
-      setStreak(0);
-      setFeedback({
-        type: "wrong",
+      progress.setStreak(0);
+      progress.setWrong((w) => w + 1);
+      const fb = {
+        type: "wrong" as const,
         message: `The word was: ${wordData.word}`,
+      };
+      setFeedback(fb);
+      progress.save({
+        streak: 0,
+        wrong: progress.wrong + 1,
+        state: { wordData, guess, answered: true, feedback: fb },
       });
     }
   };
+
+  if (!progress.loaded) {
+    return (
+      <main className="flex-1 px-4 py-8 max-w-2xl mx-auto text-center">
+        <p className="text-gray-500">Loading...</p>
+      </main>
+    );
+  }
 
   return (
     <main className="flex-1 px-4 py-8 max-w-2xl mx-auto w-full">
       <BackButton href="/hebrew" />
 
       <GameShell title="Word Scramble" titleHe="ערבוב אותיות" emoji="🔤" dir="rtl">
-        <ScoreBoard score={score} streak={streak} total={round} />
+        {progress.resumed && <ResumeNotice onDismiss={progress.dismissResume} />}
+
+        <ScoreBoard score={progress.score} streak={progress.streak} total={progress.round} />
 
         <div className="bg-white/90 rounded-3xl p-8 shadow-lg border-2 border-blue-100 mb-6 text-center">
           <p className="text-sm text-blue-500 font-medium mb-2">Unscramble this word:</p>

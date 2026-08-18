@@ -6,6 +6,8 @@ import { VOCAB_QUESTIONS } from "@/lib/data/english-natives";
 export default function VocabularyPage() {
   return (
     <QuizGame
+      subjectId="english-natives"
+      gameId="vocabulary"
       backHref="/english-natives"
       title="Word Wizard"
       titleHe="קוסם המילים"

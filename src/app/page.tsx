@@ -1,4 +1,5 @@
 import { SubjectCard } from "@/components/SubjectCard";
+import { ContinueBanner } from "@/components/ContinueBanner";
 import { subjects } from "@/lib/subjects";
 
 export default function HomePage() {
@@ -15,6 +16,8 @@ export default function HomePage() {
           Pick a subject and start playing!
         </p>
       </header>
+
+      <ContinueBanner />
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
         {subjects.map((subject) => (

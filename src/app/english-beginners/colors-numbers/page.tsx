@@ -1,54 +1,100 @@
 "use client";
 
 import { useState, useCallback } from "react";
+import { useRestoreGameState } from "@/hooks/useRestoreGameState";
 import { BackButton } from "@/components/BackButton";
 import { GameShell } from "@/components/GameShell";
 import { ScoreBoard } from "@/components/ScoreBoard";
 import { Feedback } from "@/components/Feedback";
+import { ResumeNotice } from "@/components/ResumeNotice";
+import { useGameProgress } from "@/hooks/useGameProgress";
 import { COLORS_NUMBERS, shuffleArray } from "@/lib/data/english-beginners";
 
 export default function ColorsNumbersPage() {
+  const progress = useGameProgress({ subjectId: "english-beginners", gameId: "colors-numbers" });
   const [index, setIndex] = useState(0);
-  const [score, setScore] = useState(0);
-  const [streak, setStreak] = useState(0);
+  const [options, setOptions] = useState<string[]>(() =>
+    shuffleArray([...COLORS_NUMBERS[0].options])
+  );
   const [feedback, setFeedback] = useState<{
     type: "correct" | "wrong";
     message: string;
   } | null>(null);
   const [answered, setAnswered] = useState(false);
+  useRestoreGameState(progress.loaded, progress.resumed, progress.gameState, (s) => {
+    if (s.index !== undefined) {
+      setIndex(s.index as number);
+      if (s.options) setOptions(s.options as string[]);
+      setAnswered(!!s.answered);
+      if (s.feedback) setFeedback(s.feedback as typeof feedback);
+    }
+  });
 
   const item = COLORS_NUMBERS[index % COLORS_NUMBERS.length];
-  const options = shuffleArray([...item.options]);
 
   const nextQuestion = useCallback(() => {
-    setIndex((i) => i + 1);
+    const nextIndex = index + 1;
+    const nextOptions = shuffleArray([...COLORS_NUMBERS[nextIndex % COLORS_NUMBERS.length].options]);
+    setIndex(nextIndex);
+    setOptions(nextOptions);
     setFeedback(null);
     setAnswered(false);
-  }, []);
+    progress.setRound((r) => r + 1);
+    progress.save({
+      round: progress.round + 1,
+      state: { index: nextIndex, options: nextOptions, answered: false, feedback: null },
+    });
+  }, [index, progress]);
 
   const handleAnswer = (answer: string) => {
     if (answered) return;
     setAnswered(true);
 
     if (answer === item.answer) {
-      setScore((s) => s + 10 + streak);
-      setStreak((s) => s + 1);
-      setFeedback({ type: "correct", message: "Yes! 🌈" });
+      const pts = 10 + progress.streak;
+      progress.setScore((s) => s + pts);
+      progress.setStreak((s) => s + 1);
+      progress.setCorrect((c) => c + 1);
+      const fb = { type: "correct" as const, message: "Yes! 🌈" };
+      setFeedback(fb);
+      progress.save({
+        score: progress.score + pts,
+        streak: progress.streak + 1,
+        correct: progress.correct + 1,
+        state: { index, options, answered: true, feedback: fb },
+      });
     } else {
-      setStreak(0);
-      setFeedback({
-        type: "wrong",
+      progress.setStreak(0);
+      progress.setWrong((w) => w + 1);
+      const fb = {
+        type: "wrong" as const,
         message: `The answer was: ${item.answer}`,
+      };
+      setFeedback(fb);
+      progress.save({
+        streak: 0,
+        wrong: progress.wrong + 1,
+        state: { index, options, answered: true, feedback: fb },
       });
     }
   };
+
+  if (!progress.loaded) {
+    return (
+      <main className="flex-1 px-4 py-8 max-w-2xl mx-auto text-center">
+        <p className="text-gray-500">Loading...</p>
+      </main>
+    );
+  }
 
   return (
     <main className="flex-1 px-4 py-8 max-w-2xl mx-auto w-full">
       <BackButton href="/english-beginners" />
 
       <GameShell title="Colors & Numbers" titleHe="צבעים ומספרים" emoji="🌈">
-        <ScoreBoard score={score} streak={streak} total={index + 1} />
+        {progress.resumed && <ResumeNotice onDismiss={progress.dismissResume} />}
+
+        <ScoreBoard score={progress.score} streak={progress.streak} total={progress.round} />
 
         <div className="bg-white/90 rounded-3xl p-8 shadow-lg border-2 border-green-100 mb-6 text-center">
           <span className="text-6xl">{item.emoji}</span>
