@@ -131,7 +131,7 @@ export function QuizGame({
     <main className="flex-1 px-4 py-3 max-w-2xl mx-auto w-full">
       <BackButton href={backHref} />
 
-      <GameShell title={gameTitle(subjectId, gameId)} emoji={emoji}>
+      <GameShell title={gameTitle(subjectId, gameId)} emoji={emoji} contentDir="ltr">
         <GameStatus
           current={index + 1}
           total={questions.length}

@@ -2,10 +2,10 @@
 
 import { BackButton } from "@/components/BackButton";
 import { GameCard } from "@/components/GameCard";
-import { useLocale } from "@/i18n/LocaleProvider";
+import { LocaleOverrideProvider, useLocale } from "@/i18n/LocaleProvider";
 import type { SubjectInfo } from "@/lib/types";
 
-export function SubjectPageContent({ subject }: { subject: SubjectInfo }) {
+function SubjectPageInner({ subject }: { subject: SubjectInfo }) {
   const { subjectTitle, t } = useLocale();
 
   return (
@@ -24,4 +24,18 @@ export function SubjectPageContent({ subject }: { subject: SubjectInfo }) {
       </div>
     </main>
   );
+}
+
+export function SubjectPageContent({ subject }: { subject: SubjectInfo }) {
+  if (subject.id === "english-natives") {
+    return (
+      <LocaleOverrideProvider locale="en">
+        <div dir="ltr" lang="en" className="contents">
+          <SubjectPageInner subject={subject} />
+        </div>
+      </LocaleOverrideProvider>
+    );
+  }
+
+  return <SubjectPageInner subject={subject} />;
 }

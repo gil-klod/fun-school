@@ -63,6 +63,30 @@ export function LocaleProvider({ children }: { children: React.ReactNode }) {
   return <LocaleContext.Provider value={value}>{children}</LocaleContext.Provider>;
 }
 
+/** Force UI strings and direction for a subtree (e.g. advanced English section). */
+export function LocaleOverrideProvider({
+  locale: overrideLocale,
+  children,
+}: {
+  locale: Locale;
+  children: React.ReactNode;
+}) {
+  const parent = useLocale();
+
+  const value: LocaleContextValue = {
+    locale: overrideLocale,
+    setLocale: parent.setLocale,
+    t: (key, params) => translate(overrideLocale, key, params),
+    dir: overrideLocale === "he" ? "rtl" : "ltr",
+    subjectTitle: (id) => getSubjectTitle(overrideLocale, id),
+    gameTitle: (subjectId, gameId) => getGameTitle(overrideLocale, subjectId, gameId),
+    gameDescription: (subjectId, gameId) =>
+      getGameDescription(overrideLocale, subjectId, gameId),
+  };
+
+  return <LocaleContext.Provider value={value}>{children}</LocaleContext.Provider>;
+}
+
 export function useLocale() {
   const ctx = useContext(LocaleContext);
   if (!ctx) throw new Error("useLocale must be used within LocaleProvider");

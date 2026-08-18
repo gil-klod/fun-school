@@ -125,7 +125,7 @@ export default function EnglishComprehensionPage() {
     <main className="flex-1 px-4 py-3 max-w-2xl mx-auto w-full">
       <BackButton href="/english-natives" />
 
-      <GameShell title={gameTitle("english-natives", "comprehension")} emoji="📚">
+      <GameShell title={gameTitle("english-natives", "comprehension")} emoji="📚" contentDir="ltr">
         <GameStatus
           current={questionIndex + 1}
           total={story.questions.length}
