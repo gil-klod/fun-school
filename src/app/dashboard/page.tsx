@@ -1,9 +1,15 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { BackButton } from "@/components/BackButton";
 import { useLocale } from "@/i18n/LocaleProvider";
+import { localizeAnalyticsKey } from "@/lib/analyticsKeys";
+import {
+  buildDashboardFeedback,
+  buildDashboardRecommendations,
+} from "@/lib/dashboardFeedback";
+import type { Locale } from "@/i18n/types";
 
 interface Analytics {
   strengths: string[];
@@ -14,8 +20,30 @@ interface Analytics {
   gameStats: { subjectId: string; gameId: string; correct: number; wrong: number; accuracy: number; score: number }[];
 }
 
+function parseStoredAiFeedback(raw: string, locale: Locale): string | null {
+  if (!raw) return null;
+  try {
+    const parsed = JSON.parse(raw) as { he?: string; en?: string };
+    const text = locale === "he" ? parsed.he : parsed.en;
+    return text?.trim() ? text : null;
+  } catch {
+    return null;
+  }
+}
+
+function parseStoredRecommendations(raw: string[], locale: Locale): string[] | null {
+  if (raw.length !== 1) return null;
+  try {
+    const parsed = JSON.parse(raw[0]) as { he?: string[]; en?: string[] };
+    const list = locale === "he" ? parsed.he : parsed.en;
+    return list && list.length > 0 ? list : null;
+  } catch {
+    return null;
+  }
+}
+
 export default function DashboardPage() {
-  const { t, subjectTitle, gameTitle } = useLocale();
+  const { t, locale, subjectTitle, gameTitle } = useLocale();
   const [analytics, setAnalytics] = useState<Analytics | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -46,6 +74,39 @@ export default function DashboardPage() {
       setRefreshing(false);
     }
   }
+
+  const localizedStrengths = useMemo(() => {
+    if (!analytics) return [];
+    return analytics.strengths.map((key) =>
+      localizeAnalyticsKey(key, locale, subjectTitle, gameTitle)
+    );
+  }, [analytics, locale, subjectTitle, gameTitle]);
+
+  const localizedWeaknesses = useMemo(() => {
+    if (!analytics) return [];
+    return analytics.weaknesses.map((key) =>
+      localizeAnalyticsKey(key, locale, subjectTitle, gameTitle)
+    );
+  }, [analytics, locale, subjectTitle, gameTitle]);
+
+  const coachFeedback = useMemo(() => {
+    if (!analytics) return "";
+    const stored = parseStoredAiFeedback(analytics.aiFeedback, locale);
+    if (stored) return stored;
+    return buildDashboardFeedback(
+      t,
+      localizedStrengths,
+      localizedWeaknesses,
+      analytics.subjectStats.length > 0
+    );
+  }, [analytics, locale, t, localizedStrengths, localizedWeaknesses]);
+
+  const coachRecommendations = useMemo(() => {
+    if (!analytics) return [];
+    const stored = parseStoredRecommendations(analytics.recommendations, locale);
+    if (stored) return stored;
+    return buildDashboardRecommendations(t, localizedWeaknesses);
+  }, [analytics, locale, t, localizedWeaknesses]);
 
   if (loading) {
     return (
@@ -78,7 +139,7 @@ export default function DashboardPage() {
         <div className="space-y-6">
           <section className="bg-gradient-to-br from-indigo-500 to-purple-600 text-white rounded-3xl p-6 shadow-lg">
             <h2 className="text-xl font-bold mb-2">{t("dashboard.coachTitle")}</h2>
-            <p className="text-indigo-100 leading-relaxed">{analytics!.aiFeedback}</p>
+            <p className="text-indigo-100 leading-relaxed">{coachFeedback}</p>
             <button
               onClick={refresh}
               disabled={refreshing}
@@ -91,9 +152,9 @@ export default function DashboardPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <section className="bg-green-50 border-2 border-green-200 rounded-2xl p-5">
               <h3 className="font-bold text-green-800 text-lg mb-3">{t("dashboard.strengths")}</h3>
-              {analytics!.strengths.length > 0 ? (
+              {localizedStrengths.length > 0 ? (
                 <ul className="space-y-2">
-                  {analytics!.strengths.map((s) => (
+                  {localizedStrengths.map((s) => (
                     <li key={s} className="text-green-700 bg-green-100 rounded-lg px-3 py-2 text-sm font-medium">
                       {s}
                     </li>
@@ -106,9 +167,9 @@ export default function DashboardPage() {
 
             <section className="bg-amber-50 border-2 border-amber-200 rounded-2xl p-5">
               <h3 className="font-bold text-amber-800 text-lg mb-3">{t("dashboard.toImprove")}</h3>
-              {analytics!.weaknesses.length > 0 ? (
+              {localizedWeaknesses.length > 0 ? (
                 <ul className="space-y-2">
-                  {analytics!.weaknesses.map((w) => (
+                  {localizedWeaknesses.map((w) => (
                     <li key={w} className="text-amber-700 bg-amber-100 rounded-lg px-3 py-2 text-sm font-medium">
                       {w}
                     </li>
@@ -120,11 +181,11 @@ export default function DashboardPage() {
             </section>
           </div>
 
-          {analytics!.recommendations.length > 0 && (
+          {coachRecommendations.length > 0 && (
             <section className="bg-white/90 border-2 border-indigo-100 rounded-2xl p-5">
               <h3 className="font-bold text-indigo-800 text-lg mb-3">{t("dashboard.tips")}</h3>
               <ul className="space-y-2">
-                {analytics!.recommendations.map((r, i) => (
+                {coachRecommendations.map((r, i) => (
                   <li key={i} className="text-gray-700 text-sm flex gap-2">
                     <span className="text-indigo-400">→</span> {r}
                   </li>

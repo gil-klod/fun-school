@@ -83,6 +83,13 @@ export const he: Dictionary = {
     accuracy: "דיוק",
     answers: "תשובות",
     noStrengths: "המשך לשחק כדי לגלות חוזקות!",
+    feedbackEmpty: "התחל לשחק כדי לקבל משוב מותאם אישית! 🎮",
+    feedbackGreatIn: "💪 כל הכבוד ב: {list}.",
+    feedbackPractice: "📚 כדאי להתאמן ב: {list}.",
+    feedbackProgress: "התקדמות יפה! המשך לשחק ולגלות עוד חוזקות.",
+    recTryNew: "נסו משחק חדש שעדיין לא שיחקתם!",
+    recStreak: "נסו לשבור את הרצף הקודם!",
+    recPractice: "תרגלו את {game} 10 דקות היום",
   },
   subjects: {
     math: {

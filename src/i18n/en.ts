@@ -83,6 +83,13 @@ export const en: Dictionary = {
     accuracy: "Accuracy",
     answers: "Answers",
     noStrengths: "Keep playing to discover strengths!",
+    feedbackEmpty: "Start playing games to get personalized feedback! 🎮",
+    feedbackGreatIn: "💪 You're doing great in: {list}.",
+    feedbackPractice: "📚 Keep practicing: {list}.",
+    feedbackProgress: "You're making good progress! Keep playing to discover your strengths.",
+    recTryNew: "Try a new game you haven't played yet!",
+    recStreak: "Challenge yourself with a higher streak!",
+    recPractice: "Practice {game} for 10 minutes today",
   },
   subjects: {
     math: {

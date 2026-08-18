@@ -96,6 +96,13 @@ export interface Dictionary {
     accuracy: string;
     answers: string;
     noStrengths: string;
+    feedbackEmpty: string;
+    feedbackGreatIn: string;
+    feedbackPractice: string;
+    feedbackProgress: string;
+    recTryNew: string;
+    recStreak: string;
+    recPractice: string;
   };
   subjects: Record<string, SubjectStrings>;
   games: {
