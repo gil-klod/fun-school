@@ -9,7 +9,7 @@ import { Feedback } from "@/components/Feedback";
 import { SESSION_SIZE, sessionQuestion } from "@/lib/session";
 import { useGameProgress } from "@/hooks/useGameProgress";
 import { useLocale } from "@/i18n/LocaleProvider";
-import { generateShukChallenge, buildOptions } from "@/lib/data/math";
+import { generateShukChallenge, buildOptions, getShukItemName } from "@/lib/data/math";
 
 function newChallenge() {
   const c = generateShukChallenge();
@@ -17,7 +17,7 @@ function newChallenge() {
 }
 
 export default function ShukPage() {
-  const { t, gameTitle } = useLocale();
+  const { t, gameTitle, locale } = useLocale();
   const progress = useGameProgress({ subjectId: "math", gameId: "shuk" });
   const [round, setRound] = useState(() => newChallenge());
   const { challenge, options } = round;
@@ -114,30 +114,21 @@ export default function ShukPage() {
           score={progress.score}
         />
 
-        <div className="bg-white/90 rounded-3xl p-6 shadow-lg border-2 border-amber-100 mb-4">
-          <p className="text-lg font-semibold text-amber-700 mb-4">{t("games.shoppingList")}</p>
-          <div className="space-y-3">
+        <div className="bg-white/90 rounded-2xl p-4 shadow border-2 border-amber-100 mb-3">
+          <p className="text-base font-semibold text-amber-700 mb-3">{t("games.shoppingList")}</p>
+          <div className="space-y-2">
             {challenge.items.map((item, i) => (
               <div
                 key={i}
-                className="flex items-center justify-between bg-amber-50 rounded-xl px-4 py-3"
+                className="flex items-center justify-between bg-amber-50 rounded-xl px-3 py-2"
               >
-                <span className="text-2xl">{item.emoji}</span>
-                <span className="font-medium">
-                  {item.name}{" "}
-                  <span className="text-gray-500" dir="rtl">
-                    ({item.nameHe})
-                  </span>
-                </span>
+                <span className="text-xl">{item.emoji}</span>
+                <span className="font-medium">{getShukItemName(item, locale)}</span>
                 <span className="font-bold text-amber-700">₪{item.price}</span>
               </div>
             ))}
           </div>
-          <div className="border-t-2 border-amber-200 mt-4 pt-4 flex justify-between text-lg">
-            <span className="font-semibold">{t("games.total")}</span>
-            <span className="font-bold text-amber-800">₪{challenge.total}</span>
-          </div>
-          <div className="flex justify-between text-lg mt-2">
+          <div className="border-t border-amber-200 mt-3 pt-3 flex justify-between text-base">
             <span className="font-semibold">{t("games.youPay")}</span>
             <span className="font-bold text-green-700">₪{challenge.paid}</span>
           </div>

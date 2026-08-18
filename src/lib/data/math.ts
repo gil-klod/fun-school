@@ -18,6 +18,10 @@ export interface ShukItem {
   emoji: string;
 }
 
+export function getShukItemName(item: ShukItem, locale: "he" | "en"): string {
+  return locale === "he" ? item.nameHe : item.name;
+}
+
 export const SHUK_ITEMS: ShukItem[] = [
   { name: "Apple", nameHe: "תפוח", price: 3, emoji: "🍎" },
   { name: "Bread", nameHe: "לחם", price: 8, emoji: "🍞" },
