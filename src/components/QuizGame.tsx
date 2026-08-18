@@ -1,12 +1,14 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { useGameResume } from "@/hooks/useGameResume";
+import { useGameSession } from "@/hooks/useGameSession";
 import { BackButton } from "@/components/BackButton";
 import { GameShell } from "@/components/GameShell";
 import { GameStatus } from "@/components/GameStatus";
 import { Feedback } from "@/components/Feedback";
-import { useGameProgress } from "@/hooks/useGameProgress";
+import { DifficultySelector } from "@/components/DifficultySelector";
+import { GameContentGate } from "@/components/GameContentGate";
 import { useLocale } from "@/i18n/LocaleProvider";
 import type { QuizQuestion } from "@/lib/types";
 
@@ -15,18 +17,27 @@ interface QuizGameProps {
   gameId: string;
   backHref: string;
   emoji: string;
-  questions: QuizQuestion[];
+  contentDir?: "ltr" | "rtl";
 }
 
-export function QuizGame({
+function QuizGamePlay({
   subjectId,
   gameId,
   backHref,
   emoji,
+  contentDir,
   questions,
-}: QuizGameProps) {
+  difficulty,
+  changeDifficulty,
+  progress,
+}: QuizGameProps & {
+  questions: QuizQuestion[];
+  difficulty: ReturnType<typeof useGameSession>["difficulty"];
+  changeDifficulty: ReturnType<typeof useGameSession>["changeDifficulty"];
+  progress: ReturnType<typeof useGameSession>["progress"];
+}) {
   const { t, gameTitle } = useLocale();
-  const progress = useGameProgress({ subjectId, gameId });
+
   const [index, setIndex] = useState(0);
   const [feedback, setFeedback] = useState<{
     type: "correct" | "wrong";
@@ -131,7 +142,13 @@ export function QuizGame({
     <main className="flex-1 px-4 py-3 max-w-2xl mx-auto w-full">
       <BackButton href={backHref} />
 
-      <GameShell title={gameTitle(subjectId, gameId)} emoji={emoji} contentDir="ltr">
+      <GameShell title={gameTitle(subjectId, gameId)} emoji={emoji} contentDir={contentDir}>
+        <DifficultySelector
+          value={difficulty}
+          onChange={changeDifficulty}
+          disabled={answered && !finished}
+        />
+
         <GameStatus
           current={index + 1}
           total={questions.length}
@@ -177,10 +194,7 @@ export function QuizGame({
           </>
         ) : (
           <div className="text-center">
-            <Feedback
-              type="correct"
-              message={t("games.allDone", { score: progress.score })}
-            />
+            <Feedback type="correct" message={t("games.allDone", { score: progress.score })} />
             <button
               onClick={() => {
                 setIndex(0);
@@ -210,5 +224,42 @@ export function QuizGame({
         )}
       </GameShell>
     </main>
+  );
+}
+
+export function QuizGame(props: QuizGameProps) {
+  const { subjectId, gameId } = props;
+  const session = useGameSession(subjectId, gameId);
+  const { content, contentLoading, contentError, ready, difficulty, changeDifficulty, progress } =
+    session;
+
+  const questions = useMemo(
+    () =>
+      (content?.items ?? [])
+        .filter((item) => item.itemType === "quiz")
+        .map((item) => item.data as unknown as QuizQuestion),
+    [content]
+  );
+
+  if (!ready || questions.length === 0) {
+    return (
+      <GameContentGate
+        loading={!ready || contentLoading || questions.length === 0}
+        error={contentError}
+      >
+        {null}
+      </GameContentGate>
+    );
+  }
+
+  return (
+    <QuizGamePlay
+      key={difficulty}
+      {...props}
+      questions={questions}
+      difficulty={difficulty}
+      changeDifficulty={changeDifficulty}
+      progress={progress}
+    />
   );
 }

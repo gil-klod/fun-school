@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
+import type { DifficultyLevel } from "@/lib/content/types";
 
 export interface ProgressData {
   score: number;
@@ -10,15 +11,32 @@ export interface ProgressData {
   wrong: number;
   state: Record<string, unknown>;
   status?: "in_progress" | "completed";
+  difficulty?: DifficultyLevel;
 }
 
 interface UseGameProgressOptions {
   subjectId: string;
   gameId: string;
+  difficulty: DifficultyLevel;
   defaultState?: Record<string, unknown>;
 }
 
-export function useGameProgress({ subjectId, gameId, defaultState = {} }: UseGameProgressOptions) {
+const emptyProgress = (defaultState: Record<string, unknown>): ProgressData => ({
+  score: 0,
+  streak: 0,
+  round: 1,
+  correct: 0,
+  wrong: 0,
+  state: defaultState,
+  status: "in_progress",
+});
+
+export function useGameProgress({
+  subjectId,
+  gameId,
+  difficulty,
+  defaultState = {},
+}: UseGameProgressOptions) {
   const [loaded, setLoaded] = useState(false);
   const [hasSavedProgress, setHasSavedProgress] = useState(false);
   const [score, setScore] = useState(0);
@@ -28,21 +46,35 @@ export function useGameProgress({ subjectId, gameId, defaultState = {} }: UseGam
   const [wrong, setWrong] = useState(0);
   const [gameState, setGameState] = useState<Record<string, unknown>>(defaultState);
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const latest = useRef<ProgressData>({ score: 0, streak: 0, round: 1, correct: 0, wrong: 0, state: defaultState });
+  const latest = useRef<ProgressData>(emptyProgress(defaultState));
 
   useEffect(() => {
-    latest.current = { score, streak, round, correct, wrong, state: gameState };
-  }, [score, streak, round, correct, wrong, gameState]);
+    latest.current = { score, streak, round, correct, wrong, state: gameState, difficulty };
+  }, [score, streak, round, correct, wrong, gameState, difficulty]);
+
+  const resetProgress = useCallback(() => {
+    const fresh = emptyProgress(defaultState);
+    setScore(fresh.score);
+    setStreak(fresh.streak);
+    setRound(fresh.round);
+    setCorrect(fresh.correct);
+    setWrong(fresh.wrong);
+    setGameState(fresh.state);
+    setHasSavedProgress(false);
+  }, [defaultState]);
 
   useEffect(() => {
+    let cancelled = false;
+    setLoaded(false);
+
     async function load() {
       try {
         const res = await fetch(
-          `/api/progress?subjectId=${subjectId}&gameId=${gameId}`
+          `/api/progress?subjectId=${subjectId}&gameId=${gameId}&difficulty=${difficulty}`
         );
         if (res.ok) {
           const { progress } = await res.json();
-          if (progress && progress.status === "in_progress") {
+          if (!cancelled && progress && progress.status === "in_progress") {
             const state = (progress.state ?? {}) as Record<string, unknown>;
             setScore(progress.score ?? 0);
             setStreak(progress.streak ?? 0);
@@ -51,16 +83,22 @@ export function useGameProgress({ subjectId, gameId, defaultState = {} }: UseGam
             setWrong(progress.wrong ?? 0);
             setGameState(state);
             setHasSavedProgress(true);
+          } else if (!cancelled) {
+            resetProgress();
           }
         }
       } catch (err) {
         console.error("Failed to load progress:", err);
       } finally {
-        setLoaded(true);
+        if (!cancelled) setLoaded(true);
       }
     }
+
     load();
-  }, [subjectId, gameId, defaultState]);
+    return () => {
+      cancelled = true;
+    };
+  }, [subjectId, gameId, difficulty, resetProgress]);
 
   const save = useCallback(
     (overrides?: Partial<ProgressData>) => {
@@ -69,6 +107,7 @@ export function useGameProgress({ subjectId, gameId, defaultState = {} }: UseGam
       const data: ProgressData = {
         ...latest.current,
         ...overrides,
+        difficulty,
         status: overrides?.status ?? "in_progress",
       };
 
@@ -78,14 +117,14 @@ export function useGameProgress({ subjectId, gameId, defaultState = {} }: UseGam
           await fetch("/api/progress", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ subjectId, gameId, ...data }),
+            body: JSON.stringify({ subjectId, gameId, difficulty, ...data }),
           });
         } catch (err) {
           console.error("Failed to save progress:", err);
         }
       }, 500);
     },
-    [loaded, subjectId, gameId]
+    [loaded, subjectId, gameId, difficulty]
   );
 
   const markCompleted = useCallback(() => {
@@ -95,6 +134,7 @@ export function useGameProgress({ subjectId, gameId, defaultState = {} }: UseGam
   return {
     loaded,
     hasSavedProgress,
+    difficulty,
     score,
     setScore,
     streak,
@@ -107,6 +147,7 @@ export function useGameProgress({ subjectId, gameId, defaultState = {} }: UseGam
     setWrong,
     gameState,
     setGameState,
+    resetProgress,
     save,
     markCompleted,
   };

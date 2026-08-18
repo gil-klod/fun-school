@@ -14,6 +14,7 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const subjectId = searchParams.get("subjectId");
   const gameId = searchParams.get("gameId");
+  const difficultyParam = searchParams.get("difficulty");
   const recent = searchParams.get("recent");
 
   if (recent === "true") {
@@ -26,11 +27,19 @@ export async function GET(request: Request) {
   }
 
   if (subjectId && gameId) {
-    const progress = await GameProgress.findOne({
+    const query: Record<string, unknown> = {
       userId: session.user.id,
       subjectId,
       gameId,
-    });
+    };
+    if (difficultyParam) {
+      const d = Number(difficultyParam);
+      if ([1, 2, 3].includes(d)) query.difficulty = d;
+    } else {
+      query.difficulty = 2;
+    }
+
+    const progress = await GameProgress.findOne(query);
     return NextResponse.json({ progress });
   }
 
@@ -46,17 +55,21 @@ export async function POST(request: Request) {
 
   try {
     const body = await request.json();
-    const { subjectId, gameId, score, streak, round, correct, wrong, state, status } = body;
+    const { subjectId, gameId, difficulty, score, streak, round, correct, wrong, state, status } =
+      body;
 
     if (!subjectId || !gameId) {
       return NextResponse.json({ error: "subjectId and gameId required" }, { status: 400 });
     }
 
+    const diff = [1, 2, 3].includes(Number(difficulty)) ? Number(difficulty) : 2;
+
     await connectDB();
 
     const progress = await GameProgress.findOneAndUpdate(
-      { userId: session.user.id, subjectId, gameId },
+      { userId: session.user.id, subjectId, gameId, difficulty: diff },
       {
+        difficulty: diff,
         score: score ?? 0,
         streak: streak ?? 0,
         round: round ?? 1,

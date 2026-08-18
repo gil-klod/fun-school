@@ -27,6 +27,15 @@ export const en: Dictionary = {
     questionN: "Question {current}",
     points: "{score} pts",
   },
+  difficulty: {
+    label: "Difficulty",
+    "1": "Easy",
+    "2": "Medium",
+    "3": "Hard",
+  },
+  content: {
+    seedHint: "An admin needs to run the content seed for game data.",
+  },
   nav: {
     myProgress: "My Progress",
     hi: "Hi",

@@ -1,20 +1,36 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useGameResume } from "@/hooks/useGameResume";
+import { useGameSession } from "@/hooks/useGameSession";
 import { BackButton } from "@/components/BackButton";
 import { GameShell } from "@/components/GameShell";
 import { GameStatus } from "@/components/GameStatus";
 import { Feedback } from "@/components/Feedback";
-import { useGameProgress } from "@/hooks/useGameProgress";
+import { DifficultySelector } from "@/components/DifficultySelector";
+import { GameContentGate } from "@/components/GameContentGate";
 import { useLocale } from "@/i18n/LocaleProvider";
-import { HEBREW_STORIES } from "@/lib/data/hebrew";
 
-export default function HebrewComprehensionPage() {
+interface HebrewStory {
+  title: string;
+  text: string;
+  questions: { question: string; options: string[]; correctIndex: number }[];
+}
+
+function HebrewComprehensionPlay({
+  stories,
+  difficulty,
+  changeDifficulty,
+  progress,
+}: {
+  stories: HebrewStory[];
+  difficulty: ReturnType<typeof useGameSession>["difficulty"];
+  changeDifficulty: ReturnType<typeof useGameSession>["changeDifficulty"];
+  progress: ReturnType<typeof useGameSession>["progress"];
+}) {
   const { t, gameTitle } = useLocale();
-  const progress = useGameProgress({ subjectId: "hebrew", gameId: "comprehension" });
   const [storyIndex, setStoryIndex] = useState(() =>
-    Math.floor(Math.random() * HEBREW_STORIES.length)
+    Math.floor(Math.random() * stories.length)
   );
   const [questionIndex, setQuestionIndex] = useState(0);
   const [feedback, setFeedback] = useState<{
@@ -23,6 +39,15 @@ export default function HebrewComprehensionPage() {
   } | null>(null);
   const [answered, setAnswered] = useState(false);
   const [finished, setFinished] = useState(false);
+
+  useEffect(() => {
+    setStoryIndex(Math.floor(Math.random() * stories.length));
+    setQuestionIndex(0);
+    setFeedback(null);
+    setAnswered(false);
+    setFinished(false);
+  }, [difficulty, stories.length]);
+
   useGameResume(
     progress.loaded,
     progress.hasSavedProgress,
@@ -38,12 +63,18 @@ export default function HebrewComprehensionPage() {
       const s = progress.gameState;
       const storyIdx = s.storyIndex as number;
       const qIdx = s.questionIndex as number;
-      const story = HEBREW_STORIES[storyIdx];
+      const story = stories[storyIdx];
       if (qIdx + 1 >= story.questions.length) {
         setFinished(true);
         progress.markCompleted();
         progress.save({
-          state: { storyIndex: storyIdx, questionIndex: qIdx, finished: true, answered: false, feedback: null },
+          state: {
+            storyIndex: storyIdx,
+            questionIndex: qIdx,
+            finished: true,
+            answered: false,
+            feedback: null,
+          },
           status: "completed",
         });
       } else {
@@ -56,13 +87,19 @@ export default function HebrewComprehensionPage() {
         progress.setRound((r) => r + 1);
         progress.save({
           round: progress.round + 1,
-          state: { storyIndex: storyIdx, questionIndex: nextIdx, finished: false, answered: false, feedback: null },
+          state: {
+            storyIndex: storyIdx,
+            questionIndex: nextIdx,
+            finished: false,
+            answered: false,
+            feedback: null,
+          },
         });
       }
     }
   );
 
-  const story = HEBREW_STORIES[storyIndex];
+  const story = stories[storyIndex];
   const question = story.questions[questionIndex];
 
   const handleAnswer = (optionIndex: number) => {
@@ -115,7 +152,42 @@ export default function HebrewComprehensionPage() {
     progress.setRound((r) => r + 1);
     progress.save({
       round: progress.round + 1,
-      state: { storyIndex, questionIndex: nextIdx, finished: false, answered: false, feedback: null },
+      state: {
+        storyIndex,
+        questionIndex: nextIdx,
+        finished: false,
+        answered: false,
+        feedback: null,
+      },
+    });
+  };
+
+  const readAnother = () => {
+    const newStoryIndex = Math.floor(Math.random() * stories.length);
+    setStoryIndex(newStoryIndex);
+    setQuestionIndex(0);
+    setFeedback(null);
+    setAnswered(false);
+    setFinished(false);
+    progress.setScore(0);
+    progress.setStreak(0);
+    progress.setRound(1);
+    progress.setCorrect(0);
+    progress.setWrong(0);
+    progress.save({
+      score: 0,
+      streak: 0,
+      round: 1,
+      correct: 0,
+      wrong: 0,
+      status: "in_progress",
+      state: {
+        storyIndex: newStoryIndex,
+        questionIndex: 0,
+        finished: false,
+        answered: false,
+        feedback: null,
+      },
     });
   };
 
@@ -124,6 +196,12 @@ export default function HebrewComprehensionPage() {
       <BackButton href="/hebrew" />
 
       <GameShell title={gameTitle("hebrew", "comprehension")} emoji="🕵️" contentDir="rtl">
+        <DifficultySelector
+          value={difficulty}
+          onChange={changeDifficulty}
+          disabled={answered && !finished}
+        />
+
         <GameStatus
           current={questionIndex + 1}
           total={story.questions.length}
@@ -164,7 +242,9 @@ export default function HebrewComprehensionPage() {
 
             {answered && (
               <button onClick={nextQuestion} className="game-btn game-btn-primary w-full">
-                {questionIndex + 1 >= story.questions.length ? t("common.seeResults") : t("common.nextQuestion")}
+                {questionIndex + 1 >= story.questions.length
+                  ? t("common.seeResults")
+                  : t("common.nextQuestion")}
               </button>
             )}
           </>
@@ -174,15 +254,43 @@ export default function HebrewComprehensionPage() {
               type="correct"
               message={t("games.storyComplete", { score: progress.score })}
             />
-            <button
-              onClick={() => window.location.reload()}
-              className="game-btn game-btn-primary w-full mt-4"
-            >
+            <button onClick={readAnother} className="game-btn game-btn-primary w-full mt-4">
               {t("games.readAnother")}
             </button>
           </div>
         )}
       </GameShell>
     </main>
+  );
+}
+
+export default function HebrewComprehensionPage() {
+  const session = useGameSession("hebrew", "comprehension");
+  const { ready, content, contentLoading, contentError, difficulty, changeDifficulty, progress } =
+    session;
+
+  const stories = useMemo(
+    () =>
+      (content?.items ?? [])
+        .filter((item) => item.itemType === "story")
+        .map((item) => item.data as unknown as HebrewStory),
+    [content]
+  );
+
+  if (!ready || stories.length === 0) {
+    return (
+      <GameContentGate loading={!ready || contentLoading || stories.length === 0} error={contentError}>
+        {null}
+      </GameContentGate>
+    );
+  }
+
+  return (
+    <HebrewComprehensionPlay
+      stories={stories}
+      difficulty={difficulty}
+      changeDifficulty={changeDifficulty}
+      progress={progress}
+    />
   );
 }

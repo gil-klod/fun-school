@@ -1,14 +1,21 @@
 "use client";
 
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, useEffect } from "react";
 import { useGameResume } from "@/hooks/useGameResume";
+import { useGameSession } from "@/hooks/useGameSession";
 import { BackButton } from "@/components/BackButton";
 import { GameShell } from "@/components/GameShell";
 import { GameStatus } from "@/components/GameStatus";
 import { Feedback } from "@/components/Feedback";
-import { useGameProgress } from "@/hooks/useGameProgress";
+import { DifficultySelector } from "@/components/DifficultySelector";
+import { GameContentGate } from "@/components/GameContentGate";
 import { useLocale } from "@/i18n/LocaleProvider";
-import { SENTENCE_CHALLENGES } from "@/lib/data/english-beginners";
+
+interface SentenceChallenge {
+  words: string[];
+  correct: string;
+  translation: string;
+}
 
 interface WordToken {
   id: string;
@@ -46,9 +53,18 @@ function tokensFromSavedWords(saved: string[], bank: WordToken[]): WordToken[] {
   return tokens;
 }
 
-export default function SentencesPage() {
+function SentencesPlay({
+  challenges,
+  difficulty,
+  changeDifficulty,
+  progress,
+}: {
+  challenges: SentenceChallenge[];
+  difficulty: ReturnType<typeof useGameSession>["difficulty"];
+  changeDifficulty: ReturnType<typeof useGameSession>["changeDifficulty"];
+  progress: ReturnType<typeof useGameSession>["progress"];
+}) {
   const { t, gameTitle } = useLocale();
-  const progress = useGameProgress({ subjectId: "english-beginners", gameId: "sentences" });
   const [index, setIndex] = useState(0);
   const [selected, setSelected] = useState<WordToken[]>([]);
   const [feedback, setFeedback] = useState<{
@@ -57,7 +73,7 @@ export default function SentencesPage() {
   } | null>(null);
   const [answered, setAnswered] = useState(false);
 
-  const challenge = SENTENCE_CHALLENGES[index % SENTENCE_CHALLENGES.length];
+  const challenge = challenges[index % challenges.length];
 
   const wordBank = useMemo(
     () => buildWordBank(index, challenge.words),
@@ -70,6 +86,13 @@ export default function SentencesPage() {
     [wordBank, selectedIds]
   );
 
+  useEffect(() => {
+    setIndex(0);
+    setSelected([]);
+    setFeedback(null);
+    setAnswered(false);
+  }, [difficulty, challenges.length]);
+
   useGameResume(
     progress.loaded,
     progress.hasSavedProgress,
@@ -78,8 +101,7 @@ export default function SentencesPage() {
       if (s.index !== undefined) {
         const savedIndex = s.index as number;
         setIndex(savedIndex);
-        const savedChallenge =
-          SENTENCE_CHALLENGES[savedIndex % SENTENCE_CHALLENGES.length];
+        const savedChallenge = challenges[savedIndex % challenges.length];
         const bank = buildWordBank(savedIndex, savedChallenge.words);
         const savedSelected = s.selected;
         if (Array.isArray(savedSelected)) {
@@ -178,9 +200,15 @@ export default function SentencesPage() {
       <BackButton href="/english-beginners" />
 
       <GameShell title={gameTitle("english-beginners", "sentences")} emoji="🧩">
+        <DifficultySelector
+          value={difficulty}
+          onChange={changeDifficulty}
+          disabled={answered}
+        />
+
         <GameStatus
           current={index + 1}
-          total={SENTENCE_CHALLENGES.length}
+          total={challenges.length}
           correct={progress.correct}
           wrong={progress.wrong}
           score={progress.score}
@@ -250,5 +278,39 @@ export default function SentencesPage() {
         )}
       </GameShell>
     </main>
+  );
+}
+
+export default function SentencesPage() {
+  const session = useGameSession("english-beginners", "sentences");
+  const { ready, content, contentLoading, contentError, difficulty, changeDifficulty, progress } =
+    session;
+
+  const challenges = useMemo(
+    () =>
+      (content?.items ?? [])
+        .filter((item) => item.itemType === "sentence")
+        .map((item) => item.data as unknown as SentenceChallenge),
+    [content]
+  );
+
+  if (!ready || challenges.length === 0) {
+    return (
+      <GameContentGate
+        loading={!ready || contentLoading || challenges.length === 0}
+        error={contentError}
+      >
+        {null}
+      </GameContentGate>
+    );
+  }
+
+  return (
+    <SentencesPlay
+      challenges={challenges}
+      difficulty={difficulty}
+      changeDifficulty={changeDifficulty}
+      progress={progress}
+    />
   );
 }

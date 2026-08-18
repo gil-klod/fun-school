@@ -1,18 +1,41 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect, useMemo } from "react";
 import { useGameResume } from "@/hooks/useGameResume";
+import { useGameSession } from "@/hooks/useGameSession";
 import { BackButton } from "@/components/BackButton";
 import { GameShell } from "@/components/GameShell";
 import { GameStatus } from "@/components/GameStatus";
 import { Feedback } from "@/components/Feedback";
-import { useGameProgress } from "@/hooks/useGameProgress";
+import { DifficultySelector } from "@/components/DifficultySelector";
+import { GameContentGate } from "@/components/GameContentGate";
 import { useLocale } from "@/i18n/LocaleProvider";
-import { FIX_SENTENCES, getFixSentenceExplanation } from "@/lib/data/hebrew";
 
-export default function FixSentencePage() {
+interface FixSentenceQuestion {
+  wrong: string;
+  correct: string;
+  mistake: string;
+  options: string[];
+  explanationHe: string;
+  explanationEn: string;
+}
+
+function getFixSentenceExplanation(question: FixSentenceQuestion, locale: "he" | "en") {
+  return locale === "he" ? question.explanationHe : question.explanationEn;
+}
+
+function FixSentencePlay({
+  sentences,
+  difficulty,
+  changeDifficulty,
+  progress,
+}: {
+  sentences: FixSentenceQuestion[];
+  difficulty: ReturnType<typeof useGameSession>["difficulty"];
+  changeDifficulty: ReturnType<typeof useGameSession>["changeDifficulty"];
+  progress: ReturnType<typeof useGameSession>["progress"];
+}) {
   const { t, gameTitle, locale } = useLocale();
-  const progress = useGameProgress({ subjectId: "hebrew", gameId: "fix-sentence" });
   const [index, setIndex] = useState(0);
   const [feedback, setFeedback] = useState<{
     type: "correct" | "wrong";
@@ -20,6 +43,13 @@ export default function FixSentencePage() {
     explanation?: string;
   } | null>(null);
   const [answered, setAnswered] = useState(false);
+
+  useEffect(() => {
+    setIndex(0);
+    setFeedback(null);
+    setAnswered(false);
+  }, [difficulty, sentences.length]);
+
   useGameResume(
     progress.loaded,
     progress.hasSavedProgress,
@@ -44,7 +74,7 @@ export default function FixSentencePage() {
     }
   );
 
-  const question = FIX_SENTENCES[index % FIX_SENTENCES.length];
+  const question = sentences[index % sentences.length];
 
   const nextQuestion = useCallback(() => {
     const nextIndex = index + 1;
@@ -99,9 +129,15 @@ export default function FixSentencePage() {
       <BackButton href="/hebrew" />
 
       <GameShell title={gameTitle("hebrew", "fix-sentence")} emoji="✏️" contentDir="rtl">
+        <DifficultySelector
+          value={difficulty}
+          onChange={changeDifficulty}
+          disabled={answered}
+        />
+
         <GameStatus
           current={index + 1}
-          total={FIX_SENTENCES.length}
+          total={sentences.length}
           correct={progress.correct}
           wrong={progress.wrong}
           score={progress.score}
@@ -153,5 +189,39 @@ export default function FixSentencePage() {
         )}
       </GameShell>
     </main>
+  );
+}
+
+export default function FixSentencePage() {
+  const session = useGameSession("hebrew", "fix-sentence");
+  const { ready, content, contentLoading, contentError, difficulty, changeDifficulty, progress } =
+    session;
+
+  const sentences = useMemo(
+    () =>
+      (content?.items ?? [])
+        .filter((item) => item.itemType === "fix-sentence")
+        .map((item) => item.data as unknown as FixSentenceQuestion),
+    [content]
+  );
+
+  if (!ready || sentences.length === 0) {
+    return (
+      <GameContentGate
+        loading={!ready || contentLoading || sentences.length === 0}
+        error={contentError}
+      >
+        {null}
+      </GameContentGate>
+    );
+  }
+
+  return (
+    <FixSentencePlay
+      sentences={sentences}
+      difficulty={difficulty}
+      changeDifficulty={changeDifficulty}
+      progress={progress}
+    />
   );
 }

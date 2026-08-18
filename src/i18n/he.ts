@@ -27,6 +27,15 @@ export const he: Dictionary = {
     questionN: "שאלה {current}",
     points: "{score} נקודות",
   },
+  difficulty: {
+    label: "רמת קושי",
+    "1": "קל",
+    "2": "בינוני",
+    "3": "קשה",
+  },
+  content: {
+    seedHint: "מנהל המערכת צריך להריץ seed לתוכן המשחקים.",
+  },
   nav: {
     myProgress: "ההתקדמות שלי",
     hi: "שלום",

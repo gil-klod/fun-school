@@ -1,28 +1,41 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect, useMemo } from "react";
 import { useGameResume } from "@/hooks/useGameResume";
+import { useGameSession } from "@/hooks/useGameSession";
 import { BackButton } from "@/components/BackButton";
 import { GameShell } from "@/components/GameShell";
 import { GameStatus } from "@/components/GameStatus";
 import { Feedback } from "@/components/Feedback";
-import { SESSION_SIZE, sessionQuestion } from "@/lib/session";
-import { useGameProgress } from "@/hooks/useGameProgress";
+import { DifficultySelector } from "@/components/DifficultySelector";
+import { GameContentGate } from "@/components/GameContentGate";
+import { sessionQuestion } from "@/lib/session";
 import { useLocale } from "@/i18n/LocaleProvider";
 import {
-  newScrambleWord,
   getWordHint,
   getWordCategory,
+  newScrambleWord,
   type HebrewWord,
-} from "@/lib/data/hebrew";
+} from "@/lib/content/hebrew-helpers";
 
 type WordData = HebrewWord & { scrambled: string };
 
-export default function ScramblePage() {
+function ScramblePlay({
+  words,
+  sessionSize,
+  difficulty,
+  changeDifficulty,
+  progress,
+}: {
+  words: HebrewWord[];
+  sessionSize: number;
+  difficulty: ReturnType<typeof useGameSession>["difficulty"];
+  changeDifficulty: ReturnType<typeof useGameSession>["changeDifficulty"];
+  progress: ReturnType<typeof useGameSession>["progress"];
+}) {
   const { t, gameTitle, locale } = useLocale();
-  const progress = useGameProgress({ subjectId: "hebrew", gameId: "scramble" });
   const [usedWords, setUsedWords] = useState<string[]>([]);
-  const [wordData, setWordData] = useState<WordData>(() => newScrambleWord());
+  const [wordData, setWordData] = useState<WordData>(() => newScrambleWord(words));
   const [guess, setGuess] = useState("");
   const [feedback, setFeedback] = useState<{
     type: "correct" | "wrong";
@@ -30,9 +43,17 @@ export default function ScramblePage() {
   } | null>(null);
   const [answered, setAnswered] = useState(false);
 
+  useEffect(() => {
+    setUsedWords([]);
+    setWordData(newScrambleWord(words));
+    setGuess("");
+    setFeedback(null);
+    setAnswered(false);
+  }, [difficulty, words]);
+
   const advanceToNext = useCallback(
     (currentUsed: string[]) => {
-      const w = newScrambleWord(currentUsed);
+      const w = newScrambleWord(words, currentUsed);
       setWordData(w);
       setGuess("");
       setFeedback(null);
@@ -41,7 +62,7 @@ export default function ScramblePage() {
         state: { wordData: w, usedWords: currentUsed, guess: "", answered: false, feedback: null },
       });
     },
-    [progress]
+    [progress, words]
   );
 
   const nextWord = useCallback(() => {
@@ -117,9 +138,15 @@ export default function ScramblePage() {
       <BackButton href="/hebrew" />
 
       <GameShell title={gameTitle("hebrew", "scramble")} emoji="🔤" contentDir="rtl">
+        <DifficultySelector
+          value={difficulty}
+          onChange={changeDifficulty}
+          disabled={answered}
+        />
+
         <GameStatus
           current={sessionQuestion(progress.round)}
-          total={SESSION_SIZE}
+          total={sessionSize}
           correct={progress.correct}
           wrong={progress.wrong}
           score={progress.score}
@@ -131,7 +158,8 @@ export default function ScramblePage() {
             {wordData.scrambled.split("").join(" ")}
           </p>
           <p className="text-sm text-gray-500">
-            {t("games.hint")}: {getWordHint(wordData, locale)} · {t("games.category")}: {getWordCategory(wordData, locale)}
+            {t("games.hint")}: {getWordHint(wordData, locale)} · {t("games.category")}:{" "}
+            {getWordCategory(wordData, locale)}
           </p>
         </div>
 
@@ -165,5 +193,37 @@ export default function ScramblePage() {
         )}
       </GameShell>
     </main>
+  );
+}
+
+export default function ScramblePage() {
+  const session = useGameSession("hebrew", "scramble");
+  const { ready, content, contentLoading, contentError, difficulty, changeDifficulty, progress } =
+    session;
+
+  const words = useMemo(
+    () =>
+      (content?.items ?? [])
+        .filter((item) => item.itemType === "word")
+        .map((item) => item.data as unknown as HebrewWord),
+    [content]
+  );
+
+  if (!ready || words.length === 0) {
+    return (
+      <GameContentGate loading={!ready || contentLoading || words.length === 0} error={contentError}>
+        {null}
+      </GameContentGate>
+    );
+  }
+
+  return (
+    <ScramblePlay
+      words={words}
+      sessionSize={content!.sessionSize}
+      difficulty={difficulty}
+      changeDifficulty={changeDifficulty}
+      progress={progress}
+    />
   );
 }

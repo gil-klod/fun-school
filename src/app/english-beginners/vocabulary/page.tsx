@@ -1,15 +1,23 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect, useMemo } from "react";
 import { useGameResume } from "@/hooks/useGameResume";
+import { useGameSession } from "@/hooks/useGameSession";
 import { BackButton } from "@/components/BackButton";
 import { GameShell } from "@/components/GameShell";
 import { GameStatus } from "@/components/GameStatus";
 import { Feedback } from "@/components/Feedback";
-import { useGameProgress } from "@/hooks/useGameProgress";
+import { DifficultySelector } from "@/components/DifficultySelector";
+import { GameContentGate } from "@/components/GameContentGate";
 import { useLocale } from "@/i18n/LocaleProvider";
-import { BEGINNER_VOCAB, shuffleArray } from "@/lib/data/english-beginners";
+import { shuffleArray } from "@/lib/content/generators";
 import type { Locale } from "@/i18n/types";
+
+interface VocabPair {
+  english: string;
+  hebrew: string;
+  emoji: string;
+}
 
 type VocabQuestion = {
   prompt: string;
@@ -20,14 +28,15 @@ type VocabQuestion = {
 };
 
 function generateQuestion(
+  vocab: VocabPair[],
   usedWords: string[],
   _locale: Locale,
   t: (key: string, params?: Record<string, string>) => string
 ): VocabQuestion {
-  const available = BEGINNER_VOCAB.filter((v) => !usedWords.includes(v.english));
-  const pool = available.length > 0 ? available : BEGINNER_VOCAB;
+  const available = vocab.filter((v) => !usedWords.includes(v.english));
+  const pool = available.length > 0 ? available : vocab;
   const correct = pool[Math.floor(Math.random() * pool.length)];
-  const others = shuffleArray(BEGINNER_VOCAB.filter((v) => v.english !== correct.english)).slice(0, 3);
+  const others = shuffleArray(vocab.filter((v) => v.english !== correct.english)).slice(0, 3);
   const options = shuffleArray([correct, ...others]);
   const askHebrew = Math.random() > 0.5;
   const word = askHebrew ? correct.hebrew : correct.english;
@@ -45,12 +54,21 @@ function generateQuestion(
   };
 }
 
-export default function VocabularyPage() {
+function VocabularyPlay({
+  vocab,
+  difficulty,
+  changeDifficulty,
+  progress,
+}: {
+  vocab: VocabPair[];
+  difficulty: ReturnType<typeof useGameSession>["difficulty"];
+  changeDifficulty: ReturnType<typeof useGameSession>["changeDifficulty"];
+  progress: ReturnType<typeof useGameSession>["progress"];
+}) {
   const { t, gameTitle, locale } = useLocale();
-  const progress = useGameProgress({ subjectId: "english-beginners", gameId: "vocabulary" });
   const [usedWords, setUsedWords] = useState<string[]>([]);
   const [question, setQuestion] = useState<VocabQuestion>(() =>
-    generateQuestion([], locale, t)
+    generateQuestion(vocab, [], locale, t)
   );
   const [feedback, setFeedback] = useState<{
     type: "correct" | "wrong";
@@ -58,9 +76,16 @@ export default function VocabularyPage() {
   } | null>(null);
   const [answered, setAnswered] = useState(false);
 
+  useEffect(() => {
+    setUsedWords([]);
+    setQuestion(generateQuestion(vocab, [], locale, t));
+    setFeedback(null);
+    setAnswered(false);
+  }, [difficulty, vocab, locale, t]);
+
   const advanceToNext = useCallback(
     (currentUsed: string[]) => {
-      const q = generateQuestion(currentUsed, locale, t);
+      const q = generateQuestion(vocab, currentUsed, locale, t);
       setQuestion(q);
       setFeedback(null);
       setAnswered(false);
@@ -68,7 +93,7 @@ export default function VocabularyPage() {
         state: { question: q, usedWords: currentUsed, answered: false, feedback: null },
       });
     },
-    [progress, locale, t]
+    [progress, vocab, locale, t]
   );
 
   const nextQuestion = useCallback(() => {
@@ -143,9 +168,15 @@ export default function VocabularyPage() {
       <BackButton href="/english-beginners" />
 
       <GameShell title={gameTitle("english-beginners", "vocabulary")} emoji="🎯">
+        <DifficultySelector
+          value={difficulty}
+          onChange={changeDifficulty}
+          disabled={answered}
+        />
+
         <GameStatus
-          current={((progress.round - 1) % BEGINNER_VOCAB.length) + 1}
-          total={BEGINNER_VOCAB.length}
+          current={((progress.round - 1) % vocab.length) + 1}
+          total={vocab.length}
           correct={progress.correct}
           wrong={progress.wrong}
           score={progress.score}
@@ -182,5 +213,36 @@ export default function VocabularyPage() {
         )}
       </GameShell>
     </main>
+  );
+}
+
+export default function VocabularyPage() {
+  const session = useGameSession("english-beginners", "vocabulary");
+  const { ready, content, contentLoading, contentError, difficulty, changeDifficulty, progress } =
+    session;
+
+  const vocab = useMemo(
+    () =>
+      (content?.items ?? [])
+        .filter((item) => item.itemType === "vocab")
+        .map((item) => item.data as unknown as VocabPair),
+    [content]
+  );
+
+  if (!ready || vocab.length === 0) {
+    return (
+      <GameContentGate loading={!ready || contentLoading || vocab.length === 0} error={contentError}>
+        {null}
+      </GameContentGate>
+    );
+  }
+
+  return (
+    <VocabularyPlay
+      vocab={vocab}
+      difficulty={difficulty}
+      changeDifficulty={changeDifficulty}
+      progress={progress}
+    />
   );
 }

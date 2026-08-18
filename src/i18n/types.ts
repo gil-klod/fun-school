@@ -40,6 +40,15 @@ export interface Dictionary {
     questionN: string;
     points: string;
   };
+  difficulty: {
+    label: string;
+    "1": string;
+    "2": string;
+    "3": string;
+  };
+  content: {
+    seedHint: string;
+  };
   nav: {
     myProgress: string;
     hi: string;

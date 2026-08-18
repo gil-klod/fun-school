@@ -1,20 +1,37 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useGameResume } from "@/hooks/useGameResume";
+import { useGameSession } from "@/hooks/useGameSession";
 import { BackButton } from "@/components/BackButton";
 import { GameShell } from "@/components/GameShell";
 import { GameStatus } from "@/components/GameStatus";
 import { Feedback } from "@/components/Feedback";
-import { useGameProgress } from "@/hooks/useGameProgress";
+import { DifficultySelector } from "@/components/DifficultySelector";
+import { GameContentGate } from "@/components/GameContentGate";
 import { useLocale } from "@/i18n/LocaleProvider";
-import { ENGLISH_STORIES } from "@/lib/data/english-natives";
+import type { QuizQuestion } from "@/lib/types";
 
-export default function EnglishComprehensionPage() {
+interface EnglishStory {
+  title: string;
+  text: string;
+  questions: QuizQuestion[];
+}
+
+function EnglishComprehensionPlay({
+  stories,
+  difficulty,
+  changeDifficulty,
+  progress,
+}: {
+  stories: EnglishStory[];
+  difficulty: ReturnType<typeof useGameSession>["difficulty"];
+  changeDifficulty: ReturnType<typeof useGameSession>["changeDifficulty"];
+  progress: ReturnType<typeof useGameSession>["progress"];
+}) {
   const { t, gameTitle } = useLocale();
-  const progress = useGameProgress({ subjectId: "english-natives", gameId: "comprehension" });
   const [storyIndex, setStoryIndex] = useState(() =>
-    Math.floor(Math.random() * ENGLISH_STORIES.length)
+    Math.floor(Math.random() * stories.length)
   );
   const [questionIndex, setQuestionIndex] = useState(0);
   const [feedback, setFeedback] = useState<{
@@ -24,6 +41,15 @@ export default function EnglishComprehensionPage() {
   } | null>(null);
   const [answered, setAnswered] = useState(false);
   const [finished, setFinished] = useState(false);
+
+  useEffect(() => {
+    setStoryIndex(Math.floor(Math.random() * stories.length));
+    setQuestionIndex(0);
+    setFeedback(null);
+    setAnswered(false);
+    setFinished(false);
+  }, [difficulty, stories.length]);
+
   useGameResume(
     progress.loaded,
     progress.hasSavedProgress,
@@ -39,12 +65,18 @@ export default function EnglishComprehensionPage() {
       const s = progress.gameState;
       const storyIdx = s.storyIndex as number;
       const qIdx = s.questionIndex as number;
-      const story = ENGLISH_STORIES[storyIdx];
+      const story = stories[storyIdx];
       if (qIdx + 1 >= story.questions.length) {
         setFinished(true);
         progress.markCompleted();
         progress.save({
-          state: { storyIndex: storyIdx, questionIndex: qIdx, finished: true, answered: false, feedback: null },
+          state: {
+            storyIndex: storyIdx,
+            questionIndex: qIdx,
+            finished: true,
+            answered: false,
+            feedback: null,
+          },
           status: "completed",
         });
       } else {
@@ -57,13 +89,19 @@ export default function EnglishComprehensionPage() {
         progress.setRound((r) => r + 1);
         progress.save({
           round: progress.round + 1,
-          state: { storyIndex: storyIdx, questionIndex: nextIdx, finished: false, answered: false, feedback: null },
+          state: {
+            storyIndex: storyIdx,
+            questionIndex: nextIdx,
+            finished: false,
+            answered: false,
+            feedback: null,
+          },
         });
       }
     }
   );
 
-  const story = ENGLISH_STORIES[storyIndex];
+  const story = stories[storyIndex];
   const question = story.questions[questionIndex];
 
   const handleAnswer = (optionIndex: number) => {
@@ -117,7 +155,42 @@ export default function EnglishComprehensionPage() {
     progress.setRound((r) => r + 1);
     progress.save({
       round: progress.round + 1,
-      state: { storyIndex, questionIndex: nextIdx, finished: false, answered: false, feedback: null },
+      state: {
+        storyIndex,
+        questionIndex: nextIdx,
+        finished: false,
+        answered: false,
+        feedback: null,
+      },
+    });
+  };
+
+  const readAnother = () => {
+    const newStoryIndex = Math.floor(Math.random() * stories.length);
+    setStoryIndex(newStoryIndex);
+    setQuestionIndex(0);
+    setFeedback(null);
+    setAnswered(false);
+    setFinished(false);
+    progress.setScore(0);
+    progress.setStreak(0);
+    progress.setRound(1);
+    progress.setCorrect(0);
+    progress.setWrong(0);
+    progress.save({
+      score: 0,
+      streak: 0,
+      round: 1,
+      correct: 0,
+      wrong: 0,
+      status: "in_progress",
+      state: {
+        storyIndex: newStoryIndex,
+        questionIndex: 0,
+        finished: false,
+        answered: false,
+        feedback: null,
+      },
     });
   };
 
@@ -126,6 +199,12 @@ export default function EnglishComprehensionPage() {
       <BackButton href="/english-natives" />
 
       <GameShell title={gameTitle("english-natives", "comprehension")} emoji="📚" contentDir="ltr">
+        <DifficultySelector
+          value={difficulty}
+          onChange={changeDifficulty}
+          disabled={answered && !finished}
+        />
+
         <GameStatus
           current={questionIndex + 1}
           total={story.questions.length}
@@ -170,7 +249,9 @@ export default function EnglishComprehensionPage() {
 
             {answered && (
               <button onClick={nextQuestion} className="game-btn game-btn-primary w-full">
-                {questionIndex + 1 >= story.questions.length ? t("common.seeResults") : t("common.nextQuestion")}
+                {questionIndex + 1 >= story.questions.length
+                  ? t("common.seeResults")
+                  : t("common.nextQuestion")}
               </button>
             )}
           </>
@@ -180,15 +261,43 @@ export default function EnglishComprehensionPage() {
               type="correct"
               message={t("games.storyComplete", { score: progress.score })}
             />
-            <button
-              onClick={() => window.location.reload()}
-              className="game-btn game-btn-primary w-full mt-4"
-            >
+            <button onClick={readAnother} className="game-btn game-btn-primary w-full mt-4">
               {t("games.readAnother")}
             </button>
           </div>
         )}
       </GameShell>
     </main>
+  );
+}
+
+export default function EnglishComprehensionPage() {
+  const session = useGameSession("english-natives", "comprehension");
+  const { ready, content, contentLoading, contentError, difficulty, changeDifficulty, progress } =
+    session;
+
+  const stories = useMemo(
+    () =>
+      (content?.items ?? [])
+        .filter((item) => item.itemType === "story")
+        .map((item) => item.data as unknown as EnglishStory),
+    [content]
+  );
+
+  if (!ready || stories.length === 0) {
+    return (
+      <GameContentGate loading={!ready || contentLoading || stories.length === 0} error={contentError}>
+        {null}
+      </GameContentGate>
+    );
+  }
+
+  return (
+    <EnglishComprehensionPlay
+      stories={stories}
+      difficulty={difficulty}
+      changeDifficulty={changeDifficulty}
+      progress={progress}
+    />
   );
 }

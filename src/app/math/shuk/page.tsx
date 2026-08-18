@@ -1,31 +1,59 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect, useMemo } from "react";
 import { useGameResume } from "@/hooks/useGameResume";
+import { useGameSession } from "@/hooks/useGameSession";
 import { BackButton } from "@/components/BackButton";
 import { GameShell } from "@/components/GameShell";
 import { GameStatus } from "@/components/GameStatus";
 import { Feedback } from "@/components/Feedback";
-import { SESSION_SIZE, sessionQuestion } from "@/lib/session";
-import { useGameProgress } from "@/hooks/useGameProgress";
+import { DifficultySelector } from "@/components/DifficultySelector";
+import { GameContentGate } from "@/components/GameContentGate";
+import { sessionQuestion } from "@/lib/session";
 import { useLocale } from "@/i18n/LocaleProvider";
-import { generateShukChallenge, buildOptions, getShukItemName } from "@/lib/data/math";
+import {
+  generateShukChallenge,
+  buildOptions,
+  getShukItemName,
+  type ShukItem,
+} from "@/lib/content/generators";
+import type { ShukConfig } from "@/lib/content/types";
 
-function newChallenge() {
-  const c = generateShukChallenge();
+function newChallenge(items: ShukItem[], config: ShukConfig) {
+  const c = generateShukChallenge(items, config);
   return { challenge: c, options: buildOptions(c.change) };
 }
 
-export default function ShukPage() {
+function ShukPlay({
+  items,
+  config,
+  sessionSize,
+  difficulty,
+  changeDifficulty,
+  progress,
+}: {
+  items: ShukItem[];
+  config: ShukConfig;
+  sessionSize: number;
+  difficulty: ReturnType<typeof useGameSession>["difficulty"];
+  changeDifficulty: ReturnType<typeof useGameSession>["changeDifficulty"];
+  progress: ReturnType<typeof useGameSession>["progress"];
+}) {
   const { t, gameTitle, locale } = useLocale();
-  const progress = useGameProgress({ subjectId: "math", gameId: "shuk" });
-  const [round, setRound] = useState(() => newChallenge());
+  const [round, setRound] = useState(() => newChallenge(items, config));
   const { challenge, options } = round;
   const [feedback, setFeedback] = useState<{
     type: "correct" | "wrong";
     message: string;
   } | null>(null);
   const [answered, setAnswered] = useState(false);
+
+  useEffect(() => {
+    setRound(newChallenge(items, config));
+    setFeedback(null);
+    setAnswered(false);
+  }, [difficulty, items, config]);
+
   useGameResume(
     progress.loaded,
     progress.hasSavedProgress,
@@ -39,7 +67,7 @@ export default function ShukPage() {
     },
     () => {
       progress.setRound((r) => r + 1);
-      const newR = newChallenge();
+      const newR = newChallenge(items, config);
       setRound(newR);
       setFeedback(null);
       setAnswered(false);
@@ -53,7 +81,7 @@ export default function ShukPage() {
   const correct = challenge.change;
 
   const nextChallenge = useCallback(() => {
-    const newR = newChallenge();
+    const newR = newChallenge(items, config);
     setRound(newR);
     setFeedback(null);
     setAnswered(false);
@@ -62,7 +90,7 @@ export default function ShukPage() {
       round: progress.round + 1,
       state: { round: newR, answered: false, feedback: null },
     });
-  }, [progress]);
+  }, [progress, items, config]);
 
   const handleAnswer = (answer: number) => {
     if (answered) return;
@@ -106,9 +134,15 @@ export default function ShukPage() {
       <BackButton href="/math" />
 
       <GameShell title={gameTitle("math", "shuk")} emoji="🛒">
+        <DifficultySelector
+          value={difficulty}
+          onChange={changeDifficulty}
+          disabled={answered}
+        />
+
         <GameStatus
           current={sessionQuestion(progress.round)}
-          total={SESSION_SIZE}
+          total={sessionSize}
           correct={progress.correct}
           wrong={progress.wrong}
           score={progress.score}
@@ -164,5 +198,46 @@ export default function ShukPage() {
         )}
       </GameShell>
     </main>
+  );
+}
+
+export default function ShukPage() {
+  const session = useGameSession("math", "shuk");
+  const { ready, content, contentLoading, contentError, difficulty, changeDifficulty, progress } =
+    session;
+
+  const items = useMemo(
+    () =>
+      (content?.items ?? [])
+        .filter((item) => item.itemType === "shuk-item")
+        .map((item) => item.data as unknown as ShukItem),
+    [content]
+  );
+
+  const config = useMemo(
+    () => (content?.config ?? null) as ShukConfig | null,
+    [content]
+  );
+
+  if (!ready || !config || items.length === 0) {
+    return (
+      <GameContentGate
+        loading={!ready || contentLoading || !config || items.length === 0}
+        error={contentError}
+      >
+        {null}
+      </GameContentGate>
+    );
+  }
+
+  return (
+    <ShukPlay
+      items={items}
+      config={config}
+      sessionSize={content!.sessionSize}
+      difficulty={difficulty}
+      changeDifficulty={changeDifficulty}
+      progress={progress}
+    />
   );
 }

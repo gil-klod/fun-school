@@ -1,25 +1,47 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect, useMemo } from "react";
 import { useGameResume } from "@/hooks/useGameResume";
+import { useGameSession } from "@/hooks/useGameSession";
 import { BackButton } from "@/components/BackButton";
 import { GameShell } from "@/components/GameShell";
 import { GameStatus } from "@/components/GameStatus";
 import { Feedback } from "@/components/Feedback";
-import { SESSION_SIZE, sessionQuestion } from "@/lib/session";
-import { useGameProgress } from "@/hooks/useGameProgress";
+import { DifficultySelector } from "@/components/DifficultySelector";
+import { GameContentGate } from "@/components/GameContentGate";
+import { sessionQuestion } from "@/lib/session";
 import { useLocale } from "@/i18n/LocaleProvider";
-import { generateMystery, buildOptions, getMysteryText, getMysteryHint } from "@/lib/data/math";
+import {
+  generateMystery,
+  buildOptions,
+  getMysteryText,
+  getMysteryHint,
+  type MysteryTemplate,
+} from "@/lib/content/generators";
+import type { MysteryConfig } from "@/lib/content/types";
 
-function newRound() {
-  const q = generateMystery();
+function newRound(templates: MysteryTemplate[], config: MysteryConfig) {
+  const q = generateMystery(templates, config);
   return { question: q, options: buildOptions(q.answer) };
 }
 
-export default function MysteryPage() {
+function MysteryPlay({
+  templates,
+  config,
+  sessionSize,
+  difficulty,
+  changeDifficulty,
+  progress,
+}: {
+  templates: MysteryTemplate[];
+  config: MysteryConfig;
+  sessionSize: number;
+  difficulty: ReturnType<typeof useGameSession>["difficulty"];
+  changeDifficulty: ReturnType<typeof useGameSession>["changeDifficulty"];
+  progress: ReturnType<typeof useGameSession>["progress"];
+}) {
   const { t, gameTitle, locale } = useLocale();
-  const progress = useGameProgress({ subjectId: "math", gameId: "mystery" });
-  const [round, setRound] = useState(() => newRound());
+  const [round, setRound] = useState(() => newRound(templates, config));
   const { question, options } = round;
   const [feedback, setFeedback] = useState<{
     type: "correct" | "wrong";
@@ -28,6 +50,14 @@ export default function MysteryPage() {
   } | null>(null);
   const [answered, setAnswered] = useState(false);
   const [showHint, setShowHint] = useState(false);
+
+  useEffect(() => {
+    setRound(newRound(templates, config));
+    setFeedback(null);
+    setAnswered(false);
+    setShowHint(false);
+  }, [difficulty, templates, config]);
+
   useGameResume(
     progress.loaded,
     progress.hasSavedProgress,
@@ -42,7 +72,7 @@ export default function MysteryPage() {
     },
     () => {
       progress.setRound((r) => r + 1);
-      const newR = newRound();
+      const newR = newRound(templates, config);
       setRound(newR);
       setFeedback(null);
       setAnswered(false);
@@ -57,7 +87,7 @@ export default function MysteryPage() {
   const correct = question.answer;
 
   const nextQuestion = useCallback(() => {
-    const newR = newRound();
+    const newR = newRound(templates, config);
     setRound(newR);
     setFeedback(null);
     setAnswered(false);
@@ -67,7 +97,7 @@ export default function MysteryPage() {
       round: progress.round + 1,
       state: { round: newR, answered: false, feedback: null, showHint: false },
     });
-  }, [progress]);
+  }, [progress, templates, config]);
 
   const handleAnswer = (answer: number) => {
     if (answered) return;
@@ -108,9 +138,15 @@ export default function MysteryPage() {
       <BackButton href="/math" />
 
       <GameShell title={gameTitle("math", "mystery")} emoji="🔍">
+        <DifficultySelector
+          value={difficulty}
+          onChange={changeDifficulty}
+          disabled={answered}
+        />
+
         <GameStatus
           current={sessionQuestion(progress.round)}
-          total={SESSION_SIZE}
+          total={sessionSize}
           correct={progress.correct}
           wrong={progress.wrong}
           score={progress.score}
@@ -167,5 +203,46 @@ export default function MysteryPage() {
         )}
       </GameShell>
     </main>
+  );
+}
+
+export default function MysteryPage() {
+  const session = useGameSession("math", "mystery");
+  const { ready, content, contentLoading, contentError, difficulty, changeDifficulty, progress } =
+    session;
+
+  const templates = useMemo(
+    () =>
+      (content?.items ?? [])
+        .filter((item) => item.itemType === "mystery-template")
+        .map((item) => item.data as unknown as MysteryTemplate),
+    [content]
+  );
+
+  const config = useMemo(
+    () => (content?.config ?? null) as MysteryConfig | null,
+    [content]
+  );
+
+  if (!ready || !config || templates.length === 0) {
+    return (
+      <GameContentGate
+        loading={!ready || contentLoading || !config || templates.length === 0}
+        error={contentError}
+      >
+        {null}
+      </GameContentGate>
+    );
+  }
+
+  return (
+    <MysteryPlay
+      templates={templates}
+      config={config}
+      sessionSize={content!.sessionSize}
+      difficulty={difficulty}
+      changeDifficulty={changeDifficulty}
+      progress={progress}
+    />
   );
 }

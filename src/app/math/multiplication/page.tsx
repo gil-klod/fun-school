@@ -1,36 +1,55 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect, useMemo } from "react";
 import { useGameResume } from "@/hooks/useGameResume";
+import { useGameSession } from "@/hooks/useGameSession";
 import { BackButton } from "@/components/BackButton";
 import { GameShell } from "@/components/GameShell";
 import { GameStatus } from "@/components/GameStatus";
 import { Feedback } from "@/components/Feedback";
-import { SESSION_SIZE, sessionQuestion } from "@/lib/session";
-import { useGameProgress } from "@/hooks/useGameProgress";
+import { DifficultySelector } from "@/components/DifficultySelector";
+import { GameContentGate } from "@/components/GameContentGate";
+import { sessionQuestion } from "@/lib/session";
 import { useLocale } from "@/i18n/LocaleProvider";
-import {
-  generateMultiplication,
-  TABLES,
-  buildOptions,
-} from "@/lib/data/math";
+import { generateMultiplication, buildOptions } from "@/lib/content/generators";
+import type { MultiplicationConfig } from "@/lib/content/types";
 
-function newRound(table?: number) {
-  const q = generateMultiplication(table);
+function newRound(config: MultiplicationConfig, table?: number) {
+  const q = generateMultiplication(config, table);
   return { question: q, options: buildOptions(q.a * q.b) };
 }
 
-export default function MultiplicationPage() {
+function MultiplicationPlay({
+  config,
+  sessionSize,
+  difficulty,
+  changeDifficulty,
+  progress,
+}: {
+  config: MultiplicationConfig;
+  sessionSize: number;
+  difficulty: ReturnType<typeof useGameSession>["difficulty"];
+  changeDifficulty: ReturnType<typeof useGameSession>["changeDifficulty"];
+  progress: ReturnType<typeof useGameSession>["progress"];
+}) {
   const { t, gameTitle } = useLocale();
-  const progress = useGameProgress({ subjectId: "math", gameId: "multiplication" });
+  const tables = config.tables.length > 0 ? config.tables : [2, 3, 4, 5];
   const [table, setTable] = useState<number | undefined>(undefined);
-  const [round, setRound] = useState(() => newRound());
+  const [round, setRound] = useState(() => newRound(config));
   const { question, options } = round;
   const [feedback, setFeedback] = useState<{
     type: "correct" | "wrong";
     message: string;
   } | null>(null);
   const [answered, setAnswered] = useState(false);
+
+  useEffect(() => {
+    setTable(undefined);
+    setRound(newRound(config));
+    setFeedback(null);
+    setAnswered(false);
+  }, [difficulty, config]);
+
   useGameResume(
     progress.loaded,
     progress.hasSavedProgress,
@@ -47,7 +66,7 @@ export default function MultiplicationPage() {
       const savedTable = progress.gameState.table as number | undefined;
       setTable(savedTable);
       progress.setRound((r) => r + 1);
-      const newR = newRound(savedTable);
+      const newR = newRound(config, savedTable);
       setRound(newR);
       setFeedback(null);
       setAnswered(false);
@@ -62,7 +81,7 @@ export default function MultiplicationPage() {
 
   const nextQuestion = useCallback(
     (selectedTable?: number) => {
-      const newR = newRound(selectedTable ?? table);
+      const newR = newRound(config, selectedTable ?? table);
       setRound(newR);
       setFeedback(null);
       setAnswered(false);
@@ -72,7 +91,7 @@ export default function MultiplicationPage() {
         state: { table: selectedTable ?? table, round: newR, answered: false, feedback: null },
       });
     },
-    [table, progress]
+    [table, progress, config]
   );
 
   const handleAnswer = (answer: number) => {
@@ -113,27 +132,39 @@ export default function MultiplicationPage() {
       <BackButton href="/math" />
 
       <GameShell title={gameTitle("math", "multiplication")} emoji="⚔️">
+        <DifficultySelector
+          value={difficulty}
+          onChange={changeDifficulty}
+          disabled={answered}
+        />
+
         <div className="flex gap-2 overflow-x-auto pb-1 mb-2 scrollbar-none">
           <button
-            onClick={() => { setTable(undefined); nextQuestion(undefined); }}
+            onClick={() => {
+              setTable(undefined);
+              nextQuestion(undefined);
+            }}
             className={`px-4 py-2 rounded-xl font-semibold text-sm transition-all ${!table ? "bg-indigo-500 text-white" : "bg-white border-2 border-indigo-200"}`}
           >
             {t("games.mixed")}
           </button>
-          {TABLES.map((t) => (
+          {tables.map((tbl) => (
             <button
-              key={t}
-              onClick={() => { setTable(t); nextQuestion(t); }}
-              className={`px-4 py-2 rounded-xl font-semibold text-sm transition-all ${table === t ? "bg-indigo-500 text-white" : "bg-white border-2 border-indigo-200"}`}
+              key={tbl}
+              onClick={() => {
+                setTable(tbl);
+                nextQuestion(tbl);
+              }}
+              className={`px-4 py-2 rounded-xl font-semibold text-sm transition-all ${table === tbl ? "bg-indigo-500 text-white" : "bg-white border-2 border-indigo-200"}`}
             >
-              ×{t}
+              ×{tbl}
             </button>
           ))}
         </div>
 
         <GameStatus
           current={sessionQuestion(progress.round)}
-          total={SESSION_SIZE}
+          total={sessionSize}
           correct={progress.correct}
           wrong={progress.wrong}
           score={progress.score}
@@ -171,5 +202,34 @@ export default function MultiplicationPage() {
         )}
       </GameShell>
     </main>
+  );
+}
+
+export default function MultiplicationPage() {
+  const session = useGameSession("math", "multiplication");
+  const { ready, content, contentLoading, contentError, difficulty, changeDifficulty, progress } =
+    session;
+
+  const config = useMemo(
+    () => (content?.config ?? null) as MultiplicationConfig | null,
+    [content]
+  );
+
+  if (!ready || !config) {
+    return (
+      <GameContentGate loading={!ready || contentLoading || !config} error={contentError}>
+        {null}
+      </GameContentGate>
+    );
+  }
+
+  return (
+    <MultiplicationPlay
+      config={config}
+      sessionSize={content!.sessionSize}
+      difficulty={difficulty}
+      changeDifficulty={changeDifficulty}
+      progress={progress}
+    />
   );
 }
