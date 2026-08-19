@@ -4,6 +4,7 @@ import bcrypt from "bcryptjs";
 import { authConfig } from "@/auth.config";
 import { connectDB } from "@/lib/db";
 import { User } from "@/models/User";
+import { ensureAdminFlag } from "@/lib/auth/adminEmails";
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   ...authConfig,
@@ -23,11 +24,13 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         const valid = await bcrypt.compare(String(credentials.password), user.passwordHash);
         if (!valid) return null;
 
+        const isAdmin = await ensureAdminFlag(user);
+
         return {
           id: user._id.toString(),
           name: user.name,
           email: user.email,
-          isAdmin: !!user.isAdmin,
+          isAdmin,
         };
       },
     }),

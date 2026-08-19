@@ -13,7 +13,8 @@ export default auth((req) => {
   const isPublic =
     publicPaths.some((p) => pathname.startsWith(p)) ||
     pathname.startsWith("/api/auth") ||
-    pathname.startsWith("/api/content");
+    pathname.startsWith("/api/content") ||
+    pathname.startsWith("/api/seed");
 
   const isAdminRoute =
     pathname.startsWith("/admin") || pathname.startsWith("/api/admin");
