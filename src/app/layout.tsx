@@ -1,8 +1,6 @@
 import type { Metadata } from "next";
 import { Rubik } from "next/font/google";
-import { AuthProvider } from "@/components/AuthProvider";
-import { LocaleProvider } from "@/i18n/LocaleProvider";
-import { NavBar } from "@/components/NavBar";
+import { AppShell } from "@/components/AppShell";
 import "./globals.css";
 
 const rubik = Rubik({
@@ -20,12 +18,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="he" dir="rtl" className={`${rubik.variable} h-full antialiased`}>
       <body className="min-h-full flex flex-col">
-        <LocaleProvider>
-          <AuthProvider>
-            <NavBar />
-            {children}
-          </AuthProvider>
-        </LocaleProvider>
+        <AppShell>{children}</AppShell>
       </body>
     </html>
   );

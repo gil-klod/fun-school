@@ -143,6 +143,18 @@ export const en: Dictionary = {
       },
     },
   },
+  mascot: {
+    name: "Milo",
+    dismiss: "Close",
+    welcome: "Hi! I'm Milo 🎒 Pick a subject and let's play!",
+    correct0: "Amazing! Clap clap! 👏",
+    correct1: "You're on fire! Keep going!",
+    correct2: "Brilliant! I knew you could do it!",
+    correct3: "Super star! ⭐",
+    wrong0: "Almost! Try again — you've got this!",
+    wrong1: "No worries! Every mistake helps us learn.",
+    wrong2: "Close one! Let's crush the next question!",
+  },
   games: {
     correct: "Correct! 🌟",
     wrongAnswer: "Answer: {answer}",

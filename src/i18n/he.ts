@@ -143,6 +143,18 @@ export const he: Dictionary = {
       },
     },
   },
+  mascot: {
+    name: "מילו",
+    dismiss: "סגור",
+    welcome: "היי! אני מילו 🎒 בחר נושא ובוא נשחק!",
+    correct0: "מדהים! כפיים כפיים! 👏",
+    correct1: "אתה בוער! המשך כך!",
+    correct2: "מבריק! ידעתי שתצליח!",
+    correct3: "כוכב על! ⭐",
+    wrong0: "כמעט! נסה שוב — אתה יכול!",
+    wrong1: "לא נורא! מכל טעות לומדים.",
+    wrong2: "קרוב! נעיף את השאלה הבאה!",
+  },
   games: {
     correct: "כל הכבוד! 🌟",
     wrongAnswer: "התשובה: {answer}",

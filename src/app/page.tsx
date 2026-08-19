@@ -2,6 +2,7 @@
 
 import { SubjectCard } from "@/components/SubjectCard";
 import { ContinueBanner } from "@/components/ContinueBanner";
+import { MascotWelcome } from "@/components/mascot";
 import { subjects } from "@/lib/subjects";
 import { APP_CONTAINER } from "@/lib/layout";
 import { useLocale } from "@/i18n/LocaleProvider";
@@ -20,6 +21,7 @@ export default function HomePage() {
       </header>
 
       <ContinueBanner />
+      <MascotWelcome />
 
       <div className="grid grid-cols-1 gap-4 sm:gap-5">
         {subjects.map((subject) => (

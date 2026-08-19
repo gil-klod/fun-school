@@ -120,6 +120,18 @@ export interface Dictionary {
     recPractice: string;
   };
   subjects: Record<string, SubjectStrings>;
+  mascot: {
+    name: string;
+    dismiss: string;
+    welcome: string;
+    correct0: string;
+    correct1: string;
+    correct2: string;
+    correct3: string;
+    wrong0: string;
+    wrong1: string;
+    wrong2: string;
+  };
   games: {
     correct: string;
     wrongAnswer: string;

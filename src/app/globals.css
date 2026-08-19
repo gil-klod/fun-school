@@ -62,6 +62,53 @@ body {
   animation: pop 0.3s ease-out;
 }
 
+/* Milo mascot animations */
+@keyframes mascot-clap-left {
+  0%, 100% { transform: rotate(18deg); }
+  50% { transform: rotate(-8deg); }
+}
+
+@keyframes mascot-clap-right {
+  0%, 100% { transform: rotate(-18deg); }
+  50% { transform: rotate(8deg); }
+}
+
+@keyframes mascot-wave {
+  0%, 100% { transform: rotate(0deg); }
+  25% { transform: rotate(-12deg); }
+  75% { transform: rotate(12deg); }
+}
+
+@keyframes mascot-talk {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-3px); }
+}
+
+@keyframes mascot-idle {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+}
+
+.mascot-idle {
+  animation: mascot-idle 2.5s ease-in-out infinite;
+}
+
+.mascot-clap .mascot-hand:first-of-type {
+  animation: mascot-clap-left 0.35s ease-in-out infinite;
+}
+
+.mascot-clap .mascot-hand:last-of-type {
+  animation: mascot-clap-right 0.35s ease-in-out infinite;
+}
+
+.mascot-wave {
+  animation: mascot-wave 0.6s ease-in-out infinite;
+}
+
+.mascot-talk {
+  animation: mascot-talk 0.5s ease-in-out infinite;
+}
+
 .game-btn {
   @apply px-6 py-4 rounded-2xl font-bold text-lg transition-all duration-200 shadow-md hover:shadow-lg hover:scale-105 active:scale-95 cursor-pointer;
 }

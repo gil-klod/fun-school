@@ -1,9 +1,14 @@
 "use client";
 
+import { useEffect, useRef } from "react";
+import { useMascot } from "@/components/mascot";
+
 interface FeedbackProps {
   type: "correct" | "wrong" | "info";
   message: string;
   explanation?: string;
+  /** Trigger Milo mascot reaction. Default true for correct/wrong. */
+  mascot?: boolean;
 }
 
 const styles = {
@@ -18,7 +23,20 @@ const emojis = {
   info: "💡",
 };
 
-export function Feedback({ type, message, explanation }: FeedbackProps) {
+export function Feedback({ type, message, explanation, mascot = true }: FeedbackProps) {
+  const { celebrate, encourage } = useMascot();
+  const lastReaction = useRef("");
+
+  useEffect(() => {
+    if (!mascot || type === "info") return;
+    const key = `${type}:${message}`;
+    if (lastReaction.current === key) return;
+    lastReaction.current = key;
+
+    if (type === "correct") celebrate();
+    else if (type === "wrong") encourage();
+  }, [type, message, mascot, celebrate, encourage]);
+
   return (
     <div className={`rounded-xl border px-4 py-3 text-center ${styles[type]}`}>
       <p className="text-base font-bold">
