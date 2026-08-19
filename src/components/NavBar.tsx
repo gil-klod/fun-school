@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useSession } from "next-auth/react";
 import { useLocale } from "@/i18n/LocaleProvider";
 import { SideMenu } from "@/components/SideMenu";
-import { MiloToggleButton } from "@/components/mascot";
+import { MiloToggleButton, MascotMuteButton } from "@/components/mascot";
 import { APP_CONTAINER } from "@/lib/layout";
 
 function MenuIcon() {
@@ -30,7 +30,8 @@ export function NavBar() {
           </Link>
 
           {session ? (
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1 sm:gap-2">
+              <MascotMuteButton />
               <MiloToggleButton />
               <button
                 type="button"

@@ -124,6 +124,9 @@ export interface Dictionary {
     name: string;
     dismiss: string;
     welcome: string;
+    mute: string;
+    unmute: string;
+    replay: string;
     toggleOn: string;
     toggleOff: string;
     tapMilo: string;

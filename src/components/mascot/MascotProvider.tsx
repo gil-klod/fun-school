@@ -13,7 +13,7 @@ import { usePathname } from "next/navigation";
 import { useLocale } from "@/i18n/LocaleProvider";
 import { pickContextLine, resolveMascotContext } from "@/lib/mascot/lines";
 import { Mascot } from "./Mascot";
-import { speakText, stopSpeaking } from "./speech";
+import { isMascotMuted, setMascotMuted, speakText, stopSpeaking } from "./speech";
 import type { MascotAnimation, MascotContextValue, MascotShowOptions } from "./types";
 
 const WELCOME_KEY = "fun-school-mascot-welcome";
@@ -32,16 +32,20 @@ export function MascotProvider({ children }: { children: React.ReactNode }) {
   const { t, locale } = useLocale();
   const pathname = usePathname();
   const [pinned, setPinned] = useState(false);
-  const [pinnedLoaded, setPinnedLoaded] = useState(false);
+  const [muted, setMuted] = useState(false);
+  const [prefsLoaded, setPrefsLoaded] = useState(false);
   const [bubbleOpen, setBubbleOpen] = useState(false);
+  const [speaking, setSpeaking] = useState(false);
   const [text, setText] = useState("");
   const [animation, setAnimation] = useState<MascotAnimation>("idle");
   const hideTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const mutedRef = useRef(muted);
+  mutedRef.current = muted;
 
   useEffect(() => {
-    const stored = localStorage.getItem(PINNED_KEY);
-    if (stored === "1") setPinned(true);
-    setPinnedLoaded(true);
+    setPinned(localStorage.getItem(PINNED_KEY) === "1");
+    setMuted(isMascotMuted());
+    setPrefsLoaded(true);
   }, []);
 
   const clearHideTimer = useCallback(() => {
@@ -54,6 +58,7 @@ export function MascotProvider({ children }: { children: React.ReactNode }) {
   const closeBubble = useCallback(() => {
     clearHideTimer();
     stopSpeaking();
+    setSpeaking(false);
     setBubbleOpen(false);
     setText("");
     setAnimation("idle");
@@ -62,6 +67,25 @@ export function MascotProvider({ children }: { children: React.ReactNode }) {
   const hide = useCallback(() => {
     closeBubble();
   }, [closeBubble]);
+
+  const runSpeech = useCallback(
+    (msg: string, baseAnimation: MascotAnimation) => {
+      speakText(msg, locale, {
+        muted: mutedRef.current,
+        onStart: () => {
+          setSpeaking(true);
+          if (baseAnimation !== "clap" && baseAnimation !== "wave") {
+            setAnimation("talk");
+          }
+        },
+        onEnd: () => {
+          setSpeaking(false);
+          setAnimation(baseAnimation === "clap" || baseAnimation === "wave" ? baseAnimation : "idle");
+        },
+      });
+    },
+    [locale]
+  );
 
   const show = useCallback(
     ({
@@ -72,11 +96,11 @@ export function MascotProvider({ children }: { children: React.ReactNode }) {
     }: MascotShowOptions) => {
       clearHideTimer();
       setText(msg);
-      setAnimation(anim);
+      setAnimation(anim === "talk" ? "idle" : anim);
       setBubbleOpen(true);
 
       if (speak) {
-        speakText(msg, locale);
+        runSpeech(msg, anim);
       }
 
       if (durationMs > 0) {
@@ -85,8 +109,13 @@ export function MascotProvider({ children }: { children: React.ReactNode }) {
         }, durationMs);
       }
     },
-    [clearHideTimer, closeBubble, locale]
+    [clearHideTimer, closeBubble, runSpeech]
   );
+
+  const replaySpeech = useCallback(() => {
+    if (!text || mutedRef.current) return;
+    runSpeech(text, animation);
+  }, [text, animation, runSpeech]);
 
   const sayContextLine = useCallback(() => {
     const context = resolveMascotContext(pathname);
@@ -111,6 +140,18 @@ export function MascotProvider({ children }: { children: React.ReactNode }) {
       return next;
     });
   }, [sayContextLine, closeBubble]);
+
+  const toggleMuted = useCallback(() => {
+    setMuted((prev) => {
+      const next = !prev;
+      setMascotMuted(next);
+      if (next) {
+        stopSpeaking();
+        setSpeaking(false);
+      }
+      return next;
+    });
+  }, []);
 
   const celebrate = useCallback(() => {
     show({
@@ -148,7 +189,11 @@ export function MascotProvider({ children }: { children: React.ReactNode }) {
       welcome,
       sayContextLine,
       togglePinned,
+      toggleMuted,
+      replaySpeech,
       pinned,
+      muted,
+      speaking,
       bubbleOpen,
       text,
       animation,
@@ -161,7 +206,11 @@ export function MascotProvider({ children }: { children: React.ReactNode }) {
       welcome,
       sayContextLine,
       togglePinned,
+      toggleMuted,
+      replaySpeech,
       pinned,
+      muted,
+      speaking,
       bubbleOpen,
       text,
       animation,
@@ -171,7 +220,7 @@ export function MascotProvider({ children }: { children: React.ReactNode }) {
   return (
     <MascotContext.Provider value={value}>
       {children}
-      {pinnedLoaded ? <Mascot /> : null}
+      {prefsLoaded ? <Mascot /> : null}
     </MascotContext.Provider>
   );
 }
