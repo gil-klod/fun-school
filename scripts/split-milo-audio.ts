@@ -12,6 +12,7 @@ import { spawnSync } from "child_process";
 import ffmpegStatic from "ffmpeg-static";
 import { getMiloTextCatalog, type MiloTextEntry } from "../src/lib/mascot/catalog";
 import { miloAudioFilename } from "../src/lib/mascot/audio";
+import type { MiloBoundaryFile } from "../src/lib/mascot/boundaries";
 
 const OUT_DIR = path.join(process.cwd(), "public/audio/milo");
 const NOISE_DB = -35;
@@ -26,19 +27,27 @@ function parseArgs() {
   const args = process.argv.slice(2);
   let input = "";
   let variant: Variant | "" = "";
+  let boundaries = "";
   for (let i = 0; i < args.length; i++) {
     if (args[i] === "--input") input = args[++i] ?? "";
     if (args[i] === "--variant") variant = (args[++i] ?? "") as Variant;
+    if (args[i] === "--boundaries") boundaries = args[++i] ?? "";
   }
   if (!input || !variant) {
-    console.error("Usage: npx tsx scripts/split-milo-audio.ts --input <file.mp3> --variant en|he-male|he-female");
+    console.error(
+      "Usage: npx tsx scripts/split-milo-audio.ts --input <file.mp3> --variant en|he-male|he-female [--boundaries boundaries.json]"
+    );
     process.exit(1);
   }
   if (!fs.existsSync(input)) {
     console.error(`Input not found: ${input}`);
     process.exit(1);
   }
-  return { input, variant };
+  if (boundaries && !fs.existsSync(boundaries)) {
+    console.error(`Boundaries not found: ${boundaries}`);
+    process.exit(1);
+  }
+  return { input, variant, boundaries };
 }
 
 function ffmpegPath(): string {
@@ -347,6 +356,19 @@ function segmentsFromCatalogGroups(
   return fine;
 }
 
+function loadBoundarySegments(boundariesPath: string, entries: MiloTextEntry[]): Segment[] {
+  const raw = JSON.parse(fs.readFileSync(boundariesPath, "utf8")) as MiloBoundaryFile;
+  if (raw.clips.length !== entries.length) {
+    throw new Error(`Boundaries have ${raw.clips.length} clips, expected ${entries.length}.`);
+  }
+  for (let i = 0; i < entries.length; i++) {
+    if (raw.clips[i].id !== entries[i].id) {
+      throw new Error(`Boundary clip ${i + 1} id mismatch: ${raw.clips[i].id} vs ${entries[i].id}`);
+    }
+  }
+  return raw.clips.map((clip) => ({ start: clip.start, end: clip.end }));
+}
+
 function catalogForVariant(variant: Variant) {
   const catalog = getMiloTextCatalog();
   if (variant === "en") return catalog.filter((entry) => entry.locale === "en");
@@ -372,20 +394,26 @@ function cutSegment(input: string, start: number, end: number, output: string) {
 }
 
 async function main() {
-  const { input, variant } = parseArgs();
+  const { input, variant, boundaries } = parseArgs();
   const entries = catalogForVariant(variant);
-  const groups = catalogGroups(entries);
   const duration = probeDuration(input);
-  const silences = detectSilences(input);
-  const segments = segmentsFromCatalogGroups(duration, silences, groups);
+  const segments = boundaries
+    ? loadBoundarySegments(boundaries, entries)
+    : segmentsFromCatalogGroups(duration, detectSilences(input), catalogGroups(entries));
 
   fs.mkdirSync(OUT_DIR, { recursive: true });
 
   console.log(`Input: ${input}`);
   console.log(`Variant: ${variant}`);
   console.log(`Duration: ${duration.toFixed(2)}s`);
-  console.log(`Catalog groups: ${groups.length} (${groups.filter((g) => g.size > 1).length} context blocks)`);
-  console.log(`Line-break silences: ${silences.filter((s) => isLineBreak(s, silences)).length}`);
+  if (boundaries) {
+    console.log(`Using manual boundaries: ${boundaries}`);
+  } else {
+    const groups = catalogGroups(entries);
+    const silences = detectSilences(input);
+    console.log(`Catalog groups: ${groups.length} (${groups.filter((g) => g.size > 1).length} context blocks)`);
+    console.log(`Line-break silences: ${silences.filter((s) => isLineBreak(s, silences)).length}`);
+  }
   console.log(`Writing ${entries.length} clips to ${OUT_DIR}\n`);
 
   entries.forEach((entry, index) => {

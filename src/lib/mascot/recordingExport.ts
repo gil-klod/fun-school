@@ -28,6 +28,11 @@ export function formatMiloRecordingExport(
   return entries.map((entry) => entry.text.trim()).join(separator);
 }
 
+/** One line per box — record separately in DaVinci to avoid splitting one long MP3. */
+export function formatMiloRecordingExportLines(entries: MiloTextEntry[]): string[] {
+  return entries.map((entry) => entry.text.trim());
+}
+
 export function miloRecordingExportHint(lineCount: number, mode: MiloRecordingPauseMode): string {
   const { hint } = MILO_RECORDING_PAUSE_MODES[mode];
   return `${lineCount} lines · ${hint}`;

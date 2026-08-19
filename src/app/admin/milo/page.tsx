@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { AdminNav } from "@/components/admin/AdminNav";
+import { MiloBoundaryTrimmer } from "@/components/admin/MiloBoundaryTrimmer";
 import { getMiloTextCatalog } from "@/lib/mascot/catalog";
 import {
   formatMiloRecordingExport,
@@ -123,6 +124,7 @@ export default function AdminMiloPage() {
   const [reviewFilter, setReviewFilter] = useState<ReviewFilter>("all");
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
   const [exportOpen, setExportOpen] = useState(false);
+  const [trimOpen, setTrimOpen] = useState(false);
   const [pauseMode, setPauseMode] = useState<MiloRecordingPauseMode>("eleven-v3");
 
   const englishExport = useMemo(
@@ -231,12 +233,27 @@ export default function AdminMiloPage() {
         </select>
         <button
           type="button"
+          onClick={() => setTrimOpen((v) => !v)}
+          className="px-3 py-2 rounded-xl border-2 border-rose-200 text-sm font-semibold hover:bg-rose-50 text-rose-900"
+        >
+          {trimOpen ? "Hide" : "Show"} manual split tool
+        </button>
+        <button
+          type="button"
           onClick={() => setExportOpen((v) => !v)}
           className="px-3 py-2 rounded-xl border-2 border-indigo-100 text-sm font-semibold hover:bg-indigo-50"
         >
           {exportOpen ? "Hide" : "Show"} recording export
         </button>
       </div>
+
+      {trimOpen && (
+        <MiloBoundaryTrimmer
+          variant="he-female"
+          title="Hebrew (female)"
+          entries={hebrewFemaleEntries}
+        />
+      )}
 
       {exportOpen && (
         <section className="mb-6">
