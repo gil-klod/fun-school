@@ -91,6 +91,7 @@ export interface Dictionary {
     invalidCredentials: string;
     emailVerifiedBanner: string;
     checkEmail: string;
+    registerSuccessLogin: string;
     goToLogin: string;
     devVerifyLink: string;
   };

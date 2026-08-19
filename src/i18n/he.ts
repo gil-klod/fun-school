@@ -77,6 +77,7 @@ export const he: Dictionary = {
     invalidCredentials: "אימייל או סיסמה שגויים. ודא שהאימייל אומת.",
     emailVerifiedBanner: "האימייל אומת! אפשר להתחבר עכשיו.",
     checkEmail: "ההרשמה הצליחה! בדוק את האימייל לאימות החשבון.",
+    registerSuccessLogin: "החשבון נוצר! אפשר להתחבר עכשיו.",
     goToLogin: "עבור להתחברות",
     devVerifyLink: "מצב פיתוח — קישור אימות:",
   },

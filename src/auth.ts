@@ -5,6 +5,7 @@ import { authConfig } from "@/auth.config";
 import { connectDB } from "@/lib/db";
 import { User } from "@/models/User";
 import { ensureAdminFlag } from "@/lib/auth/adminEmails";
+import { REQUIRE_EMAIL_VERIFICATION } from "@/lib/auth/emailVerification";
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   ...authConfig,
@@ -19,7 +20,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
         await connectDB();
         const user = await User.findOne({ email: String(credentials.email).toLowerCase() });
-        if (!user || !user.emailVerified) return null;
+        if (!user || (REQUIRE_EMAIL_VERIFICATION && !user.emailVerified)) return null;
 
         const valid = await bcrypt.compare(String(credentials.password), user.passwordHash);
         if (!valid) return null;

@@ -5,6 +5,7 @@ import { connectDB } from "@/lib/db";
 import { User } from "@/models/User";
 import { VerificationToken } from "@/models/VerificationToken";
 import { sendVerificationEmail } from "@/lib/email";
+import { REQUIRE_EMAIL_VERIFICATION } from "@/lib/auth/emailVerification";
 
 export async function POST(request: Request) {
   try {
@@ -26,6 +27,21 @@ export async function POST(request: Request) {
     }
 
     const passwordHash = await bcrypt.hash(password, 12);
+
+    if (!REQUIRE_EMAIL_VERIFICATION) {
+      await User.create({
+        name: name.trim(),
+        email: email.toLowerCase().trim(),
+        passwordHash,
+        emailVerified: new Date(),
+      });
+
+      return NextResponse.json({
+        message: "Registration successful! You can log in now.",
+        loginReady: true,
+      });
+    }
+
     const user = await User.create({
       name: name.trim(),
       email: email.toLowerCase().trim(),

@@ -12,6 +12,7 @@ export default function RegisterPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
+  const [loginReady, setLoginReady] = useState(false);
   const [devUrl, setDevUrl] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -36,6 +37,7 @@ export default function RegisterPage() {
       }
 
       setSuccess(true);
+      setLoginReady(!!data.loginReady);
       if (data.devVerifyUrl) setDevUrl(data.devVerifyUrl);
     } catch {
       setError("Something went wrong. Please try again.");
@@ -59,7 +61,7 @@ export default function RegisterPage() {
         {success ? (
           <div className="text-center space-y-4">
             <div className="bg-green-50 border-2 border-green-200 rounded-xl p-4 text-green-800">
-              {t("auth.checkEmail")}
+              {loginReady ? t("auth.registerSuccessLogin") : t("auth.checkEmail")}
             </div>
             {devUrl && (
               <div className="bg-amber-50 border-2 border-amber-200 rounded-xl p-4 text-sm">

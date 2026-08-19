@@ -77,6 +77,7 @@ export const en: Dictionary = {
     invalidCredentials: "Invalid email or password. Make sure your email is verified.",
     emailVerifiedBanner: "Email verified! You can log in now.",
     checkEmail: "Registration successful! Check your email to verify your account.",
+    registerSuccessLogin: "Account created! You can log in now.",
     goToLogin: "Go to Login",
     devVerifyLink: "Dev mode — verify link:",
   },
