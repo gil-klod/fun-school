@@ -10,6 +10,7 @@ import {
   buildDashboardRecommendations,
 } from "@/lib/dashboardFeedback";
 import type { Locale } from "@/i18n/types";
+import { APP_CONTAINER } from "@/lib/layout";
 
 interface Analytics {
   strengths: string[];
@@ -110,7 +111,7 @@ export default function DashboardPage() {
 
   if (loading) {
     return (
-      <main className="flex-1 px-4 py-8 max-w-3xl mx-auto text-center">
+      <main className={`flex-1 py-8 ${APP_CONTAINER} text-center`}>
         <p className="text-gray-500 text-lg">{t("common.loading")}</p>
       </main>
     );
@@ -119,7 +120,7 @@ export default function DashboardPage() {
   const hasData = analytics && analytics.gameStats.some((g) => g.correct + g.wrong > 0);
 
   return (
-    <main className="flex-1 px-4 py-6 sm:py-8 max-w-5xl mx-auto w-full">
+    <main className={`flex-1 py-6 sm:py-8 ${APP_CONTAINER}`}>
       <header className="text-center mb-8">
         <span className="text-5xl">📊</span>
         <h1 className="text-3xl font-bold text-gray-800 mt-2">{t("dashboard.title")}</h1>

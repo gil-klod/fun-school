@@ -3,6 +3,7 @@
 import { useLocale } from "@/i18n/LocaleProvider";
 import { DifficultySelector } from "@/components/DifficultySelector";
 import type { DifficultyLevel } from "@/lib/content/types";
+import { APP_CONTAINER } from "@/lib/layout";
 
 interface GameShellProps {
   title: string;
@@ -54,7 +55,7 @@ export function GameShell({
 
 export function GamePage({ children }: { children: React.ReactNode }) {
   return (
-    <main className="flex-1 px-4 py-4 sm:py-6 max-w-5xl mx-auto w-full">{children}</main>
+    <main className={`flex-1 py-4 sm:py-6 ${APP_CONTAINER}`}>{children}</main>
   );
 }
 

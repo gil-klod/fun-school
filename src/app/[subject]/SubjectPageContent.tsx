@@ -3,12 +3,13 @@
 import { GameCard } from "@/components/GameCard";
 import { LocaleOverrideProvider, useLocale } from "@/i18n/LocaleProvider";
 import type { SubjectInfo } from "@/lib/types";
+import { APP_CONTAINER } from "@/lib/layout";
 
 function SubjectPageInner({ subject }: { subject: SubjectInfo }) {
   const { subjectTitle, t } = useLocale();
 
   return (
-    <main className="flex-1 px-4 py-6 sm:py-8 max-w-5xl mx-auto w-full">
+    <main className={`flex-1 py-6 sm:py-8 ${APP_CONTAINER}`}>
       <header className="flex items-center gap-4 mb-8">
         <span className="text-5xl sm:text-6xl shrink-0">{subject.emoji}</span>
         <div>

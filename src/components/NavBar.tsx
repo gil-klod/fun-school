@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useSession } from "next-auth/react";
 import { useLocale } from "@/i18n/LocaleProvider";
 import { SideMenu } from "@/components/SideMenu";
+import { APP_CONTAINER } from "@/lib/layout";
 
 function MenuIcon() {
   return (
@@ -22,7 +23,7 @@ export function NavBar() {
   return (
     <>
       <nav className="bg-white/80 backdrop-blur border-b border-indigo-100 sticky top-0 z-50">
-        <div className="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between gap-3">
+        <div className={`${APP_CONTAINER} py-3 flex items-center justify-between gap-3`}>
           <Link href="/" className="font-bold text-indigo-700 text-lg shrink-0">
             Fun School 🎒
           </Link>

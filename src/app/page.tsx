@@ -3,13 +3,14 @@
 import { SubjectCard } from "@/components/SubjectCard";
 import { ContinueBanner } from "@/components/ContinueBanner";
 import { subjects } from "@/lib/subjects";
+import { APP_CONTAINER } from "@/lib/layout";
 import { useLocale } from "@/i18n/LocaleProvider";
 
 export default function HomePage() {
   const { t } = useLocale();
 
   return (
-    <main className="flex-1 px-4 py-6 sm:py-8 max-w-3xl mx-auto w-full">
+    <main className={`flex-1 py-6 sm:py-8 ${APP_CONTAINER}`}>
       <header className="text-center mb-8 sm:mb-10 animate-bounce-in">
         <h1 className="text-3xl sm:text-5xl font-extrabold text-indigo-700 mb-2">
           Fun School 🎒
