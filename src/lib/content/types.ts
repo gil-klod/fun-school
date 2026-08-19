@@ -36,6 +36,15 @@ export interface MultiplicationConfig {
 export interface ShukConfig {
   minItems: number;
   maxItems: number;
+  /** Max units per product (hard level). Defaults to 1. */
+  maxQuantityPerItem?: number;
+}
+
+export interface ShukItem {
+  name: string;
+  nameHe: string;
+  price: number;
+  emoji: string;
 }
 
 export interface MysteryConfig {

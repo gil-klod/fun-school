@@ -176,9 +176,9 @@ export const MASCOT_LINES: Record<
       "Seven times eight? Easy. Six times seven? ...you go first!",
     ],
     "game.math.shuk": [
-      "Shuk time! Buy, pay, get change — smile at the vendor.",
+      "Market time! Buy, pay, get change — smile at the vendor.",
       "Change is not a gift. Sadly.",
-      "Shopping plus math equals Shuk Challenge!",
+      "Shopping plus math equals Market Challenge!",
     ],
     "game.math.mystery": [
       "Mystery number! I guess forty-two. It's always forty-two. No? Okay.",

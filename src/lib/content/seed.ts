@@ -74,7 +74,7 @@ function configs(): SeedDoc[] {
   const shukConfigs: Record<DifficultyLevel, Record<string, unknown>> = {
     1: { minItems: 2, maxItems: 2 },
     2: { minItems: 2, maxItems: 3 },
-    3: { minItems: 3, maxItems: 4 },
+    3: { minItems: 3, maxItems: 4, maxQuantityPerItem: 3 },
   };
 
   const mysteryConfigs: Record<DifficultyLevel, Record<string, unknown>> = {
@@ -291,6 +291,12 @@ export async function fetchGameContentBundle(
   }
 
   const configRow = rows.find((r) => r.itemType === "config");
+  let config: Record<string, unknown> | null = configRow
+    ? (configRow.data as Record<string, unknown>)
+    : null;
+  if (gameId === "shuk" && difficulty === 3 && config) {
+    config = { maxQuantityPerItem: 3, ...config };
+  }
   const items = rows
     .filter((r) => r.itemType !== "config")
     .map((r) => ({
@@ -310,7 +316,7 @@ export async function fetchGameContentBundle(
     subjectId,
     gameId,
     difficulty,
-    config: configRow ? (configRow.data as Record<string, unknown>) : null,
+    config,
     items,
     sessionSize,
   };

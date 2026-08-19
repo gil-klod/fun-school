@@ -140,6 +140,12 @@ export interface Dictionary {
     delete: string;
     deleteConfirm: string;
     deleteFailed: string;
+    resetAllData: string;
+    resetAllDescription: string;
+    resetAllConfirm: string;
+    resetAllSuccess: string;
+    resetAllFailed: string;
+    resetting: string;
     settingsTitle: string;
     settingsSubtitle: string;
     formError: string;

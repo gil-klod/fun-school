@@ -2,18 +2,26 @@ import type {
   MysteryConfig,
   MultiplicationConfig,
   ShukConfig,
+  ShukItem,
 } from "./types";
+
+export type { ShukItem };
+
+export interface ShukCartLine {
+  item: ShukItem;
+  quantity: number;
+}
+
+export interface ShukChallenge {
+  lines: ShukCartLine[];
+  total: number;
+  paid: number;
+  change: number;
+}
 
 export interface MultiplicationQuestion {
   a: number;
   b: number;
-}
-
-export interface ShukItem {
-  name: string;
-  nameHe: string;
-  price: number;
-  emoji: string;
 }
 
 export interface MysteryQuestion {
@@ -54,15 +62,23 @@ export function generateMultiplication(
   return { a: t, b };
 }
 
-export function generateShukChallenge(items: ShukItem[], config: ShukConfig) {
+export function generateShukChallenge(items: ShukItem[], config: ShukConfig): ShukChallenge {
   const count =
     config.minItems +
     Math.floor(Math.random() * (config.maxItems - config.minItems + 1));
   const shuffled = [...items].sort(() => Math.random() - 0.5);
   const picked = shuffled.slice(0, Math.min(count, items.length));
-  const total = picked.reduce((sum, item) => sum + item.price, 0);
+  const maxQuantity = config.maxQuantityPerItem ?? 1;
+  const lines: ShukCartLine[] = picked.map((item) => ({
+    item,
+    quantity:
+      maxQuantity === 1
+        ? 1
+        : Math.floor(Math.random() * maxQuantity) + 1,
+  }));
+  const total = lines.reduce((sum, line) => sum + line.item.price * line.quantity, 0);
   const paid = total + (Math.floor(Math.random() * 3) + 1) * 5;
-  return { items: picked, total, paid, change: paid - total };
+  return { lines, total, paid, change: paid - total };
 }
 
 export function generateMystery(

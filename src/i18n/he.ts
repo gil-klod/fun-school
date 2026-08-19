@@ -125,6 +125,14 @@ export const he: Dictionary = {
     delete: "הסר",
     deleteConfirm: "להסיר את {name}? כל ההתקדמות תימחק.",
     deleteFailed: "לא הצלחנו להסיר את התלמיד",
+    resetAllData: "איפוס כל ההתקדמות",
+    resetAllDescription:
+      "מוחק ציונים, משחקים באמצע וסטטיסטיקות בדשבורד לכל התלמידים. פרופילי התלמידים נשארים.",
+    resetAllConfirm:
+      "למחוק את כל ההתקדמות והסטטיסטיקות של כל התלמידים בחשבון? התלמידים נשארים — רק הציונים והנתונים נמחקים.",
+    resetAllSuccess: "כל ההתקדמות אופסה.",
+    resetAllFailed: "לא הצלחנו לאפס את ההתקדמות",
+    resetting: "מאפס...",
     settingsTitle: "הגדרות",
     settingsSubtitle: "ניהול תלמידים בחשבון",
     formError: "מלא את כל השדות",

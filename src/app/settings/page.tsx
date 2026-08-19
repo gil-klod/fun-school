@@ -13,7 +13,26 @@ export default function SettingsPage() {
   const { students, deleteStudent, createStudent, ready } = useStudent();
   const [showForm, setShowForm] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [resetting, setResetting] = useState(false);
+  const [success, setSuccess] = useState("");
   const [error, setError] = useState("");
+
+  async function handleResetAll() {
+    if (!confirm(t("students.resetAllConfirm"))) return;
+    setResetting(true);
+    setError("");
+    setSuccess("");
+    try {
+      const res = await fetch("/api/account/reset-data", { method: "POST" });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? t("students.resetAllFailed"));
+      setSuccess(t("students.resetAllSuccess"));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : t("students.resetAllFailed"));
+    } finally {
+      setResetting(false);
+    }
+  }
 
   async function handleDelete(id: string, name: string) {
     if (!confirm(t("students.deleteConfirm", { name }))) return;
@@ -46,6 +65,9 @@ export default function SettingsPage() {
 
       {error && (
         <p className="text-red-600 text-sm text-center mb-4">{error}</p>
+      )}
+      {success && (
+        <p className="text-emerald-700 text-sm text-center mb-4">{success}</p>
       )}
 
       <section className="bg-white/90 border-2 border-indigo-100 rounded-3xl p-5 sm:p-6 mb-6">
@@ -98,6 +120,19 @@ export default function SettingsPage() {
             {t("students.add")}
           </button>
         )}
+      </section>
+
+      <section className="bg-white/90 border-2 border-amber-100 rounded-3xl p-5 sm:p-6 mb-6">
+        <h2 className="font-bold text-lg text-gray-800 mb-2">{t("students.resetAllData")}</h2>
+        <p className="text-sm text-gray-600 mb-4">{t("students.resetAllDescription")}</p>
+        <button
+          type="button"
+          onClick={handleResetAll}
+          disabled={resetting || students.length === 0}
+          className="px-4 py-2 rounded-xl text-sm font-semibold text-amber-900 bg-amber-100 hover:bg-amber-200 disabled:opacity-50"
+        >
+          {resetting ? t("students.resetting") : t("students.resetAllData")}
+        </button>
       </section>
 
       <div className="text-center">

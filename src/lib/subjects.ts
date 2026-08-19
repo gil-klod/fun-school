@@ -20,9 +20,9 @@ export const subjects: SubjectInfo[] = [
       },
       {
         id: "shuk",
-        title: "Shuk Challenge",
+        title: "Market Challenge",
         titleHe: "אתגר השוק",
-        description: "Shop with shekels and calculate change!",
+        description: "Shop at the market with shekels and calculate change!",
         emoji: "🛒",
         href: "/math/shuk",
       },

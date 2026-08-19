@@ -13,7 +13,7 @@ A fun web app with math, Hebrew, and English games for Israeli 3rd grade (כית
 
 | Subject | Games |
 |---------|-------|
-| **Math** | Multiplication Boss, Shuk Challenge, Mystery Number |
+| **Math** | Multiplication Boss, Market Challenge, Mystery Number |
 | **Hebrew** | Word Scramble, Fix the Sentence, Story Detective |
 | **English (Beginners)** | Word Match, Build a Sentence, Colors & Numbers |
 | **English (Advanced)** | Grammar Quest, Word Wizard, Reading Challenge |

@@ -162,14 +162,20 @@ function ShukPlay({
           <div className="bg-white/90 rounded-2xl p-4 shadow border-2 border-amber-100">
             <p className="text-base font-semibold text-amber-700 mb-3">{t("games.shoppingList")}</p>
             <div className="space-y-2">
-              {challenge.items.map((item, i) => (
+              {challenge.lines.map((line, i) => (
                 <div
                   key={i}
                   className="flex items-center justify-between bg-amber-50 rounded-xl px-3 py-2 gap-2"
                 >
-                  <span className="text-xl shrink-0">{item.emoji}</span>
-                  <span className="font-medium flex-1 min-w-0 truncate">{getShukItemName(item, locale)}</span>
-                  <MathLtr className="font-bold text-amber-700 shrink-0">₪{item.price}</MathLtr>
+                  <span className="text-xl shrink-0">{line.item.emoji}</span>
+                  <span className="font-medium flex-1 min-w-0 truncate">
+                    {line.quantity > 1
+                      ? `${line.quantity} × ${getShukItemName(line.item, locale)}`
+                      : getShukItemName(line.item, locale)}
+                  </span>
+                  <MathLtr className="font-bold text-amber-700 shrink-0">
+                    ₪{line.item.price * line.quantity}
+                  </MathLtr>
                 </div>
               ))}
             </div>

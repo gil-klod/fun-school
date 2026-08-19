@@ -125,6 +125,14 @@ export const en: Dictionary = {
     delete: "Remove",
     deleteConfirm: "Remove {name}? All their progress will be deleted.",
     deleteFailed: "Could not remove student",
+    resetAllData: "Reset all progress",
+    resetAllDescription:
+      "Clears game scores, in-progress sessions, and dashboard stats for every student. Student profiles stay on your account.",
+    resetAllConfirm:
+      "Clear all game progress and stats for every student on this account? Students stay — only scores and analytics are wiped.",
+    resetAllSuccess: "All progress has been reset.",
+    resetAllFailed: "Could not reset progress",
+    resetting: "Resetting...",
     settingsTitle: "Settings",
     settingsSubtitle: "Manage students on this account",
     formError: "Please fill in all fields",
@@ -133,10 +141,10 @@ export const en: Dictionary = {
   subjects: {
     math: {
       title: "Math",
-      description: "Times tables, shopping math & number puzzles",
+      description: "Times tables, market math & number puzzles",
       games: {
         multiplication: { title: "Multiplication Boss", description: "Beat the times-table bosses!" },
-        shuk: { title: "Shuk Challenge", description: "Shop with shekels and calculate change!" },
+        shuk: { title: "Market Challenge", description: "Shop at the market with shekels and calculate change!" },
         mystery: { title: "Mystery Number", description: "Find the hidden number!" },
       },
     },

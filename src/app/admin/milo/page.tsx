@@ -2,12 +2,14 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { AdminNav } from "@/components/admin/AdminNav";
-import { MiloBoundaryTrimmer } from "@/components/admin/MiloBoundaryTrimmer";
 import { getMiloTextCatalog } from "@/lib/mascot/catalog";
 import {
   formatMiloRecordingExport,
+  MINIMAX_LINE_PAUSE_TAG,
+  miloRecordingExportCharCount,
   miloRecordingExportHint,
   miloRecordingExportInstructions,
+  miloRecordingWithinMinimaxLimit,
   MILO_RECORDING_PAUSE_MODES,
   type MiloRecordingPauseMode,
 } from "@/lib/mascot/recordingExport";
@@ -124,8 +126,7 @@ export default function AdminMiloPage() {
   const [reviewFilter, setReviewFilter] = useState<ReviewFilter>("all");
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
   const [exportOpen, setExportOpen] = useState(false);
-  const [trimOpen, setTrimOpen] = useState(false);
-  const [pauseMode, setPauseMode] = useState<MiloRecordingPauseMode>("eleven-v3");
+  const [pauseMode, setPauseMode] = useState<MiloRecordingPauseMode>("minimax");
 
   const englishExport = useMemo(
     () => formatMiloRecordingExport(englishEntries, pauseMode),
@@ -233,34 +234,42 @@ export default function AdminMiloPage() {
         </select>
         <button
           type="button"
-          onClick={() => setTrimOpen((v) => !v)}
-          className="px-3 py-2 rounded-xl border-2 border-rose-200 text-sm font-semibold hover:bg-rose-50 text-rose-900"
-        >
-          {trimOpen ? "Hide" : "Show"} manual split tool
-        </button>
-        <button
-          type="button"
           onClick={() => setExportOpen((v) => !v)}
           className="px-3 py-2 rounded-xl border-2 border-indigo-100 text-sm font-semibold hover:bg-indigo-50"
         >
-          {exportOpen ? "Hide" : "Show"} recording export
+          {exportOpen ? "Hide" : "Show"} MiniMax export
         </button>
       </div>
 
-      {trimOpen && (
-        <MiloBoundaryTrimmer
-          variant="he-female"
-          title="Hebrew (female)"
-          entries={hebrewFemaleEntries}
-        />
-      )}
-
       {exportOpen && (
         <section className="mb-6">
-          <div className="mb-3 p-3 rounded-xl bg-amber-50 border border-amber-200 text-sm text-amber-950">
-            <strong>DaVinci ignores line breaks.</strong> Use the pause tags below — do not delete{" "}
-            <code className="bg-amber-100 px-1 rounded">[long pause]</code> or{" "}
-            <code className="bg-amber-100 px-1 rounded">&lt;break /&gt;</code> between lines.
+          <div className="mb-3 p-3 rounded-xl bg-sky-50 border border-sky-200 text-sm text-sky-950">
+            <strong>MiniMax workflow</strong>
+            <ol className="list-decimal ms-5 mt-2 space-y-1">
+              <li>
+                Copy one box below into{" "}
+                <a
+                  href="https://www.minimax.io/audio/text-to-speech"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="underline font-semibold"
+                >
+                  MiniMax Text to Speech
+                </a>
+              </li>
+              <li>Pick voice + language, generate, download MP3</li>
+              <li>
+                Split:{" "}
+                <code className="bg-sky-100 px-1 rounded text-xs">
+                  npm run split-milo-audio -- --input your.mp3 --variant he-female
+                </code>
+              </li>
+            </ol>
+            <p className="mt-2">
+              Keep every pause tag{" "}
+              <code className="bg-sky-100 px-1 rounded">{MINIMAX_LINE_PAUSE_TAG}</code> between lines —
+              do not edit or remove them.
+            </p>
           </div>
           <div className="flex flex-wrap gap-3 mb-4">
             <select
@@ -311,6 +320,15 @@ export default function AdminMiloPage() {
                   <h3 className="font-bold text-sm">{box.title}</h3>
                   <p className="text-xs text-gray-500">
                     {miloRecordingExportHint(box.entries.length, pauseMode)}
+                    {pauseMode === "minimax" && (
+                      <>
+                        {" · "}
+                        {miloRecordingExportCharCount(box.entries, pauseMode).toLocaleString()} chars
+                        {!miloRecordingWithinMinimaxLimit(box.entries, pauseMode) && (
+                          <span className="text-red-600 font-semibold"> — over 10,000 limit!</span>
+                        )}
+                      </>
+                    )}
                   </p>
                 </div>
                 <button
