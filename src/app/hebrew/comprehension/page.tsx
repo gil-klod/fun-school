@@ -12,6 +12,8 @@ import { useLocale } from "@/i18n/LocaleProvider";
 interface HebrewStory {
   title: string;
   text: string;
+  titleNikud?: string;
+  textNikud?: string;
   questions: { question: string; options: string[]; correctIndex: number }[];
 }
 
@@ -37,6 +39,7 @@ function HebrewComprehensionPlay({
   } | null>(null);
   const [answered, setAnswered] = useState(false);
   const [finished, setFinished] = useState(false);
+  const [showNikud, setShowNikud] = useState(false);
 
   useEffect(() => {
     setStoryIndex(Math.floor(Math.random() * stories.length));
@@ -99,6 +102,9 @@ function HebrewComprehensionPlay({
 
   const story = stories[storyIndex];
   const question = story.questions[questionIndex];
+  const hasNikud = Boolean(story.titleNikud && story.textNikud);
+  const displayTitle = showNikud && story.titleNikud ? story.titleNikud : story.title;
+  const displayText = showNikud && story.textNikud ? story.textNikud : story.text;
 
   const handleAnswer = (optionIndex: number) => {
     if (answered) return;
@@ -209,8 +215,29 @@ function HebrewComprehensionPlay({
 
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 mb-4 items-start">
           <div className="bg-white/90 rounded-2xl p-5 sm:p-6 shadow border-2 border-blue-100 xl:max-h-[28rem] xl:overflow-y-auto">
-            <h2 className="text-xl font-bold text-blue-700 mb-3">{story.title}</h2>
-            <p className="text-lg leading-relaxed text-gray-800">{story.text}</p>
+            <div className="flex flex-wrap items-start justify-between gap-2 mb-3">
+              <h2 className="text-xl font-bold text-blue-700">{displayTitle}</h2>
+              {hasNikud && (
+                <button
+                  type="button"
+                  onClick={() => setShowNikud((v) => !v)}
+                  className={`shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-sm font-bold transition-all ${
+                    showNikud
+                      ? "bg-blue-500 text-white shadow-md ring-2 ring-blue-600"
+                      : "bg-white border-2 border-blue-200 text-blue-700 hover:border-blue-400"
+                  }`}
+                  aria-pressed={showNikud}
+                  aria-label={showNikud ? t("games.hideNikud") : t("games.showNikud")}
+                  title={showNikud ? t("games.hideNikud") : t("games.showNikud")}
+                >
+                  <span className="text-base leading-none" aria-hidden>
+                    אָ
+                  </span>
+                  <span>{showNikud ? t("games.hideNikud") : t("games.showNikud")}</span>
+                </button>
+              )}
+            </div>
+            <p className="text-lg leading-relaxed text-gray-800">{displayText}</p>
           </div>
 
           {!finished ? (

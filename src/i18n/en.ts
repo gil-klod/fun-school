@@ -234,6 +234,8 @@ export const en: Dictionary = {
     allDone: "All done! Final score: {score} 🏆",
     storyComplete: "Story complete! Final score: {score} 🌟",
     readAnother: "Read Another Story",
+    showNikud: "Show nikud",
+    hideNikud: "Hide nikud",
     needHint: "💡 Need a hint?",
     mixed: "Mixed",
     howMuchChange: "How much change do you get? 💰",

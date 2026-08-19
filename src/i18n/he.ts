@@ -234,6 +234,8 @@ export const he: Dictionary = {
     allDone: "סיימת! ניקוד סופי: {score} 🏆",
     storyComplete: "סיימת את הסיפור! ניקוד: {score} 🌟",
     readAnother: "קרא סיפור נוסף",
+    showNikud: "הצג ניקוד",
+    hideNikud: "הסתר ניקוד",
     needHint: "💡 צריך רמז?",
     mixed: "מעורב",
     howMuchChange: "כמה עודף תקבל? 💰",

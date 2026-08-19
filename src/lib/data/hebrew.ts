@@ -120,13 +120,20 @@ export const FIX_SENTENCES: FixSentenceQuestion[] = [
 export interface HebrewStory {
   title: string;
   text: string;
+  /** Pre-vocalized title (nikud) — shown when the nikud toggle is on */
+  titleNikud?: string;
+  /** Pre-vocalized story text (nikud) — shown when the nikud toggle is on */
+  textNikud?: string;
   questions: { question: string; options: string[]; correctIndex: number }[];
 }
 
 export const HEBREW_STORIES: HebrewStory[] = [
   {
     title: "הכלב של דני",
+    titleNikud: "הַכֶּלֶב שֶׁל דָּנִי",
     text: "לדני יש כלב קטן בשם בובי. בובי אוהב לרוץ בגינה ולשחק עם כדור. ביום שישי, דני לקח את בובי לפארק. שם פגשו ילדים אחרים ושיחקו יחד. בובי היה מאושר מאוד!",
+    textNikud:
+      "לְדָנִי יֵשׁ כֶּלֶב קָטָן בְּשֵׁם בּוֹבִּי. בּוֹבִּי אוֹהֵב לָרוּץ בַּגִּנָּה וּלְשַׂחֵק עִם כַּדּוּר. בְּיוֹם שִׁשִּׁי, דָּנִי לָקַח אֶת בּוֹבִּי לַפַּארְק. שָׁם פָּגְשׁוּ יְלָדִים אֲחֵרִים וְשִׂחֲקוּ יַחַד. בּוֹבִּי הָיָה מְאֻשָּׁר מְאוֹד!",
     questions: [
       {
         question: "מה שם הכלב?",
@@ -147,7 +154,10 @@ export const HEBREW_STORIES: HebrewStory[] = [
   },
   {
     title: "יום הולדת",
+    titleNikud: "יוֹם הֻלֶּדֶת",
     text: "למיה יום הולדת היום! אמא שלה אפתה עוגת שוקולד גדולה. אחותה קישטה את הבית בבלונים צבעוניים. בערב הגיעו חברים ושירו 'יום הולדת שמח'. מיה קיבלה מתנה — ספר על דינוזאורים!",
+    textNikud:
+      "לְמָיָה יוֹם הֻלֶּדֶת הַיּוֹם! אִמָּא שֶׁלָּהּ אָפְתָה עוּגַת שׁוֹקוֹלָד גְּדוֹלָה. אֲחוֹתָהּ קִשְּׁטָה אֶת הַבַּיִת בַּבָּלוֹנִים צִבְעוֹנִיִּים. בָּעֶרֶב הִגִּיעוּ חֲבֵרִים וְשֶׁיָּרוּ 'יוֹם הֻלֶּדֶת שָׂמֵחַ'. מָיָה קִבְּלָה מַתָּנָה — סֵפֶר עַל דִּינוֹזָאוּרִים!",
     questions: [
       {
         question: "מי חוגג/ת יום הולדת?",

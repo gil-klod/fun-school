@@ -209,6 +209,8 @@ export interface Dictionary {
     allDone: string;
     storyComplete: string;
     readAnother: string;
+    showNikud: string;
+    hideNikud: string;
     needHint: string;
     mixed: string;
     howMuchChange: string;
