@@ -4,12 +4,14 @@ import { useState } from "react";
 import Link from "next/link";
 import { useLocale } from "@/i18n/LocaleProvider";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
+import type { UserGender } from "@/lib/gender";
 
 export default function RegisterPage() {
   const { t } = useLocale();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [gender, setGender] = useState<UserGender | "">("");
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
   const [devUrl, setDevUrl] = useState("");
@@ -25,7 +27,7 @@ export default function RegisterPage() {
       const res = await fetch("/api/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, email, password }),
+        body: JSON.stringify({ name, email, password, gender }),
       });
 
       const data = await res.json();
@@ -94,6 +96,39 @@ export default function RegisterPage() {
                 required
                 className="w-full px-4 py-3 rounded-xl border-2 border-indigo-100 focus:border-indigo-400 focus:outline-none"
               />
+            </div>
+            <div>
+              <span className="block text-sm font-medium text-gray-700 mb-2">{t("auth.gender")}</span>
+              <div className="flex gap-3">
+                <label className="flex-1 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="gender"
+                    value="male"
+                    checked={gender === "male"}
+                    onChange={() => setGender("male")}
+                    required
+                    className="sr-only peer"
+                  />
+                  <span className="block text-center px-4 py-3 rounded-xl border-2 border-indigo-100 peer-checked:border-indigo-500 peer-checked:bg-indigo-50 font-medium text-gray-700">
+                    {t("auth.genderMale")}
+                  </span>
+                </label>
+                <label className="flex-1 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="gender"
+                    value="female"
+                    checked={gender === "female"}
+                    onChange={() => setGender("female")}
+                    required
+                    className="sr-only peer"
+                  />
+                  <span className="block text-center px-4 py-3 rounded-xl border-2 border-indigo-100 peer-checked:border-indigo-500 peer-checked:bg-indigo-50 font-medium text-gray-700">
+                    {t("auth.genderFemale")}
+                  </span>
+                </label>
+              </div>
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">{t("auth.password")}</label>

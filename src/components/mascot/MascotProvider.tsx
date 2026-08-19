@@ -10,8 +10,15 @@ import {
   useState,
 } from "react";
 import { usePathname } from "next/navigation";
+import { useSession } from "next-auth/react";
 import { useLocale } from "@/i18n/LocaleProvider";
-import { pickContextLine, resolveMascotContext } from "@/lib/mascot/lines";
+import { normalizeGender, type UserGender } from "@/lib/gender";
+import type { Locale } from "@/i18n/types";
+import {
+  getMascotSpeechLine,
+  pickContextLine,
+  resolveMascotContext,
+} from "@/lib/mascot/genderLines";
 import { Mascot } from "./Mascot";
 import { isMascotMuted, setMascotMuted, speakText, stopSpeaking, warmSpeechVoices } from "./speech";
 import type { MascotAnimation, MascotContextValue, MascotShowOptions } from "./types";
@@ -24,12 +31,15 @@ const WRONG_KEYS = ["mascot.wrong0", "mascot.wrong1", "mascot.wrong2"];
 
 const MascotContext = createContext<MascotContextValue | null>(null);
 
-function pickRandom(keys: string[], t: (key: string) => string) {
-  return t(keys[Math.floor(Math.random() * keys.length)]!);
+function pickRandom(keys: string[], locale: Locale, gender: UserGender, t: (key: string) => string) {
+  const key = keys[Math.floor(Math.random() * keys.length)]!;
+  return getMascotSpeechLine(locale, key, gender, t);
 }
 
 export function MascotProvider({ children }: { children: React.ReactNode }) {
   const { t, locale } = useLocale();
+  const { data: session } = useSession();
+  const gender = normalizeGender(session?.user?.gender);
   const pathname = usePathname();
   const [pinned, setPinned] = useState(false);
   const [muted, setMuted] = useState(false);
@@ -120,14 +130,14 @@ export function MascotProvider({ children }: { children: React.ReactNode }) {
 
   const sayContextLine = useCallback(() => {
     const context = resolveMascotContext(pathname);
-    const line = pickContextLine(locale, context);
+    const line = pickContextLine(locale, context, gender);
     show({
       text: line,
       animation: "talk",
       speak: true,
       durationMs: pinned ? 8000 : 6000,
     });
-  }, [pathname, locale, show, pinned]);
+  }, [pathname, locale, gender, show, pinned]);
 
   const togglePinned = useCallback(() => {
     setPinned((prev) => {
@@ -156,30 +166,30 @@ export function MascotProvider({ children }: { children: React.ReactNode }) {
 
   const celebrate = useCallback(() => {
     show({
-      text: pickRandom(CORRECT_KEYS, t),
+      text: pickRandom(CORRECT_KEYS, locale, gender, t),
       animation: "clap",
       speak: true,
     });
-  }, [show, t]);
+  }, [show, t, locale, gender]);
 
   const encourage = useCallback(() => {
     show({
-      text: pickRandom(WRONG_KEYS, t),
+      text: pickRandom(WRONG_KEYS, locale, gender, t),
       animation: "wave",
       speak: true,
     });
-  }, [show, t]);
+  }, [show, t, locale, gender]);
 
   const welcome = useCallback(() => {
     if (typeof window !== "undefined" && localStorage.getItem(WELCOME_KEY)) return;
     show({
-      text: t("mascot.welcome"),
+      text: getMascotSpeechLine(locale, "mascot.welcome", gender, t),
       animation: "wave",
       speak: true,
       durationMs: 8000,
     });
     localStorage.setItem(WELCOME_KEY, "1");
-  }, [show, t]);
+  }, [show, t, locale, gender]);
 
   const value = useMemo<MascotContextValue>(
     () => ({

@@ -27,6 +27,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           id: user._id.toString(),
           name: user.name,
           email: user.email,
+          gender: user.gender ?? "male",
         };
       },
     }),

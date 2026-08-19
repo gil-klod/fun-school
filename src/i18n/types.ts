@@ -76,6 +76,9 @@ export interface Dictionary {
     password: string;
     name: string;
     passwordHint: string;
+    gender: string;
+    genderMale: string;
+    genderFemale: string;
     login: string;
     loggingIn: string;
     signUp: string;

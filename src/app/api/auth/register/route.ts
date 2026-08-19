@@ -2,16 +2,17 @@ import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
 import { connectDB } from "@/lib/db";
+import { isUserGender } from "@/lib/gender";
 import { User } from "@/models/User";
 import { VerificationToken } from "@/models/VerificationToken";
 import { sendVerificationEmail } from "@/lib/email";
 
 export async function POST(request: Request) {
   try {
-    const { name, email, password } = await request.json();
+    const { name, email, password, gender } = await request.json();
 
-    if (!name?.trim() || !email?.trim() || !password) {
-      return NextResponse.json({ error: "Name, email, and password are required" }, { status: 400 });
+    if (!name?.trim() || !email?.trim() || !password || !isUserGender(gender)) {
+      return NextResponse.json({ error: "Name, email, password, and gender are required" }, { status: 400 });
     }
 
     if (password.length < 6) {
@@ -30,6 +31,7 @@ export async function POST(request: Request) {
       name: name.trim(),
       email: email.toLowerCase().trim(),
       passwordHash,
+      gender,
       emailVerified: null,
     });
 

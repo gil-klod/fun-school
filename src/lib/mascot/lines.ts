@@ -1,103 +1,143 @@
 import type { Locale } from "@/i18n/types";
+import type { UserGender } from "@/lib/gender";
+
+type LineInput = string | { male: string; female: string };
+
+function genderLines(lines: LineInput[]): Record<UserGender, string[]> {
+  return {
+    male: lines.map((line) => (typeof line === "string" ? line : line.male)),
+    female: lines.map((line) => (typeof line === "string" ? line : line.female)),
+  };
+}
 
 /** Context id → funny lines Milo can say when tapped. */
-export const MASCOT_LINES: Record<Locale, Record<string, string[]>> = {
+export const MASCOT_LINES: Record<
+  Locale,
+  Record<string, string[] | Record<UserGender, string[]>>
+> = {
   he: {
-    home: [
-      "אני מילו! בחר נושא — אני כבר מחזיק את התשובות... סתם, לא באמת.",
+    home: genderLines([
+      {
+        male: "אני מילו! בחר נושא — אני כבר מחזיק את התשובות... סתם, לא באמת.",
+        female: "אני מילו! בחרי נושא — אני כבר מחזיקה את התשובות... סתם, לא באמת.",
+      },
       "ארבעה נושאים, הרבה משחקים, אפס שיעורי בית משעממים!",
       "טיפ מילו: התחל מחשבון — שם המספרים לא מתווכחים. בניגוד לי.",
-    ],
-    dashboard: [
+    ]),
+    dashboard: genderLines([
       "הנה ההתקדמות שלך! אני גאה — כמעט כמו שאמא שלך גאה. כמעט.",
       "סטטיסטיקות! נשמע מבוגר, אבל הגרפים צבעוניים.",
-      "אם המספרים נמוכים — זה רק כי לא שיחקת עדיין היום!",
-    ],
-    "subject.math": [
+      {
+        male: "אם המספרים נמוכים — זה רק כי לא שיחקת עדיין היום!",
+        female: "אם המספרים נמוכים — זה רק כי לא שיחקת עדיין היום!",
+      },
+    ]),
+    "subject.math": genderLines([
       "חשבון! המקום שבו מספרים לא מתלוננים. בניגוד לי.",
       "כפל, שוק וחידות — מי אמר שמתמטיקה לא יכולה להיות כיפית?",
-      "בוא נראה אם הכפל יכול לעמוד בקצב שלך!",
-    ],
-    "subject.hebrew": [
+      { male: "בוא נראה אם הכפל יכול לעמוד בקצב שלך!", female: "בואי נראה אם הכפל יכול לעמוד בקצב שלך!" },
+    ]),
+    "subject.hebrew": genderLines([
       "עברית! האותיות הולכות לכל הכיוונים ואני עדיין מבולבל.",
       "ערבוב אותיות, תיקון משפטים — בלש עברי בדרך!",
       "מילה טובה ביום שומרת את המורה רחוקה. או משהו כזה.",
-    ],
-    "subject.english-beginners": [
+    ]),
+    "subject.english-beginners": genderLines([
       "זמן אנגלית! אל תדאג — גם אני מתבלבל לפעמים.",
       "אנגלית למתחילים — מילים, משפטים, צבעים. קדימה!",
-      "מילה אחת בכל פעם — ואתה כבר מדבר אנגלית. כמעט!",
-    ],
-    "subject.english-natives": [
+      {
+        male: "מילה אחת בכל פעם — ואתה כבר מדבר אנגלית. כמעט!",
+        female: "מילה אחת בכל פעם — ואת כבר מדברת אנגלית. כמעט!",
+      },
+    ]),
+    "subject.english-natives": genderLines([
       "אנגלית מתקדמת! עכשיו מדברים ברצינות.",
-      "דקדוק, אוצר מילים, קריאה — אתה כבר כמעט שם.",
+      {
+        male: "דקדוק, אוצר מילים, קריאה — אתה כבר כמעט שם.",
+        female: "דקדוק, אוצר מילים, קריאה — את כבר כמעט שם.",
+      },
       "מילה מוזרה? אני ממציא הגדרות. בטוח.",
-    ],
-    "game.math.multiplication": [
+    ]),
+    "game.math.multiplication": genderLines([
       "טבלאות כפל! כמו לחץ, אבל עם מספרים.",
       "בוס הכפל לא מפחיד. רק נראה רציני בגלל החרב.",
-      "שבע כפול שמונה? קל. שש כפול שבע? ...תן לי שנייה. אתה קודם!",
-    ],
-    "game.math.shuk": [
+      {
+        male: "שבע כפול שמונה? קל. שש כפול שבע? ...תן לי שנייה. אתה קודם!",
+        female: "שבע כפול שמונה? קל. שש כפול שבע? ...תני לי שנייה. את קודם!",
+      },
+    ]),
+    "game.math.shuk": genderLines([
       "שוק! קנה, שלם, קבל עודף — ואל תשכח לחייך לירקן.",
       "עודף זה לא מתנה. לצערי.",
       "חשבון וקניות — אתגר שוק!",
-    ],
-    "game.math.mystery": [
+    ]),
+    "game.math.mystery": genderLines([
       "מספר מסתורי! אני חושב שזה ארבעים ושתיים. תמיד. לא? אוקיי.",
       "רמז: זה מספר. עזרתי?",
       "בלש מספרים — המשקפיים על!",
-    ],
-    "game.hebrew.scramble": [
+    ]),
+    "game.hebrew.scramble": genderLines([
       "ערבוב אותיות! מ-כ-ח-ו-ל ל... משהו כחול. כנראה.",
       "אותיות מבולבלות? אני מרגיש בבית.",
-      "אם נראה לך שזה כלב — בדוק שוב!",
-    ],
-    "game.hebrew.fix-sentence": [
+      { male: "אם נראה לך שזה כלב — בדוק שוב!", female: "אם נראה לך שזה כלב — בדקי שוב!" },
+    ]),
+    "game.hebrew.fix-sentence": genderLines([
       "איזו מילה לא שייכת? כמו חתול במקלחת.",
-      "תקן את המשפט — המורה תגיד וואו. אולי.",
+      { male: "תקן את המשפט — המורה תגיד וואו. אולי.", female: "תקני את המשפט — המורה תגיד וואו. אולי." },
       "טעות קטנה, תיקון גדול!",
-    ],
-    "game.hebrew.comprehension": [
-      "קרא את הסיפור — יש שאלות. בלי לחשוף את הסוף!",
+    ]),
+    "game.hebrew.comprehension": genderLines([
+      {
+        male: "קרא את הסיפור — יש שאלות. בלי לחשוף את הסוף!",
+        female: "קראי את הסיפור — יש שאלות. בלי לחשוף את הסוף!",
+      },
       "בלש סיפורים! מי? מה? איפה?",
-      "לא הבנת? קרא שוב. בקול. עובד!",
-    ],
-    "game.english-beginners.vocabulary": [
+      {
+        male: "לא הבנת? קרא שוב. בקול. עובד!",
+        female: "לא הבנת? קראי שוב. בקול. עובד!",
+      },
+    ]),
+    "game.english-beginners.vocabulary": genderLines([
       "התאמת מילים! חתול באנגלית זה קט. כלב זה...",
       "אנגלית ועברית — מילה אחת בכל פעם.",
       "טעות? זה רק סוף השאלה. הבאה!",
-    ],
-    "game.english-beginners.sentences": [
-      "בנה משפט! סדר את המילים נכון — אני סומך עליך.",
+    ]),
+    "game.english-beginners.sentences": genderLines([
+      {
+        male: "בנה משפט! סדר את המילים נכון — אני סומך עליך.",
+        female: "בני משפט! סדרי את המילים נכון — אני סומכת עלייך.",
+      },
       "סדר מילים כמו קוביות — רק בלי לדרוך עליהן.",
       "משפט מושלם שווה נקודות וכבוד!",
-    ],
-    "game.english-beginners.colors-numbers": [
+    ]),
+    "game.english-beginners.colors-numbers": genderLines([
       "צבעים ומספרים! אדום, כחול, אחד, שתיים, שלוש.",
       "באיזה צבע השמיים? ...ביום. לא בלילה.",
       "מספרים לא משקרים!",
-    ],
-    "game.english-natives.grammar": [
+    ]),
+    "game.english-natives.grammar": genderLines([
       "משימת דקדוק! זמנים, רבים, ועוד הפתעות.",
       "עבר, הווה, עתיד — אני מבולבל בכל הזמנים.",
       "דקדוק נכון נשמע חכם!",
-    ],
-    "game.english-natives.vocabulary": [
+    ]),
+    "game.english-natives.vocabulary": genderLines([
       "קוסם המילים! מילים גדולות מרשימות.",
       "מילים נרדפות, הפכים, ומילים שנשמעות מומצאות.",
-      "לא יודע? נחש. לפעמים זה עובד!",
-    ],
-    "game.english-natives.comprehension": [
+      { male: "לא יודע? נחש. לפעמים זה עובד!", female: "לא יודעת? נחשי. לפעמים זה עובד!" },
+    ]),
+    "game.english-natives.comprehension": genderLines([
       "אתגר קריאה! סיפור ארוך, מוח חד.",
-      "קרא בעיון. התשובה מסתתרת שם.",
+      { male: "קרא בעיון. התשובה מסתתרת שם.", female: "קראי בעיון. התשובה מסתתרת שם." },
       "הבנה ותשובה — זה הניצחון!",
-    ],
-    default: [
-      "היי! אני מילו — לחץ עליי לעוד חוכמה. או צחוק.",
+    ]),
+    default: genderLines([
+      {
+        male: "היי! אני מילו — לחץ עליי לעוד חוכמה. או צחוק.",
+        female: "היי! אני מילו — לחצי עליי לעוד חוכמה. או צחוק.",
+      },
       "אני כאן! לא עושה שיעורי בית במקומך.",
-      "בוא נשחק! המוח שלך מודה לי.",
-    ],
+      { male: "בוא נשחק! המוח שלך מודה לי.", female: "בואי נשחק! המוח שלך מודה לי." },
+    ]),
   },
   en: {
     home: [
@@ -210,9 +250,7 @@ export function resolveMascotContext(pathname: string): string {
 }
 
 export function pickContextLine(locale: Locale, context: string): string {
-  const lines =
-    MASCOT_LINES[locale][context] ??
-    MASCOT_LINES[locale].default ??
-    MASCOT_LINES.en.default!;
+  const bucket = MASCOT_LINES[locale][context] ?? MASCOT_LINES[locale].default ?? MASCOT_LINES.en.default;
+  const lines = Array.isArray(bucket) ? bucket : bucket.male;
   return lines[Math.floor(Math.random() * lines.length)]!;
 }
