@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "seed": "npx tsx scripts/seed-content.ts"
+    "seed": "npx tsx scripts/seed-content.ts",
+    "generate-milo-audio": "npx tsx scripts/generate-milo-audio.ts"
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",

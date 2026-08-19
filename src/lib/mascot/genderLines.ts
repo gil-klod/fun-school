@@ -1,6 +1,8 @@
 import type { Locale } from "@/i18n/types";
 import type { UserGender } from "@/lib/gender";
-import { MASCOT_LINES, pickContextLine as pickContextLineBase, resolveMascotContext } from "./lines";
+import type { MiloLine } from "@/lib/mascot/audio";
+import { contextLineAudioId, speechLineAudioId } from "@/lib/mascot/audio";
+import { MASCOT_LINES, resolveMascotContext } from "./lines";
 
 /** Hebrew Milo speech with masculine / feminine second-person forms. */
 const MASCOT_SPEECH_HE: Record<string, Record<UserGender, string>> = {
@@ -43,21 +45,37 @@ export function getMascotSpeechLine(
   key: string,
   gender: UserGender,
   t: (key: string) => string
-): string {
-  if (locale !== "he") return t(key);
-  return MASCOT_SPEECH_HE[key]?.[gender] ?? t(key);
+): MiloLine {
+  if (locale !== "he") {
+    return {
+      text: t(key),
+      audioId: speechLineAudioId("en", key),
+    };
+  }
+  return {
+    text: MASCOT_SPEECH_HE[key]?.[gender] ?? t(key),
+    audioId: speechLineAudioId("he", key, gender),
+  };
 }
 
-export function pickContextLine(locale: Locale, context: string, gender: UserGender): string {
+export function pickContextLine(locale: Locale, context: string, gender: UserGender): MiloLine {
   if (locale !== "he") {
-    return pickContextLineBase(locale, context);
+    const bucket = MASCOT_LINES.en[context] ?? MASCOT_LINES.en.default;
+    const lines = Array.isArray(bucket) ? bucket : bucket.male;
+    const index = Math.floor(Math.random() * lines.length);
+    return {
+      text: lines[index]!,
+      audioId: contextLineAudioId("en", context, index),
+    };
   }
 
-  const bucket =
-    MASCOT_LINES.he[context] ??
-    MASCOT_LINES.he.default;
+  const bucket = MASCOT_LINES.he[context] ?? MASCOT_LINES.he.default;
   const lines = Array.isArray(bucket) ? bucket : bucket[gender];
-  return lines[Math.floor(Math.random() * lines.length)]!;
+  const index = Math.floor(Math.random() * lines.length);
+  return {
+    text: lines[index]!,
+    audioId: contextLineAudioId("he", context, index, gender),
+  };
 }
 
 export { resolveMascotContext };

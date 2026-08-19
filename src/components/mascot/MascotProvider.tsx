@@ -14,6 +14,7 @@ import { useLocale } from "@/i18n/LocaleProvider";
 import { useStudent } from "@/components/students";
 import { normalizeGender, type UserGender } from "@/lib/gender";
 import type { Locale } from "@/i18n/types";
+import type { MiloLine } from "@/lib/mascot/audio";
 import { translate } from "@/i18n";
 import { effectiveMascotLocale } from "@/lib/mascot/locale";
 import {
@@ -33,7 +34,12 @@ const WRONG_KEYS = ["mascot.wrong0", "mascot.wrong1", "mascot.wrong2"];
 
 const MascotContext = createContext<MascotContextValue | null>(null);
 
-function pickRandom(keys: string[], locale: Locale, gender: UserGender, t: (key: string) => string) {
+function pickRandom(
+  keys: string[],
+  locale: Locale,
+  gender: UserGender,
+  t: (key: string) => string
+): MiloLine {
   const key = keys[Math.floor(Math.random() * keys.length)]!;
   return getMascotSpeechLine(locale, key, gender, t);
 }
@@ -52,6 +58,7 @@ export function MascotProvider({ children }: { children: React.ReactNode }) {
   const [speaking, setSpeaking] = useState(false);
   const [text, setText] = useState("");
   const [animation, setAnimation] = useState<MascotAnimation>("idle");
+  const audioIdRef = useRef<string | undefined>(undefined);
   const hideTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const mutedRef = useRef(muted);
   mutedRef.current = muted;
@@ -76,6 +83,7 @@ export function MascotProvider({ children }: { children: React.ReactNode }) {
     setSpeaking(false);
     setBubbleOpen(false);
     setText("");
+    audioIdRef.current = undefined;
     setAnimation("idle");
   }, [clearHideTimer]);
 
@@ -84,8 +92,9 @@ export function MascotProvider({ children }: { children: React.ReactNode }) {
   }, [closeBubble]);
 
   const runSpeech = useCallback(
-    (msg: string, baseAnimation: MascotAnimation) => {
+    (msg: string, baseAnimation: MascotAnimation, audioId?: string) => {
       speakText(msg, mascotLocale, {
+        audioId,
         muted: mutedRef.current,
         onStart: () => {
           setSpeaking(true);
@@ -105,17 +114,19 @@ export function MascotProvider({ children }: { children: React.ReactNode }) {
   const show = useCallback(
     ({
       text: msg,
+      audioId,
       animation: anim = "talk",
       speak = true,
       durationMs = 6000,
     }: MascotShowOptions) => {
       clearHideTimer();
       setText(msg);
+      audioIdRef.current = audioId;
       setAnimation(anim === "talk" ? "idle" : anim);
       setBubbleOpen(true);
 
       if (speak) {
-        runSpeech(msg, anim);
+        runSpeech(msg, anim, audioId);
       }
 
       if (durationMs > 0) {
@@ -129,14 +140,15 @@ export function MascotProvider({ children }: { children: React.ReactNode }) {
 
   const replaySpeech = useCallback(() => {
     if (!text || mutedRef.current) return;
-    runSpeech(text, animation);
+    runSpeech(text, animation, audioIdRef.current);
   }, [text, animation, runSpeech]);
 
   const sayContextLine = useCallback(() => {
     const context = resolveMascotContext(pathname);
     const line = pickContextLine(mascotLocale, context, gender);
     show({
-      text: line,
+      text: line.text,
+      audioId: line.audioId,
       animation: "talk",
       speak: true,
       durationMs: pinned ? 8000 : 6000,
@@ -169,16 +181,20 @@ export function MascotProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const celebrate = useCallback(() => {
+    const line = pickRandom(CORRECT_KEYS, mascotLocale, gender, tMascot);
     show({
-      text: pickRandom(CORRECT_KEYS, mascotLocale, gender, tMascot),
+      text: line.text,
+      audioId: line.audioId,
       animation: "clap",
       speak: true,
     });
   }, [show, tMascot, mascotLocale, gender]);
 
   const encourage = useCallback(() => {
+    const line = pickRandom(WRONG_KEYS, mascotLocale, gender, tMascot);
     show({
-      text: pickRandom(WRONG_KEYS, mascotLocale, gender, tMascot),
+      text: line.text,
+      audioId: line.audioId,
       animation: "wave",
       speak: true,
     });
@@ -186,8 +202,10 @@ export function MascotProvider({ children }: { children: React.ReactNode }) {
 
   const welcome = useCallback(() => {
     if (typeof window !== "undefined" && localStorage.getItem(WELCOME_KEY)) return;
+    const line = getMascotSpeechLine(mascotLocale, "mascot.welcome", gender, tMascot);
     show({
-      text: getMascotSpeechLine(mascotLocale, "mascot.welcome", gender, tMascot),
+      text: line.text,
+      audioId: line.audioId,
       animation: "wave",
       speak: true,
       durationMs: 8000,

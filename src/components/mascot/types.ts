@@ -2,6 +2,7 @@ export type MascotAnimation = "idle" | "clap" | "wave" | "talk";
 
 export interface MascotShowOptions {
   text: string;
+  audioId?: string;
   animation?: MascotAnimation;
   speak?: boolean;
   durationMs?: number;

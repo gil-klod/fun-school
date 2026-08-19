@@ -1,11 +1,12 @@
 import type { Locale } from "@/i18n/types";
+import type { MiloAudioId } from "@/lib/mascot/audio";
+import { miloAudioUrl } from "@/lib/mascot/audio";
 
 const MUTE_KEY = "fun-school-mascot-muted";
 
 let speaking = false;
 let cachedVoices: SpeechSynthesisVoice[] = [];
 let currentAudio: HTMLAudioElement | null = null;
-let audioUrl: string | null = null;
 
 export function isMascotMuted(): boolean {
   if (typeof window === "undefined") return false;
@@ -37,6 +38,11 @@ export function hasHebrewBrowserVoice(): boolean {
   if (typeof window === "undefined" || !window.speechSynthesis) return false;
   const voices = cachedVoices.length ? cachedVoices : window.speechSynthesis.getVoices();
   return hebrewVoices(voices).length > 0;
+}
+
+function isMobileDevice(): boolean {
+  if (typeof navigator === "undefined") return false;
+  return /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
 }
 
 /** Call once after user interaction so Chrome loads voice list. */
@@ -105,75 +111,55 @@ function pickVoice(voices: SpeechSynthesisVoice[], locale: Locale): SpeechSynthe
 function clearAudio() {
   if (currentAudio) {
     currentAudio.pause();
+    currentAudio.onplay = null;
+    currentAudio.onended = null;
+    currentAudio.onerror = null;
     currentAudio.src = "";
     currentAudio = null;
-  }
-  if (audioUrl) {
-    URL.revokeObjectURL(audioUrl);
-    audioUrl = null;
   }
 }
 
 export interface SpeakOptions {
   muted?: boolean;
+  audioId?: MiloAudioId;
   onStart?: () => void;
   onEnd?: () => void;
 }
 
-async function speakViaApi(
-  text: string,
-  locale: Locale,
-  { onStart, onEnd }: SpeakOptions
-): Promise<boolean> {
-  try {
-    const res = await fetch(
-      `/api/tts?lang=${locale}&text=${encodeURIComponent(text)}`
-    );
-    if (!res.ok) return false;
-
-    const blob = await res.blob();
+function playAudioFile(src: string, options: SpeakOptions): Promise<boolean> {
+  return new Promise((resolve) => {
     clearAudio();
-    audioUrl = URL.createObjectURL(blob);
-    currentAudio = new Audio(audioUrl);
+    currentAudio = new Audio(src);
 
-    return await new Promise((resolve) => {
-      if (!currentAudio) {
-        resolve(false);
-        return;
-      }
-      currentAudio.onplay = () => {
-        speaking = true;
-        onStart?.();
-      };
-      currentAudio.onended = () => {
-        speaking = false;
-        clearAudio();
-        onEnd?.();
-        resolve(true);
-      };
-      currentAudio.onerror = () => {
-        speaking = false;
-        clearAudio();
-        onEnd?.();
-        resolve(false);
-      };
-      currentAudio.play().catch(() => {
-        speaking = false;
-        clearAudio();
-        onEnd?.();
-        resolve(false);
-      });
+    currentAudio.onplay = () => {
+      speaking = true;
+      options.onStart?.();
+    };
+    currentAudio.onended = () => {
+      speaking = false;
+      clearAudio();
+      options.onEnd?.();
+      resolve(true);
+    };
+    currentAudio.onerror = () => {
+      speaking = false;
+      clearAudio();
+      resolve(false);
+    };
+
+    currentAudio.play().catch(() => {
+      speaking = false;
+      clearAudio();
+      resolve(false);
     });
-  } catch {
-    return false;
-  }
+  });
 }
 
 function speakViaBrowser(
   spoken: string,
   locale: Locale,
   voice: SpeechSynthesisVoice | undefined,
-  { onStart, onEnd }: SpeakOptions
+  options: SpeakOptions
 ): Promise<boolean> {
   return new Promise((resolve) => {
     if (!window.speechSynthesis) {
@@ -184,21 +170,22 @@ function speakViaBrowser(
     window.speechSynthesis.cancel();
     const utterance = new SpeechSynthesisUtterance(spoken);
     utterance.lang = locale === "he" ? "he-IL" : "en-US";
-    utterance.rate = locale === "he" ? 0.92 : 0.98;
+    utterance.rate = locale === "he" ? 0.88 : 0.98;
     utterance.pitch = locale === "he" ? 1.05 : 1;
     if (voice) utterance.voice = voice;
 
     utterance.onstart = () => {
       speaking = true;
-      onStart?.();
+      options.onStart?.();
     };
     utterance.onend = () => {
       speaking = false;
-      onEnd?.();
+      options.onEnd?.();
       resolve(true);
     };
     utterance.onerror = () => {
       speaking = false;
+      options.onEnd?.();
       resolve(false);
     };
 
@@ -206,6 +193,11 @@ function speakViaBrowser(
   });
 }
 
+/**
+ * 1. Pre-recorded MP3 (public/audio/milo/) when audioId is set
+ * 2. Device TTS — Hebrew on mobile only; English everywhere
+ * No online Translate TTS fallback.
+ */
 export async function speakText(
   text: string,
   locale: Locale,
@@ -219,22 +211,24 @@ export async function speakText(
 
   stopSpeaking();
 
+  if (options.audioId) {
+    const played = await playAudioFile(miloAudioUrl(options.audioId), options);
+    if (played) return;
+  }
+
   const voices = cachedVoices.length ? cachedVoices : await waitForVoices();
   const voice = pickVoice(voices, locale);
 
-  // Hebrew: many desktops (esp. Linux) have no he-IL voice — use server TTS.
-  const useApiFirst = locale === "he" && !voice;
+  const allowBrowser =
+    locale === "en" || (locale === "he" && isMobileDevice() && !!voice);
 
-  if (useApiFirst) {
-    const ok = await speakViaApi(spoken, locale, options);
-    if (ok) return;
+  if (allowBrowser) {
+    await speakViaBrowser(spoken, locale, voice, options);
+    return;
   }
 
-  const browserOk = await speakViaBrowser(spoken, locale, voice, options);
-
-  if (!browserOk && locale === "he") {
-    await speakViaApi(spoken, locale, options);
-  }
+  // Desktop Hebrew without MP3: bubble text only (no bad TTS)
+  options.onEnd?.();
 }
 
 export function stopSpeaking() {

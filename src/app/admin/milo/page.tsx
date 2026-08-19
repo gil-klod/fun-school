@@ -28,6 +28,7 @@ export default function AdminMiloPage() {
     stopSpeaking();
     setPlayingId(entry.id);
     await speakText(entry.text, entry.locale, {
+      audioId: entry.id,
       onEnd: () => setPlayingId(null),
     });
   }
