@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { BackButton } from "@/components/BackButton";
+import { DirectionalArrow } from "@/components/DirectionalArrow";
 import { useLocale } from "@/i18n/LocaleProvider";
 import { localizeAnalyticsKey } from "@/lib/analyticsKeys";
 import {
@@ -187,7 +188,7 @@ export default function DashboardPage() {
               <ul className="space-y-2">
                 {coachRecommendations.map((r, i) => (
                   <li key={i} className="text-gray-700 text-sm flex gap-2">
-                    <span className="text-indigo-400">→</span> {r}
+                    <DirectionalArrow className="text-indigo-400 shrink-0" /> {r}
                   </li>
                 ))}
               </ul>

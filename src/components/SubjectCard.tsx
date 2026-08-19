@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import type { SubjectInfo } from "@/lib/types";
+import { DirectionalArrow } from "@/components/DirectionalArrow";
 import { useLocale } from "@/i18n/LocaleProvider";
 
 interface SubjectCardProps {
@@ -32,12 +33,9 @@ export function SubjectCard({ subject }: SubjectCardProps) {
               {subjectDescription(subject.id)}
             </p>
           </div>
-          <span
-            className="shrink-0 text-indigo-400 group-hover:text-indigo-600 transition-all text-lg mt-0.5 [dir=rtl]:rotate-180 group-hover:translate-x-0.5 [dir=rtl]:group-hover:-translate-x-0.5"
-            aria-hidden
-          >
-            →
-          </span>
+          <DirectionalArrow
+            className="shrink-0 text-indigo-400 group-hover:text-indigo-600 transition-colors text-lg mt-0.5"
+          />
         </div>
 
         <div className="flex flex-wrap gap-1.5 mt-3">

@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
+import { DirectionalArrow } from "@/components/DirectionalArrow";
 import { EXAMPLE_IMPORT_JSON } from "@/lib/content/import";
 
 interface GameStat {
@@ -105,8 +106,9 @@ export default function AdminPage() {
           <h1 className="text-3xl font-bold text-gray-800">Admin</h1>
           <p className="text-gray-500 text-sm mt-1">Manage game content in the database</p>
         </div>
-        <Link href="/" className="text-indigo-600 font-semibold hover:text-indigo-800">
-          ← Home
+        <Link href="/" className="inline-flex items-center gap-2 text-indigo-600 font-semibold hover:text-indigo-800">
+          <DirectionalArrow direction="back" />
+          Home
         </Link>
       </div>
 
