@@ -24,16 +24,33 @@ export default function AdminMiloPage() {
     return acc;
   }, {});
 
-  const lineExport = useMemo(
-    () => filtered.map((entry) => entry.text).join("\n"),
-    [filtered]
+  const englishExport = useMemo(
+    () => catalog.filter((e) => e.locale === "en").map((e) => e.text).join("\n"),
+    [catalog]
   );
-  const [copied, setCopied] = useState(false);
+  const hebrewMaleExport = useMemo(
+    () =>
+      catalog
+        .filter((e) => e.locale === "he" && e.gender === "male")
+        .map((e) => e.text)
+        .join("\n"),
+    [catalog]
+  );
+  const hebrewFemaleExport = useMemo(
+    () =>
+      catalog
+        .filter((e) => e.locale === "he" && e.gender === "female")
+        .map((e) => e.text)
+        .join("\n"),
+    [catalog]
+  );
 
-  async function copyLines() {
-    await navigator.clipboard.writeText(lineExport);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+  const [copiedKey, setCopiedKey] = useState<string | null>(null);
+
+  async function copyLines(key: string, text: string) {
+    await navigator.clipboard.writeText(text);
+    setCopiedKey(key);
+    setTimeout(() => setCopiedKey(null), 2000);
   }
 
   async function play(entry: MiloTextEntry) {
@@ -77,28 +94,75 @@ export default function AdminMiloPage() {
         <span className="text-sm text-gray-500 self-center">{filtered.length} lines</span>
       </div>
 
-      <section className="bg-white/90 border-2 border-indigo-100 rounded-2xl p-5 mb-6">
-        <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
-          <h2 className="font-bold text-gray-800">Export text (one line per row)</h2>
-          <button
-            type="button"
-            onClick={copyLines}
-            className="px-4 py-2 rounded-xl bg-indigo-600 text-white text-sm font-semibold hover:bg-indigo-700"
-          >
-            {copied ? "Copied!" : "Copy to clipboard"}
-          </button>
-        </div>
-        <textarea
-          readOnly
-          value={lineExport}
-          rows={12}
-          dir="auto"
-          className="w-full font-mono text-sm border-2 border-indigo-100 rounded-xl p-4 focus:outline-none resize-y"
-          onClick={(e) => e.currentTarget.select()}
-        />
-        <p className="text-xs text-gray-500 mt-2">
-          Uses current filters. Click the box to select all.
+      <section className="mb-8">
+        <h2 className="font-bold text-gray-800 mb-1">Export for voice recording</h2>
+        <p className="text-sm text-gray-500 mb-4">
+          One line per Milo clip, in catalog order. Paste each box into DaVinci separately.
         </p>
+
+        <div className="space-y-6">
+          {[
+            {
+              key: "en",
+              title: "English",
+              count: catalog.filter((e) => e.locale === "en").length,
+              value: englishExport,
+              dir: "ltr" as const,
+              border: "border-sky-200",
+              header: "bg-sky-50 text-sky-900",
+              button: "bg-sky-600 hover:bg-sky-700",
+            },
+            {
+              key: "he-male",
+              title: "Hebrew (male)",
+              count: catalog.filter((e) => e.locale === "he" && e.gender === "male").length,
+              value: hebrewMaleExport,
+              dir: "rtl" as const,
+              border: "border-emerald-200",
+              header: "bg-emerald-50 text-emerald-900",
+              button: "bg-emerald-600 hover:bg-emerald-700",
+            },
+            {
+              key: "he-female",
+              title: "Hebrew (female)",
+              count: catalog.filter((e) => e.locale === "he" && e.gender === "female").length,
+              value: hebrewFemaleExport,
+              dir: "rtl" as const,
+              border: "border-rose-200",
+              header: "bg-rose-50 text-rose-900",
+              button: "bg-rose-600 hover:bg-rose-700",
+            },
+          ].map((box) => (
+            <div
+              key={box.key}
+              className={`bg-white/90 border-2 ${box.border} rounded-2xl overflow-hidden`}
+            >
+              <div
+                className={`flex flex-wrap items-center justify-between gap-3 px-5 py-3 border-b-2 ${box.border} ${box.header}`}
+              >
+                <div>
+                  <h3 className="font-bold">{box.title}</h3>
+                  <p className="text-xs opacity-80">{box.count} lines</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => copyLines(box.key, box.value)}
+                  className={`px-4 py-2 rounded-xl text-white text-sm font-semibold ${box.button}`}
+                >
+                  {copiedKey === box.key ? "Copied!" : "Copy"}
+                </button>
+              </div>
+              <textarea
+                readOnly
+                value={box.value}
+                rows={10}
+                dir={box.dir}
+                className="w-full font-mono text-sm p-4 focus:outline-none resize-y bg-white"
+                onClick={(e) => e.currentTarget.select()}
+              />
+            </div>
+          ))}
+        </div>
       </section>
 
       <div className="space-y-6">
