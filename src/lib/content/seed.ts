@@ -7,7 +7,8 @@ import {
   SENTENCE_CHALLENGES,
   COLORS_NUMBERS,
 } from "@/lib/data/english-beginners";
-import { HEBREW_WORDS, FIX_SENTENCES, HEBREW_STORIES } from "@/lib/data/hebrew";
+import { HEBREW_WORDS, FIX_SENTENCES } from "@/lib/data/hebrew";
+import { HEBREW_STORIES_BY_LEVEL } from "@/lib/data/hebrew-stories";
 import { SHUK_ITEMS, MYSTERY_TEMPLATES } from "@/lib/data/math";
 
 const MYSTERY_WITH_OP = MYSTERY_TEMPLATES.map((t) => ({
@@ -146,14 +147,6 @@ function buildSeedDocs(): SeedDoc[] {
         (q) => ({ ...q })
       ),
       ...sliceByDifficulty(
-        HEBREW_STORIES,
-        difficulty,
-        "hebrew",
-        "comprehension",
-        "story",
-        (s) => ({ ...s })
-      ),
-      ...sliceByDifficulty(
         BEGINNER_VOCAB,
         difficulty,
         "english-beginners",
@@ -202,6 +195,17 @@ function buildSeedDocs(): SeedDoc[] {
         (s) => ({ ...s })
       )
     );
+
+    HEBREW_STORIES_BY_LEVEL[difficulty].forEach((story, i) => {
+      docs.push({
+        subjectId: "hebrew",
+        gameId: "comprehension",
+        difficulty,
+        itemType: "story",
+        data: { ...story },
+        sortOrder: i + 1,
+      });
+    });
 
     const shukItems =
       difficulty === 1
