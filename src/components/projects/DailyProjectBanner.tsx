@@ -2,7 +2,9 @@
 
 import Link from "next/link";
 import { useLocale } from "@/i18n/LocaleProvider";
+import { getGameTitle, translate } from "@/i18n";
 import { projectGameHref } from "@/lib/projects/links";
+import { projectSlotContentLocale } from "@/lib/subjectLocale";
 import type { DailyProjectPayload, ProjectSlot } from "@/lib/projects/types";
 import { PROJECT_SLOTS } from "@/lib/projects/types";
 import type { EnglishSubjectId } from "@/lib/projects/types";
@@ -87,16 +89,20 @@ export function DailyProjectBanner({
                 project.difficulty
               );
 
+          const slotLocale = projectSlotContentLocale(slot, englishSubjectId);
+          const slotLabel = slotLocale
+            ? translate(slotLocale, `projects.slot.${slot}`)
+            : t(`projects.slot.${slot}`);
+          const gameName = slotLocale
+            ? getGameTitle(slotLocale, subjectId, gameId)
+            : gameTitle(subjectId, gameId);
+
           const inner = (
             <>
               <span className="text-2xl">{game?.emoji ?? SLOT_EMOJI[slot]}</span>
               <div className="min-w-0">
-                <p className="text-xs font-semibold text-gray-500 uppercase">
-                  {t(`projects.slot.${slot}`)}
-                </p>
-                <p className="font-semibold text-gray-800 truncate">
-                  {gameTitle(subjectId, gameId)}
-                </p>
+                <p className="text-xs font-semibold text-gray-500 uppercase">{slotLabel}</p>
+                <p className="font-semibold text-gray-800 truncate">{gameName}</p>
               </div>
               <span className="text-sm font-bold shrink-0">
                 {complete ? "✅" : "▶"}

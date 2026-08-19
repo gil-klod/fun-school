@@ -40,5 +40,15 @@ export function SubjectPageContent({ subject }: { subject: SubjectInfo }) {
     );
   }
 
+  if (subject.id === "hebrew") {
+    return (
+      <LocaleOverrideProvider locale="he">
+        <div dir="rtl" lang="he" className="contents">
+          <SubjectPageInner subject={subject} />
+        </div>
+      </LocaleOverrideProvider>
+    );
+  }
+
   return <SubjectPageInner subject={subject} />;
 }
