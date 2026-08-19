@@ -3,6 +3,10 @@
 import { useMemo, useState } from "react";
 import { AdminNav } from "@/components/admin/AdminNav";
 import { getMiloTextCatalog, type MiloTextEntry } from "@/lib/mascot/catalog";
+import {
+  formatMiloRecordingExport,
+  miloRecordingExportHint,
+} from "@/lib/mascot/recordingExport";
 import { speakText, stopSpeaking } from "@/components/mascot/speech";
 import type { Locale } from "@/i18n/types";
 
@@ -24,25 +28,30 @@ export default function AdminMiloPage() {
     return acc;
   }, {});
 
-  const englishExport = useMemo(
-    () => catalog.filter((e) => e.locale === "en").map((e) => e.text).join("\n"),
+  const englishEntries = useMemo(
+    () => catalog.filter((e) => e.locale === "en"),
     [catalog]
+  );
+  const hebrewMaleEntries = useMemo(
+    () => catalog.filter((e) => e.locale === "he" && e.gender === "male"),
+    [catalog]
+  );
+  const hebrewFemaleEntries = useMemo(
+    () => catalog.filter((e) => e.locale === "he" && e.gender === "female"),
+    [catalog]
+  );
+
+  const englishExport = useMemo(
+    () => formatMiloRecordingExport(englishEntries),
+    [englishEntries]
   );
   const hebrewMaleExport = useMemo(
-    () =>
-      catalog
-        .filter((e) => e.locale === "he" && e.gender === "male")
-        .map((e) => e.text)
-        .join("\n"),
-    [catalog]
+    () => formatMiloRecordingExport(hebrewMaleEntries),
+    [hebrewMaleEntries]
   );
   const hebrewFemaleExport = useMemo(
-    () =>
-      catalog
-        .filter((e) => e.locale === "he" && e.gender === "female")
-        .map((e) => e.text)
-        .join("\n"),
-    [catalog]
+    () => formatMiloRecordingExport(hebrewFemaleEntries),
+    [hebrewFemaleEntries]
   );
 
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
@@ -97,7 +106,8 @@ export default function AdminMiloPage() {
       <section className="mb-8">
         <h2 className="font-bold text-gray-800 mb-1">Export for voice recording</h2>
         <p className="text-sm text-gray-500 mb-4">
-          One line per Milo clip, in catalog order. Paste each box into DaVinci separately.
+          Each Milo line is its own block with blank lines between. Paste one box into DaVinci,
+          record one long MP3, and we auto-split on the pauses. Do not remove the gaps.
         </p>
 
         <div className="space-y-6">
@@ -105,7 +115,7 @@ export default function AdminMiloPage() {
             {
               key: "en",
               title: "English",
-              count: catalog.filter((e) => e.locale === "en").length,
+              entries: englishEntries,
               value: englishExport,
               dir: "ltr" as const,
               border: "border-sky-200",
@@ -115,7 +125,7 @@ export default function AdminMiloPage() {
             {
               key: "he-male",
               title: "Hebrew (male)",
-              count: catalog.filter((e) => e.locale === "he" && e.gender === "male").length,
+              entries: hebrewMaleEntries,
               value: hebrewMaleExport,
               dir: "rtl" as const,
               border: "border-emerald-200",
@@ -125,7 +135,7 @@ export default function AdminMiloPage() {
             {
               key: "he-female",
               title: "Hebrew (female)",
-              count: catalog.filter((e) => e.locale === "he" && e.gender === "female").length,
+              entries: hebrewFemaleEntries,
               value: hebrewFemaleExport,
               dir: "rtl" as const,
               border: "border-rose-200",
@@ -142,7 +152,7 @@ export default function AdminMiloPage() {
               >
                 <div>
                   <h3 className="font-bold">{box.title}</h3>
-                  <p className="text-xs opacity-80">{box.count} lines</p>
+                  <p className="text-xs opacity-80">{miloRecordingExportHint(box.entries.length)}</p>
                 </div>
                 <button
                   type="button"
@@ -155,9 +165,9 @@ export default function AdminMiloPage() {
               <textarea
                 readOnly
                 value={box.value}
-                rows={10}
+                rows={14}
                 dir={box.dir}
-                className="w-full font-mono text-sm p-4 focus:outline-none resize-y bg-white"
+                className="w-full font-mono text-sm p-4 leading-relaxed whitespace-pre-wrap focus:outline-none resize-y bg-white"
                 onClick={(e) => e.currentTarget.select()}
               />
             </div>
