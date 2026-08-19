@@ -9,6 +9,8 @@ import { Feedback } from "@/components/Feedback";
 import { GameContentGate } from "@/components/GameContentGate";
 import { useQuestionCounter } from "@/hooks/useQuestionCounter";
 import { useLocale } from "@/i18n/LocaleProvider";
+import { useProjectGame } from "@/hooks/useProjectGame";
+import { ProjectSlotDone } from "@/components/projects/ProjectSlotDone";
 import {
   getWordHint,
   getWordCategory,
@@ -24,14 +26,18 @@ function ScramblePlay({
   difficulty,
   changeDifficulty,
   progress,
+  lockDifficulty,
 }: {
   words: HebrewWord[];
   sessionSize: number;
   difficulty: ReturnType<typeof useGameSession>["difficulty"];
   changeDifficulty: ReturnType<typeof useGameSession>["changeDifficulty"];
   progress: ReturnType<typeof useGameSession>["progress"];
+  lockDifficulty?: boolean;
 }) {
   const { t, gameTitle, locale } = useLocale();
+  const project = useProjectGame();
+  const [slotDone, setSlotDone] = useState(false);
   const [usedWords, setUsedWords] = useState<string[]>([]);
   const [wordData, setWordData] = useState<WordData>(() => newScrambleWord(words));
   const [guess, setGuess] = useState("");
@@ -74,16 +80,33 @@ function ScramblePlay({
   );
 
   const nextWord = useCallback(() => {
-    const used = usedWords.includes(wordData.word)
-      ? usedWords
-      : [...usedWords, wordData.word];
-    const nextNum = questionNum >= sessionSize ? 1 : questionNum + 1;
-    setUsedWords(used);
-    advanceQuestionNum();
-    progress.setRound((r) => r + 1);
-    progress.save({ round: progress.round + 1, state: { questionNum: nextNum } });
-    advanceToNext(used);
-  }, [usedWords, wordData.word, progress, advanceToNext, questionNum, sessionSize, advanceQuestionNum]);
+    const done = project.handleSessionNext(
+      questionNum,
+      sessionSize,
+      progress.markCompleted,
+      () => {
+        const used = usedWords.includes(wordData.word)
+          ? usedWords
+          : [...usedWords, wordData.word];
+        const nextNum = questionNum >= sessionSize ? 1 : questionNum + 1;
+        setUsedWords(used);
+        advanceQuestionNum();
+        progress.setRound((r) => r + 1);
+        progress.save({ round: progress.round + 1, state: { questionNum: nextNum } });
+        advanceToNext(used);
+      }
+    );
+    if (done) setSlotDone(true);
+  }, [
+    project,
+    usedWords,
+    wordData.word,
+    progress,
+    advanceToNext,
+    questionNum,
+    sessionSize,
+    advanceQuestionNum,
+  ]);
 
   useGameResume(
     progress.loaded,
@@ -158,7 +181,7 @@ function ScramblePlay({
         contentDir="rtl"
         difficulty={difficulty}
         onDifficultyChange={changeDifficulty}
-        difficultyDisabled={answered}
+        difficultyDisabled={answered || lockDifficulty}
       >
         <GameStatus
           current={questionNum}
@@ -202,11 +225,12 @@ function ScramblePlay({
               <Feedback type={feedback.type} message={feedback.message} />
             )}
 
-            {answered && (
+            {answered && !slotDone && (
               <button onClick={nextWord} className="game-btn game-btn-primary w-full mt-3">
                 {t("games.nextWord")}
               </button>
             )}
+            {slotDone && <ProjectSlotDone />}
           </div>
         </div>
       </GameShell>
@@ -216,7 +240,7 @@ function ScramblePlay({
 
 export default function ScramblePage() {
   const session = useGameSession("hebrew", "scramble");
-  const { ready, content, contentError, difficulty, changeDifficulty, progress } =
+  const { ready, content, contentError, difficulty, changeDifficulty, progress, lockDifficulty } =
     session;
 
   const words = useMemo(
@@ -242,6 +266,7 @@ export default function ScramblePage() {
       difficulty={difficulty}
       changeDifficulty={changeDifficulty}
       progress={progress}
+      lockDifficulty={lockDifficulty}
     />
   );
 }

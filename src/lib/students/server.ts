@@ -1,4 +1,5 @@
 import { connectDB } from "@/lib/db";
+import type { EnglishSubjectId } from "@/models/Student";
 import { Student, type IStudent } from "@/models/Student";
 
 export async function requireOwnedStudent(
@@ -16,6 +17,7 @@ export function serializeStudent(student: IStudent) {
     age: student.age,
     gender: student.gender,
     avatar: student.avatar,
+    englishSubjectId: (student.englishSubjectId ?? "english-beginners") as EnglishSubjectId,
     createdAt: student.createdAt,
   };
 }

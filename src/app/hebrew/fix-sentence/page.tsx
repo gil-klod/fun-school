@@ -8,6 +8,8 @@ import { GameStatus } from "@/components/GameStatus";
 import { Feedback } from "@/components/Feedback";
 import { GameContentGate } from "@/components/GameContentGate";
 import { useLocale } from "@/i18n/LocaleProvider";
+import { useProjectGame } from "@/hooks/useProjectGame";
+import { ProjectSlotDone } from "@/components/projects/ProjectSlotDone";
 
 interface FixSentenceQuestion {
   wrong: string;
@@ -27,13 +29,17 @@ function FixSentencePlay({
   difficulty,
   changeDifficulty,
   progress,
+  lockDifficulty,
 }: {
   sentences: FixSentenceQuestion[];
   difficulty: ReturnType<typeof useGameSession>["difficulty"];
   changeDifficulty: ReturnType<typeof useGameSession>["changeDifficulty"];
   progress: ReturnType<typeof useGameSession>["progress"];
+  lockDifficulty?: boolean;
 }) {
   const { t, gameTitle, locale } = useLocale();
+  const project = useProjectGame();
+  const [slotDone, setSlotDone] = useState(false);
   const [index, setIndex] = useState(0);
   const [feedback, setFeedback] = useState<{
     type: "correct" | "wrong";
@@ -76,15 +82,23 @@ function FixSentencePlay({
 
   const nextQuestion = useCallback(() => {
     const nextIndex = index + 1;
-    setIndex(nextIndex);
-    setFeedback(null);
-    setAnswered(false);
-    progress.setRound((r) => r + 1);
-    progress.save({
-      round: progress.round + 1,
-      state: { index: nextIndex, answered: false, feedback: null },
-    });
-  }, [index, progress]);
+    const done = project.handleIndexNext(
+      nextIndex,
+      sentences.length,
+      progress.markCompleted,
+      () => {
+        setIndex(nextIndex);
+        setFeedback(null);
+        setAnswered(false);
+        progress.setRound((r) => r + 1);
+        progress.save({
+          round: progress.round + 1,
+          state: { index: nextIndex, answered: false, feedback: null },
+        });
+      }
+    );
+    if (done) setSlotDone(true);
+  }, [index, progress, project, sentences.length]);
 
   const handleAnswer = (option: string) => {
     if (answered) return;
@@ -130,7 +144,7 @@ function FixSentencePlay({
         contentDir="rtl"
         difficulty={difficulty}
         onDifficultyChange={changeDifficulty}
-        difficultyDisabled={answered}
+        difficultyDisabled={answered || lockDifficulty}
       >
         <GameStatus
           current={index + 1}
@@ -182,11 +196,13 @@ function FixSentencePlay({
           </div>
         )}
 
-        {answered && (
+        {answered && !slotDone && (
           <button onClick={nextQuestion} className="game-btn game-btn-primary w-full sm:max-w-md sm:mx-auto sm:block">
             {t("games.nextSentence")}
           </button>
         )}
+
+        {slotDone && <ProjectSlotDone />}
       </GameShell>
     </GamePage>
   );
@@ -194,7 +210,7 @@ function FixSentencePlay({
 
 export default function FixSentencePage() {
   const session = useGameSession("hebrew", "fix-sentence");
-  const { ready, content, contentError, difficulty, changeDifficulty, progress } =
+  const { ready, content, contentError, difficulty, changeDifficulty, progress, lockDifficulty } =
     session;
 
   const sentences = useMemo(
@@ -222,6 +238,7 @@ export default function FixSentencePage() {
       difficulty={difficulty}
       changeDifficulty={changeDifficulty}
       progress={progress}
+      lockDifficulty={lockDifficulty}
     />
   );
 }

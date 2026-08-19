@@ -10,6 +10,7 @@ import {
 } from "react";
 import { useSession } from "next-auth/react";
 import type { UserGender } from "@/lib/gender";
+import type { EnglishSubjectId } from "@/lib/projects/types";
 
 export interface StudentProfile {
   id: string;
@@ -17,6 +18,7 @@ export interface StudentProfile {
   age: number;
   gender: UserGender;
   avatar: string;
+  englishSubjectId: EnglishSubjectId;
 }
 
 interface CreateStudentInput {
@@ -34,6 +36,7 @@ interface StudentContextValue {
   selectStudent: (id: string) => void;
   createStudent: (input: CreateStudentInput) => Promise<StudentProfile>;
   deleteStudent: (id: string) => Promise<void>;
+  updateStudentEnglishTrack: (id: string, englishSubjectId: EnglishSubjectId) => Promise<void>;
   refreshStudents: () => Promise<void>;
 }
 
@@ -140,6 +143,22 @@ export function StudentProvider({ children }: { children: React.ReactNode }) {
     [activeId, userId]
   );
 
+  const updateStudentEnglishTrack = useCallback(
+    async (id: string, englishSubjectId: EnglishSubjectId) => {
+      const res = await fetch(`/api/students/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ englishSubjectId }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "Failed to update student");
+
+      const student = data.student as StudentProfile;
+      setStudents((prev) => prev.map((s) => (s.id === id ? student : s)));
+    },
+    []
+  );
+
   const activeStudent = useMemo(
     () => students.find((s) => s.id === activeId) ?? null,
     [students, activeId]
@@ -156,6 +175,7 @@ export function StudentProvider({ children }: { children: React.ReactNode }) {
       selectStudent,
       createStudent,
       deleteStudent,
+      updateStudentEnglishTrack,
       refreshStudents: loadStudents,
     }),
     [
@@ -166,6 +186,7 @@ export function StudentProvider({ children }: { children: React.ReactNode }) {
       selectStudent,
       createStudent,
       deleteStudent,
+      updateStudentEnglishTrack,
       loadStudents,
     ]
   );

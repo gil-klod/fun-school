@@ -151,6 +151,38 @@ export interface Dictionary {
     formError: string;
     playingAs: string;
   };
+  projects: {
+    dailyTask: string;
+    dayProgress: string;
+    edit: string;
+    dayComplete: string;
+    name: string;
+    days: string;
+    englishTrack: string;
+    englishBeginners: string;
+    englishAdvanced: string;
+    save: string;
+    saving: string;
+    saveSuccess: string;
+    saveFailed: string;
+    restoreDefault: string;
+    restoring: string;
+    restoreSuccess: string;
+    restoreFailed: string;
+    restoreConfirm: string;
+    dayN: string;
+    randomizeDay: string;
+    random: string;
+    slotComplete: string;
+    backToHome: string;
+    settingsTitle: string;
+    settingsHint: string;
+    slot: {
+      math: string;
+      hebrew: string;
+      english: string;
+    };
+  };
   mascot: {
     name: string;
     dismiss: string;

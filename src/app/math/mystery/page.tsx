@@ -10,6 +10,8 @@ import { GameContentGate } from "@/components/GameContentGate";
 import { MathLtr } from "@/components/MathLtr";
 import { useQuestionCounter } from "@/hooks/useQuestionCounter";
 import { useLocale } from "@/i18n/LocaleProvider";
+import { useProjectGame } from "@/hooks/useProjectGame";
+import { ProjectSlotDone } from "@/components/projects/ProjectSlotDone";
 import {
   generateMystery,
   buildOptions,
@@ -31,6 +33,7 @@ function MysteryPlay({
   difficulty,
   changeDifficulty,
   progress,
+  lockDifficulty,
 }: {
   templates: MysteryTemplate[];
   config: MysteryConfig;
@@ -38,8 +41,11 @@ function MysteryPlay({
   difficulty: ReturnType<typeof useGameSession>["difficulty"];
   changeDifficulty: ReturnType<typeof useGameSession>["changeDifficulty"];
   progress: ReturnType<typeof useGameSession>["progress"];
+  lockDifficulty?: boolean;
 }) {
   const { t, gameTitle, locale } = useLocale();
+  const project = useProjectGame();
+  const [slotDone, setSlotDone] = useState(false);
   const [round, setRound] = useState(() => newRound(templates, config));
   const { question, options } = round;
   const [feedback, setFeedback] = useState<{
@@ -98,19 +104,27 @@ function MysteryPlay({
   const correct = question.answer;
 
   const nextQuestion = useCallback(() => {
-    const nextNum = questionNum >= sessionSize ? 1 : questionNum + 1;
-    const newR = newRound(templates, config);
-    setRound(newR);
-    setFeedback(null);
-    setAnswered(false);
-    setShowHint(false);
-    advanceQuestionNum();
-    progress.setRound((r) => r + 1);
-    progress.save({
-      round: progress.round + 1,
-      state: { round: newR, answered: false, feedback: null, showHint: false, questionNum: nextNum },
-    });
-  }, [progress, templates, config, questionNum, sessionSize, advanceQuestionNum]);
+    const done = project.handleSessionNext(
+      questionNum,
+      sessionSize,
+      progress.markCompleted,
+      () => {
+        const nextNum = questionNum >= sessionSize ? 1 : questionNum + 1;
+        const newR = newRound(templates, config);
+        setRound(newR);
+        setFeedback(null);
+        setAnswered(false);
+        setShowHint(false);
+        advanceQuestionNum();
+        progress.setRound((r) => r + 1);
+        progress.save({
+          round: progress.round + 1,
+          state: { round: newR, answered: false, feedback: null, showHint: false, questionNum: nextNum },
+        });
+      }
+    );
+    if (done) setSlotDone(true);
+  }, [project, progress, templates, config, questionNum, sessionSize, advanceQuestionNum]);
 
   const handleAnswer = (answer: number) => {
     if (answered) return;
@@ -153,7 +167,7 @@ function MysteryPlay({
         emoji="🔍"
         difficulty={difficulty}
         onDifficultyChange={changeDifficulty}
-        difficultyDisabled={answered}
+        difficultyDisabled={answered || lockDifficulty}
       >
         <GameStatus
           current={questionNum}
@@ -209,11 +223,13 @@ function MysteryPlay({
           </div>
         )}
 
-        {answered && (
+        {answered && !slotDone && (
           <button onClick={nextQuestion} className="game-btn game-btn-primary w-full sm:max-w-md sm:mx-auto sm:block">
             {t("games.nextMystery")}
           </button>
         )}
+
+        {slotDone && <ProjectSlotDone />}
       </GameShell>
     </GamePage>
   );
@@ -221,7 +237,7 @@ function MysteryPlay({
 
 export default function MysteryPage() {
   const session = useGameSession("math", "mystery");
-  const { ready, content, contentError, difficulty, changeDifficulty, progress } =
+  const { ready, content, contentError, difficulty, changeDifficulty, progress, lockDifficulty } =
     session;
 
   const templates = useMemo(
@@ -256,6 +272,7 @@ export default function MysteryPage() {
       difficulty={difficulty}
       changeDifficulty={changeDifficulty}
       progress={progress}
+      lockDifficulty={lockDifficulty}
     />
   );
 }

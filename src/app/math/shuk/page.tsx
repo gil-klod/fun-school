@@ -10,6 +10,8 @@ import { GameContentGate } from "@/components/GameContentGate";
 import { MathLtr } from "@/components/MathLtr";
 import { useQuestionCounter } from "@/hooks/useQuestionCounter";
 import { useLocale } from "@/i18n/LocaleProvider";
+import { useProjectGame } from "@/hooks/useProjectGame";
+import { ProjectSlotDone } from "@/components/projects/ProjectSlotDone";
 import {
   buildOptions,
   getShukItemName,
@@ -29,6 +31,7 @@ function ShukPlay({
   difficulty,
   changeDifficulty,
   progress,
+  lockDifficulty,
 }: {
   items: ShukItem[];
   config: ShukConfig;
@@ -36,8 +39,11 @@ function ShukPlay({
   difficulty: ReturnType<typeof useGameSession>["difficulty"];
   changeDifficulty: ReturnType<typeof useGameSession>["changeDifficulty"];
   progress: ReturnType<typeof useGameSession>["progress"];
+  lockDifficulty?: boolean;
 }) {
   const { t, gameTitle, locale } = useLocale();
+  const project = useProjectGame();
+  const [slotDone, setSlotDone] = useState(false);
   const [round, setRound] = useState(() => newChallenge(items, config));
   const { challenge, options } = useMemo(
     () => normalizeShukRound(round, items, config),
@@ -93,18 +99,26 @@ function ShukPlay({
   const correct = challenge.change;
 
   const nextChallenge = useCallback(() => {
-    const nextNum = questionNum >= sessionSize ? 1 : questionNum + 1;
-    const newR = newChallenge(items, config);
-    setRound(newR);
-    setFeedback(null);
-    setAnswered(false);
-    advanceQuestionNum();
-    progress.setRound((r) => r + 1);
-    progress.save({
-      round: progress.round + 1,
-      state: { round: newR, answered: false, feedback: null, questionNum: nextNum },
-    });
-  }, [progress, items, config, questionNum, sessionSize, advanceQuestionNum]);
+    const done = project.handleSessionNext(
+      questionNum,
+      sessionSize,
+      progress.markCompleted,
+      () => {
+        const nextNum = questionNum >= sessionSize ? 1 : questionNum + 1;
+        const newR = newChallenge(items, config);
+        setRound(newR);
+        setFeedback(null);
+        setAnswered(false);
+        advanceQuestionNum();
+        progress.setRound((r) => r + 1);
+        progress.save({
+          round: progress.round + 1,
+          state: { round: newR, answered: false, feedback: null, questionNum: nextNum },
+        });
+      }
+    );
+    if (done) setSlotDone(true);
+  }, [project, progress, items, config, questionNum, sessionSize, advanceQuestionNum]);
 
   const handleAnswer = (answer: number) => {
     if (answered) return;
@@ -150,7 +164,7 @@ function ShukPlay({
         emoji="🛒"
         difficulty={difficulty}
         onDifficultyChange={changeDifficulty}
-        difficultyDisabled={answered}
+        difficultyDisabled={answered || lockDifficulty}
       >
         <GameStatus
           current={questionNum}
@@ -212,11 +226,13 @@ function ShukPlay({
           </div>
         )}
 
-        {answered && (
+        {answered && !slotDone && (
           <button onClick={nextChallenge} className="game-btn game-btn-primary w-full sm:max-w-md sm:mx-auto sm:block">
             {t("games.nextShopping")}
           </button>
         )}
+
+        {slotDone && <ProjectSlotDone />}
       </GameShell>
     </GamePage>
   );
@@ -224,7 +240,7 @@ function ShukPlay({
 
 export default function ShukPage() {
   const session = useGameSession("math", "shuk");
-  const { ready, content, contentError, difficulty, changeDifficulty, progress } =
+  const { ready, content, contentError, difficulty, changeDifficulty, progress, lockDifficulty } =
     session;
 
   const items = useMemo(
@@ -259,6 +275,7 @@ export default function ShukPage() {
       difficulty={difficulty}
       changeDifficulty={changeDifficulty}
       progress={progress}
+      lockDifficulty={lockDifficulty}
     />
   );
 }

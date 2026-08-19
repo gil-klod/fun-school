@@ -2,8 +2,9 @@ import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { connectDB } from "@/lib/db";
 import { isUserGender } from "@/lib/gender";
+import { createDefaultProject, defaultEnglishSubjectForAge } from "@/lib/projects/server";
 import { isStudentAvatarId } from "@/lib/students/avatars";
-import { requireOwnedStudent, serializeStudent } from "@/lib/students/server";
+import { serializeStudent } from "@/lib/students/server";
 import { Student } from "@/models/Student";
 
 export async function GET() {
@@ -41,13 +42,17 @@ export async function POST(request: Request) {
     }
 
     await connectDB();
+    const englishSubjectId = defaultEnglishSubjectForAge(parsedAge);
     const student = await Student.create({
       userId: session.user.id,
       name: trimmedName,
       age: parsedAge,
       gender,
       avatar,
+      englishSubjectId,
     });
+
+    await createDefaultProject(student);
 
     return NextResponse.json({ student: serializeStudent(student) }, { status: 201 });
   } catch (err) {

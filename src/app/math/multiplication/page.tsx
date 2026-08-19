@@ -10,6 +10,8 @@ import { Feedback } from "@/components/Feedback";
 import { GameContentGate } from "@/components/GameContentGate";
 import { MathLtr } from "@/components/MathLtr";
 import { useLocale } from "@/i18n/LocaleProvider";
+import { useProjectGame } from "@/hooks/useProjectGame";
+import { ProjectSlotDone } from "@/components/projects/ProjectSlotDone";
 import { generateMultiplication, buildOptions } from "@/lib/content/generators";
 import type { MultiplicationConfig } from "@/lib/content/types";
 
@@ -24,14 +26,18 @@ function MultiplicationPlay({
   difficulty,
   changeDifficulty,
   progress,
+  lockDifficulty,
 }: {
   config: MultiplicationConfig;
   sessionSize: number;
   difficulty: ReturnType<typeof useGameSession>["difficulty"];
   changeDifficulty: ReturnType<typeof useGameSession>["changeDifficulty"];
   progress: ReturnType<typeof useGameSession>["progress"];
+  lockDifficulty?: boolean;
 }) {
   const { t, gameTitle } = useLocale();
+  const project = useProjectGame();
+  const [slotDone, setSlotDone] = useState(false);
   const tables = config.tables.length > 0 ? config.tables : [2, 3, 4, 5];
   const [table, setTable] = useState<number | undefined>(undefined);
   const [round, setRound] = useState(() => newRound(config));
@@ -121,24 +127,32 @@ function MultiplicationPlay({
 
   /** After answering — advance to next question in the session. */
   const goToNextQuestion = useCallback(() => {
-    const nextNum = questionNum >= sessionSize ? 1 : questionNum + 1;
-    advanceQuestionNum();
-    const newR = newRound(config, table);
-    setRound(newR);
-    setFeedback(null);
-    setAnswered(false);
-    progress.setRound((r) => r + 1);
-    progress.save({
-      round: progress.round + 1,
-      state: {
-        table,
-        round: newR,
-        answered: false,
-        feedback: null,
-        questionNum: nextNum,
-      },
-    });
-  }, [questionNum, sessionSize, advanceQuestionNum, config, table, progress]);
+    const done = project.handleSessionNext(
+      questionNum,
+      sessionSize,
+      progress.markCompleted,
+      () => {
+        const nextNum = questionNum >= sessionSize ? 1 : questionNum + 1;
+        advanceQuestionNum();
+        const newR = newRound(config, table);
+        setRound(newR);
+        setFeedback(null);
+        setAnswered(false);
+        progress.setRound((r) => r + 1);
+        progress.save({
+          round: progress.round + 1,
+          state: {
+            table,
+            round: newR,
+            answered: false,
+            feedback: null,
+            questionNum: nextNum,
+          },
+        });
+      }
+    );
+    if (done) setSlotDone(true);
+  }, [project, questionNum, sessionSize, advanceQuestionNum, config, table, progress]);
 
   const handleAnswer = (answer: number) => {
     if (answered) return;
@@ -180,7 +194,7 @@ function MultiplicationPlay({
         emoji="⚔️"
         difficulty={difficulty}
         onDifficultyChange={changeDifficulty}
-        difficultyDisabled={answered}
+        difficultyDisabled={answered || lockDifficulty}
         toolbar={
           <div className="flex gap-2 overflow-x-auto pb-0.5 scrollbar-none">
             <button
@@ -239,11 +253,13 @@ function MultiplicationPlay({
           </div>
         )}
 
-        {answered && (
+        {answered && !slotDone && (
           <button type="button" onClick={goToNextQuestion} className="game-btn game-btn-primary w-full sm:max-w-md sm:mx-auto sm:block">
             {t("common.nextQuestion")}
           </button>
         )}
+
+        {slotDone && <ProjectSlotDone />}
       </GameShell>
     </GamePage>
   );
@@ -251,7 +267,7 @@ function MultiplicationPlay({
 
 export default function MultiplicationPage() {
   const session = useGameSession("math", "multiplication");
-  const { ready, content, contentError, difficulty, changeDifficulty, progress } =
+  const { ready, content, contentError, difficulty, changeDifficulty, progress, lockDifficulty } =
     session;
 
   const config = useMemo(
@@ -274,6 +290,7 @@ export default function MultiplicationPage() {
       difficulty={difficulty}
       changeDifficulty={changeDifficulty}
       progress={progress}
+      lockDifficulty={lockDifficulty}
     />
   );
 }

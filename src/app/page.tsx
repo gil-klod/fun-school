@@ -2,6 +2,7 @@
 
 import { SubjectCard } from "@/components/SubjectCard";
 import { ContinueBanner } from "@/components/ContinueBanner";
+import { HomeDailyProject } from "@/components/projects/HomeDailyProject";
 import { MascotWelcome } from "@/components/mascot";
 import { subjects } from "@/lib/subjects";
 import { APP_CONTAINER } from "@/lib/layout";
@@ -21,6 +22,7 @@ export default function HomePage() {
       </header>
 
       <ContinueBanner />
+      <HomeDailyProject />
       <MascotWelcome />
 
       <div className="grid grid-cols-1 gap-4 sm:gap-5">

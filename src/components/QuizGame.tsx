@@ -8,6 +8,8 @@ import { GameStatus } from "@/components/GameStatus";
 import { Feedback } from "@/components/Feedback";
 import { GameContentGate } from "@/components/GameContentGate";
 import { useLocale } from "@/i18n/LocaleProvider";
+import { useProjectGame } from "@/hooks/useProjectGame";
+import { ProjectSlotDone } from "@/components/projects/ProjectSlotDone";
 import type { QuizQuestion } from "@/lib/types";
 
 interface QuizGameProps {
@@ -28,13 +30,16 @@ function QuizGamePlay({
   difficulty,
   changeDifficulty,
   progress,
+  lockDifficulty,
 }: QuizGameProps & {
   questions: QuizQuestion[];
   difficulty: ReturnType<typeof useGameSession>["difficulty"];
   changeDifficulty: ReturnType<typeof useGameSession>["changeDifficulty"];
   progress: ReturnType<typeof useGameSession>["progress"];
+  lockDifficulty?: boolean;
 }) {
   const { t, gameTitle } = useLocale();
+  const project = useProjectGame();
 
   const [index, setIndex] = useState(0);
   const [feedback, setFeedback] = useState<{
@@ -144,7 +149,7 @@ function QuizGamePlay({
         contentDir={contentDir}
         difficulty={difficulty}
         onDifficultyChange={changeDifficulty}
-        difficultyDisabled={answered && !finished}
+        difficultyDisabled={(answered && !finished) || lockDifficulty}
       >
         <GameStatus
           current={index + 1}
@@ -193,6 +198,8 @@ function QuizGamePlay({
               </button>
             )}
           </>
+        ) : project.isProjectGame ? (
+          <ProjectSlotDone />
         ) : (
           <div className="text-center">
             <Feedback type="correct" message={t("games.allDone", { score: progress.score })} />
@@ -231,7 +238,7 @@ function QuizGamePlay({
 export function QuizGame(props: QuizGameProps) {
   const { subjectId, gameId } = props;
   const session = useGameSession(subjectId, gameId);
-  const { content, contentError, ready, difficulty, changeDifficulty, progress } =
+  const { content, contentError, ready, difficulty, changeDifficulty, progress, lockDifficulty } =
     session;
 
   const questions = useMemo(
@@ -261,6 +268,7 @@ export function QuizGame(props: QuizGameProps) {
       difficulty={difficulty}
       changeDifficulty={changeDifficulty}
       progress={progress}
+      lockDifficulty={lockDifficulty}
     />
   );
 }

@@ -1,6 +1,8 @@
 import mongoose, { Schema, models, model } from "mongoose";
 import type { UserGender } from "@/lib/gender";
 
+export type EnglishSubjectId = "english-beginners" | "english-natives";
+
 export interface IStudent {
   _id: mongoose.Types.ObjectId;
   userId: mongoose.Types.ObjectId;
@@ -8,6 +10,7 @@ export interface IStudent {
   age: number;
   gender: UserGender;
   avatar: string;
+  englishSubjectId: EnglishSubjectId;
   createdAt: Date;
 }
 
@@ -18,6 +21,11 @@ const StudentSchema = new Schema<IStudent>(
     age: { type: Number, required: true, min: 4, max: 14 },
     gender: { type: String, enum: ["male", "female"], required: true },
     avatar: { type: String, required: true },
+    englishSubjectId: {
+      type: String,
+      enum: ["english-beginners", "english-natives"],
+      default: "english-beginners",
+    },
   },
   { timestamps: { createdAt: true, updatedAt: false } }
 );

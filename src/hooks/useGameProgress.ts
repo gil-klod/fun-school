@@ -3,6 +3,24 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import type { DifficultyLevel } from "@/lib/content/types";
 import { useStudent } from "@/components/students";
+import type { ProjectSlot } from "@/lib/projects/types";
+
+function readProjectParams(): {
+  projectId: string | null;
+  projectDay: number;
+  projectSlot: ProjectSlot | null;
+} {
+  if (typeof window === "undefined") {
+    return { projectId: null, projectDay: 0, projectSlot: null };
+  }
+  const params = new URLSearchParams(window.location.search);
+  const slot = params.get("slot");
+  return {
+    projectId: params.get("projectId"),
+    projectDay: Number(params.get("day") ?? "0"),
+    projectSlot: slot === "math" || slot === "hebrew" || slot === "english" ? slot : null,
+  };
+}
 
 export interface ProgressData {
   score: number;
@@ -19,6 +37,7 @@ interface UseGameProgressOptions {
   subjectId: string;
   gameId: string;
   difficulty: DifficultyLevel;
+  isProjectGame?: boolean;
   defaultState?: Record<string, unknown>;
 }
 
@@ -38,10 +57,17 @@ export function useGameProgress({
   subjectId,
   gameId,
   difficulty,
+  isProjectGame = false,
   defaultState = EMPTY_GAME_STATE,
 }: UseGameProgressOptions) {
   const { activeStudent, ready: studentReady } = useStudent();
+  const [projectParams, setProjectParams] = useState(readProjectParams);
   const studentId = activeStudent?.id;
+  const { projectId, projectDay, projectSlot } = projectParams;
+
+  useEffect(() => {
+    if (isProjectGame) setProjectParams(readProjectParams());
+  }, [isProjectGame]);
   const [loaded, setLoaded] = useState(false);
   const [hasSavedProgress, setHasSavedProgress] = useState(false);
   const [score, setScore] = useState(0);
@@ -139,9 +165,28 @@ export function useGameProgress({
     [loaded, studentId, subjectId, gameId, difficulty]
   );
 
+  const notifyProjectComplete = useCallback(async () => {
+    if (!projectId || !projectDay || !projectSlot || !studentId) return;
+    try {
+      await fetch("/api/projects/complete-slot", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          studentId,
+          projectId,
+          day: projectDay,
+          slot: projectSlot,
+        }),
+      });
+    } catch (err) {
+      console.error("Project complete-slot failed:", err);
+    }
+  }, [projectId, projectDay, projectSlot, studentId]);
+
   const markCompleted = useCallback(() => {
     save({ status: "completed" });
-  }, [save]);
+    if (projectId) void notifyProjectComplete();
+  }, [save, projectId, notifyProjectComplete]);
 
   return {
     loaded,

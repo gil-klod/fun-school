@@ -6,11 +6,13 @@ import { useLocale } from "@/i18n/LocaleProvider";
 import { APP_CONTAINER } from "@/lib/layout";
 import { getAvatarEmoji } from "@/lib/students/avatars";
 import { StudentForm } from "@/components/students/StudentForm";
+import { StudentProjectEditor } from "@/components/projects/StudentProjectEditor";
 import { useStudent } from "@/components/students/StudentProvider";
+import type { EnglishSubjectId } from "@/lib/projects/types";
 
 export default function SettingsPage() {
   const { t } = useLocale();
-  const { students, deleteStudent, createStudent, ready } = useStudent();
+  const { students, deleteStudent, createStudent, updateStudentEnglishTrack, ready } = useStudent();
   const [showForm, setShowForm] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [resetting, setResetting] = useState(false);
@@ -121,6 +123,32 @@ export default function SettingsPage() {
           </button>
         )}
       </section>
+
+      {students.length > 0 && (
+        <section
+          id="projects"
+          className="bg-white/90 border-2 border-violet-100 rounded-3xl p-5 sm:p-6 mb-6"
+        >
+          <h2 className="font-bold text-lg text-gray-800 mb-1">{t("projects.settingsTitle")}</h2>
+          <p className="text-sm text-gray-600 mb-4">{t("projects.settingsHint")}</p>
+          <div className="space-y-8">
+            {students.map((student) => (
+              <div key={student.id} className="border-t border-violet-100 pt-6 first:border-0 first:pt-0">
+                <h3 className="font-semibold text-gray-800 mb-3 flex items-center gap-2">
+                  <span>{getAvatarEmoji(student.avatar)}</span>
+                  {student.name}
+                </h3>
+                <StudentProjectEditor
+                  student={student}
+                  onEnglishTrackChange={async (id, track: EnglishSubjectId) => {
+                    await updateStudentEnglishTrack(id, track);
+                  }}
+                />
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
 
       <section className="bg-white/90 border-2 border-amber-100 rounded-3xl p-5 sm:p-6 mb-6">
         <h2 className="font-bold text-lg text-gray-800 mb-2">{t("students.resetAllData")}</h2>
