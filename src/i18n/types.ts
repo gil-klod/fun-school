@@ -10,6 +10,7 @@ export interface GameStrings {
 
 export interface SubjectStrings {
   title: string;
+  description: string;
   games: Record<string, GameStrings>;
 }
 
@@ -53,6 +54,10 @@ export interface Dictionary {
     myProgress: string;
     hi: string;
     logOut: string;
+    menu: string;
+    openMenu: string;
+    closeMenu: string;
+    language: string;
   };
   home: {
     tagline: string;
@@ -60,6 +65,7 @@ export interface Dictionary {
     footer: string;
     continueTitle: string;
     continueRound: string;
+    tapToPlay: string;
   };
   auth: {
     loginTitle: string;

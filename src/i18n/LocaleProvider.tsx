@@ -6,7 +6,7 @@ import {
   LOCALE_STORAGE_KEY,
   type Locale,
 } from "@/i18n/types";
-import { translate, getSubjectTitle, getGameTitle, getGameDescription } from "@/i18n";
+import { translate, getSubjectTitle, getSubjectDescription, getGameTitle, getGameDescription } from "@/i18n";
 
 interface LocaleContextValue {
   locale: Locale;
@@ -14,6 +14,7 @@ interface LocaleContextValue {
   t: (key: string, params?: Record<string, string | number>) => string;
   dir: "rtl" | "ltr";
   subjectTitle: (subjectId: string) => string;
+  subjectDescription: (subjectId: string) => string;
   gameTitle: (subjectId: string, gameId: string) => string;
   gameDescription: (subjectId: string, gameId: string) => string;
 }
@@ -56,6 +57,7 @@ export function LocaleProvider({ children }: { children: React.ReactNode }) {
     t,
     dir: locale === "he" ? "rtl" : "ltr",
     subjectTitle: (id) => getSubjectTitle(locale, id),
+    subjectDescription: (id) => getSubjectDescription(locale, id),
     gameTitle: (subjectId, gameId) => getGameTitle(locale, subjectId, gameId),
     gameDescription: (subjectId, gameId) => getGameDescription(locale, subjectId, gameId),
   };
@@ -79,6 +81,7 @@ export function LocaleOverrideProvider({
     t: (key, params) => translate(overrideLocale, key, params),
     dir: overrideLocale === "he" ? "rtl" : "ltr",
     subjectTitle: (id) => getSubjectTitle(overrideLocale, id),
+    subjectDescription: (id) => getSubjectDescription(overrideLocale, id),
     gameTitle: (subjectId, gameId) => getGameTitle(overrideLocale, subjectId, gameId),
     gameDescription: (subjectId, gameId) =>
       getGameDescription(overrideLocale, subjectId, gameId),

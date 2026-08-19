@@ -38,7 +38,7 @@ export function GameStatus({ current, total, correct, wrong, score }: GameStatus
           aria-valuemax={total}
         >
           <div
-            className="h-full rounded-full bg-indigo-500 transition-[width] duration-300"
+            className="h-full rounded-full bg-indigo-500"
             style={{ width: `${pct}%` }}
           />
         </div>

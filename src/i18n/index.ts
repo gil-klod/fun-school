@@ -36,6 +36,10 @@ export function getSubjectTitle(locale: Locale, subjectId: string): string {
   return dictionaries[locale].subjects[subjectId]?.title ?? subjectId;
 }
 
+export function getSubjectDescription(locale: Locale, subjectId: string): string {
+  return dictionaries[locale].subjects[subjectId]?.description ?? "";
+}
+
 export function getGameTitle(locale: Locale, subjectId: string, gameId: string): string {
   return dictionaries[locale].subjects[subjectId]?.games[gameId]?.title ?? gameId;
 }

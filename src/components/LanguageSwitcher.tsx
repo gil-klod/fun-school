@@ -17,7 +17,7 @@ export function LanguageSwitcher({ className = "" }: { className?: string }) {
         <button
           key={opt.value}
           onClick={() => setLocale(opt.value)}
-          className={`px-3 py-1.5 text-sm font-bold transition-colors ${
+          className={`flex-1 px-3 py-2 text-sm font-bold transition-colors ${
             locale === opt.value
               ? "bg-indigo-500 text-white"
               : "bg-white text-indigo-600 hover:bg-indigo-50"

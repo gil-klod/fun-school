@@ -9,7 +9,7 @@ import { GameStatus } from "@/components/GameStatus";
 import { Feedback } from "@/components/Feedback";
 import { DifficultySelector } from "@/components/DifficultySelector";
 import { GameContentGate } from "@/components/GameContentGate";
-import { sessionQuestion } from "@/lib/session";
+import { useQuestionCounter } from "@/hooks/useQuestionCounter";
 import { useLocale } from "@/i18n/LocaleProvider";
 import {
   generateShukChallenge,
@@ -47,12 +47,15 @@ function ShukPlay({
     message: string;
   } | null>(null);
   const [answered, setAnswered] = useState(false);
+  const { current: questionNum, setCurrent: setQuestionNum, reset: resetQuestionNum, advance: advanceQuestionNum } =
+    useQuestionCounter(sessionSize);
 
   useEffect(() => {
     setRound(newChallenge(items, config));
     setFeedback(null);
     setAnswered(false);
-  }, [difficulty, items, config]);
+    resetQuestionNum();
+  }, [difficulty, items, config, resetQuestionNum]);
 
   useGameResume(
     progress.loaded,
@@ -63,17 +66,25 @@ function ShukPlay({
         setRound(s.round as ReturnType<typeof newChallenge>);
         setAnswered(!!s.answered);
         if (s.feedback) setFeedback(s.feedback as typeof feedback);
+        if (typeof s.questionNum === "number") setQuestionNum(s.questionNum);
       }
     },
     () => {
+      const savedNum = (progress.gameState.questionNum as number) ?? questionNum;
       progress.setRound((r) => r + 1);
       const newR = newChallenge(items, config);
       setRound(newR);
       setFeedback(null);
       setAnswered(false);
+      advanceQuestionNum();
       progress.save({
         round: progress.round + 1,
-        state: { round: newR, answered: false, feedback: null },
+        state: {
+          round: newR,
+          answered: false,
+          feedback: null,
+          questionNum: savedNum >= sessionSize ? 1 : savedNum + 1,
+        },
       });
     }
   );
@@ -81,16 +92,18 @@ function ShukPlay({
   const correct = challenge.change;
 
   const nextChallenge = useCallback(() => {
+    const nextNum = questionNum >= sessionSize ? 1 : questionNum + 1;
     const newR = newChallenge(items, config);
     setRound(newR);
     setFeedback(null);
     setAnswered(false);
+    advanceQuestionNum();
     progress.setRound((r) => r + 1);
     progress.save({
       round: progress.round + 1,
-      state: { round: newR, answered: false, feedback: null },
+      state: { round: newR, answered: false, feedback: null, questionNum: nextNum },
     });
-  }, [progress, items, config]);
+  }, [progress, items, config, questionNum, sessionSize, advanceQuestionNum]);
 
   const handleAnswer = (answer: number) => {
     if (answered) return;
@@ -107,7 +120,7 @@ function ShukPlay({
         score: progress.score + pts,
         streak: progress.streak + 1,
         correct: progress.correct + 1,
-        state: { round, answered: true, feedback: fb },
+        state: { round, answered: true, feedback: fb, questionNum },
       });
     } else {
       progress.setStreak(0);
@@ -124,7 +137,7 @@ function ShukPlay({
       progress.save({
         streak: 0,
         wrong: progress.wrong + 1,
-        state: { round, answered: true, feedback: fb },
+        state: { round, answered: true, feedback: fb, questionNum },
       });
     }
   };
@@ -141,7 +154,7 @@ function ShukPlay({
         />
 
         <GameStatus
-          current={sessionQuestion(progress.round)}
+          current={questionNum}
           total={sessionSize}
           correct={progress.correct}
           wrong={progress.wrong}

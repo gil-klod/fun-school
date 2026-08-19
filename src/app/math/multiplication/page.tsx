@@ -3,13 +3,13 @@
 import { useState, useCallback, useEffect, useMemo } from "react";
 import { useGameResume } from "@/hooks/useGameResume";
 import { useGameSession } from "@/hooks/useGameSession";
+import { useQuestionCounter } from "@/hooks/useQuestionCounter";
 import { BackButton } from "@/components/BackButton";
 import { GameShell } from "@/components/GameShell";
 import { GameStatus } from "@/components/GameStatus";
 import { Feedback } from "@/components/Feedback";
 import { DifficultySelector } from "@/components/DifficultySelector";
 import { GameContentGate } from "@/components/GameContentGate";
-import { sessionQuestion } from "@/lib/session";
 import { useLocale } from "@/i18n/LocaleProvider";
 import { generateMultiplication, buildOptions } from "@/lib/content/generators";
 import type { MultiplicationConfig } from "@/lib/content/types";
@@ -42,13 +42,32 @@ function MultiplicationPlay({
     message: string;
   } | null>(null);
   const [answered, setAnswered] = useState(false);
+  const { current: questionNum, setCurrent: setQuestionNum, reset: resetQuestionNum, advance: advanceQuestionNum } =
+    useQuestionCounter(sessionSize);
 
   useEffect(() => {
     setTable(undefined);
     setRound(newRound(config));
     setFeedback(null);
     setAnswered(false);
-  }, [difficulty, config]);
+    resetQuestionNum();
+  }, [difficulty, config, resetQuestionNum]);
+
+  const saveState = useCallback(
+    (patch: Record<string, unknown>) => {
+      progress.save({
+        state: {
+          table,
+          round,
+          answered,
+          feedback,
+          questionNum,
+          ...patch,
+        },
+      });
+    },
+    [progress, table, round, answered, feedback, questionNum]
+  );
 
   useGameResume(
     progress.loaded,
@@ -60,39 +79,67 @@ function MultiplicationPlay({
         setRound(s.round as ReturnType<typeof newRound>);
         setAnswered(!!s.answered);
         if (s.feedback) setFeedback(s.feedback as typeof feedback);
+        if (typeof s.questionNum === "number") setQuestionNum(s.questionNum);
       }
     },
     () => {
       const savedTable = progress.gameState.table as number | undefined;
+      const savedNum = (progress.gameState.questionNum as number) ?? questionNum;
       setTable(savedTable);
-      progress.setRound((r) => r + 1);
+      advanceQuestionNum();
       const newR = newRound(config, savedTable);
       setRound(newR);
       setFeedback(null);
       setAnswered(false);
+      progress.setRound((r) => r + 1);
       progress.save({
         round: progress.round + 1,
-        state: { table: savedTable, round: newR, answered: false, feedback: null },
+        state: {
+          table: savedTable,
+          round: newR,
+          answered: false,
+          feedback: null,
+          questionNum: savedNum >= sessionSize ? 1 : savedNum + 1,
+        },
       });
     }
   );
 
   const correct = question.a * question.b;
 
-  const nextQuestion = useCallback(
+  /** Change times table — new question only, does NOT advance progress. */
+  const switchTable = useCallback(
     (selectedTable?: number) => {
-      const newR = newRound(config, selectedTable ?? table);
+      setTable(selectedTable);
+      const newR = newRound(config, selectedTable);
       setRound(newR);
       setFeedback(null);
       setAnswered(false);
-      progress.setRound((r) => r + 1);
-      progress.save({
-        round: progress.round + 1,
-        state: { table: selectedTable ?? table, round: newR, answered: false, feedback: null },
-      });
+      saveState({ table: selectedTable, round: newR, answered: false, feedback: null });
     },
-    [table, progress, config]
+    [config, saveState]
   );
+
+  /** After answering — advance to next question in the session. */
+  const goToNextQuestion = useCallback(() => {
+    const nextNum = questionNum >= sessionSize ? 1 : questionNum + 1;
+    advanceQuestionNum();
+    const newR = newRound(config, table);
+    setRound(newR);
+    setFeedback(null);
+    setAnswered(false);
+    progress.setRound((r) => r + 1);
+    progress.save({
+      round: progress.round + 1,
+      state: {
+        table,
+        round: newR,
+        answered: false,
+        feedback: null,
+        questionNum: nextNum,
+      },
+    });
+  }, [questionNum, sessionSize, advanceQuestionNum, config, table, progress]);
 
   const handleAnswer = (answer: number) => {
     if (answered) return;
@@ -109,7 +156,7 @@ function MultiplicationPlay({
         score: progress.score + pts,
         streak: progress.streak + 1,
         correct: progress.correct + 1,
-        state: { table, round, answered: true, feedback: fb },
+        state: { table, round, answered: true, feedback: fb, questionNum },
       });
     } else {
       progress.setStreak(0);
@@ -122,7 +169,7 @@ function MultiplicationPlay({
       progress.save({
         streak: 0,
         wrong: progress.wrong + 1,
-        state: { table, round, answered: true, feedback: fb },
+        state: { table, round, answered: true, feedback: fb, questionNum },
       });
     }
   };
@@ -140,10 +187,8 @@ function MultiplicationPlay({
 
         <div className="flex gap-2 overflow-x-auto pb-1 mb-2 scrollbar-none">
           <button
-            onClick={() => {
-              setTable(undefined);
-              nextQuestion(undefined);
-            }}
+            type="button"
+            onClick={() => switchTable(undefined)}
             className={`px-4 py-2 rounded-xl font-semibold text-sm transition-all ${!table ? "bg-indigo-500 text-white" : "bg-white border-2 border-indigo-200"}`}
           >
             {t("games.mixed")}
@@ -151,10 +196,8 @@ function MultiplicationPlay({
           {tables.map((tbl) => (
             <button
               key={tbl}
-              onClick={() => {
-                setTable(tbl);
-                nextQuestion(tbl);
-              }}
+              type="button"
+              onClick={() => switchTable(tbl)}
               className={`px-4 py-2 rounded-xl font-semibold text-sm transition-all ${table === tbl ? "bg-indigo-500 text-white" : "bg-white border-2 border-indigo-200"}`}
             >
               ×{tbl}
@@ -163,7 +206,7 @@ function MultiplicationPlay({
         </div>
 
         <GameStatus
-          current={sessionQuestion(progress.round)}
+          current={questionNum}
           total={sessionSize}
           correct={progress.correct}
           wrong={progress.wrong}
@@ -180,6 +223,7 @@ function MultiplicationPlay({
           {options.map((opt) => (
             <button
               key={opt}
+              type="button"
               onClick={() => handleAnswer(opt)}
               disabled={answered}
               className={`game-btn-option text-xl py-4 ${answered && opt === correct ? "correct" : ""} ${answered && opt !== correct ? "opacity-50" : ""}`}
@@ -196,7 +240,7 @@ function MultiplicationPlay({
         )}
 
         {answered && (
-          <button onClick={() => nextQuestion()} className="game-btn game-btn-primary w-full">
+          <button type="button" onClick={goToNextQuestion} className="game-btn game-btn-primary w-full">
             {t("common.nextQuestion")}
           </button>
         )}

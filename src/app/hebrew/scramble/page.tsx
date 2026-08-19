@@ -9,7 +9,7 @@ import { GameStatus } from "@/components/GameStatus";
 import { Feedback } from "@/components/Feedback";
 import { DifficultySelector } from "@/components/DifficultySelector";
 import { GameContentGate } from "@/components/GameContentGate";
-import { sessionQuestion } from "@/lib/session";
+import { useQuestionCounter } from "@/hooks/useQuestionCounter";
 import { useLocale } from "@/i18n/LocaleProvider";
 import {
   getWordHint,
@@ -42,6 +42,8 @@ function ScramblePlay({
     message: string;
   } | null>(null);
   const [answered, setAnswered] = useState(false);
+  const { current: questionNum, setCurrent: setQuestionNum, reset: resetQuestionNum, advance: advanceQuestionNum } =
+    useQuestionCounter(sessionSize);
 
   useEffect(() => {
     setUsedWords([]);
@@ -49,7 +51,8 @@ function ScramblePlay({
     setGuess("");
     setFeedback(null);
     setAnswered(false);
-  }, [difficulty, words]);
+    resetQuestionNum();
+  }, [difficulty, words, resetQuestionNum]);
 
   const advanceToNext = useCallback(
     (currentUsed: string[]) => {
@@ -59,21 +62,30 @@ function ScramblePlay({
       setFeedback(null);
       setAnswered(false);
       progress.save({
-        state: { wordData: w, usedWords: currentUsed, guess: "", answered: false, feedback: null },
+        state: {
+          wordData: w,
+          usedWords: currentUsed,
+          guess: "",
+          answered: false,
+          feedback: null,
+          questionNum,
+        },
       });
     },
-    [progress, words]
+    [progress, words, questionNum]
   );
 
   const nextWord = useCallback(() => {
     const used = usedWords.includes(wordData.word)
       ? usedWords
       : [...usedWords, wordData.word];
+    const nextNum = questionNum >= sessionSize ? 1 : questionNum + 1;
     setUsedWords(used);
+    advanceQuestionNum();
     progress.setRound((r) => r + 1);
-    progress.save({ round: progress.round + 1 });
+    progress.save({ round: progress.round + 1, state: { questionNum: nextNum } });
     advanceToNext(used);
-  }, [usedWords, wordData.word, progress, advanceToNext]);
+  }, [usedWords, wordData.word, progress, advanceToNext, questionNum, sessionSize, advanceQuestionNum]);
 
   useGameResume(
     progress.loaded,
@@ -87,6 +99,7 @@ function ScramblePlay({
         setGuess((s.guess as string) ?? "");
         setAnswered(!!s.answered);
         if (s.feedback) setFeedback(s.feedback as typeof feedback);
+        if (typeof s.questionNum === "number") setQuestionNum(s.questionNum);
       }
     },
     () => {
@@ -94,8 +107,14 @@ function ScramblePlay({
       const lastWord = (progress.gameState.wordData as WordData | undefined)?.word;
       const updatedUsed =
         lastWord && !used.includes(lastWord) ? [...used, lastWord] : used;
+      const savedNum = (progress.gameState.questionNum as number) ?? questionNum;
       setUsedWords(updatedUsed);
       progress.setRound((r) => r + 1);
+      advanceQuestionNum();
+      progress.save({
+        round: progress.round + 1,
+        state: { questionNum: savedNum >= sessionSize ? 1 : savedNum + 1 },
+      });
       advanceToNext(updatedUsed);
     }
   );
@@ -115,7 +134,7 @@ function ScramblePlay({
         score: progress.score + pts,
         streak: progress.streak + 1,
         correct: progress.correct + 1,
-        state: { wordData, usedWords, guess, answered: true, feedback: fb },
+        state: { wordData, usedWords, guess, answered: true, feedback: fb, questionNum },
       });
     } else {
       progress.setStreak(0);
@@ -128,7 +147,7 @@ function ScramblePlay({
       progress.save({
         streak: 0,
         wrong: progress.wrong + 1,
-        state: { wordData, usedWords, guess, answered: true, feedback: fb },
+        state: { wordData, usedWords, guess, answered: true, feedback: fb, questionNum },
       });
     }
   };
@@ -145,7 +164,7 @@ function ScramblePlay({
         />
 
         <GameStatus
-          current={sessionQuestion(progress.round)}
+          current={questionNum}
           total={sessionSize}
           correct={progress.correct}
           wrong={progress.wrong}

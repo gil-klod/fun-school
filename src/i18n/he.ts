@@ -40,6 +40,10 @@ export const he: Dictionary = {
     myProgress: "ההתקדמות שלי",
     hi: "שלום",
     logOut: "התנתק",
+    menu: "תפריט",
+    openMenu: "פתח תפריט",
+    closeMenu: "סגור תפריט",
+    language: "שפה",
   },
   home: {
     tagline: "בית ספר כיפי — משחקים לכיתה ג'",
@@ -47,6 +51,7 @@ export const he: Dictionary = {
     footer: "נבנה באהבה לכיתה ג'",
     continueTitle: "להמשיך מאיפה שהפסקת? 🎮",
     continueRound: "{label} — סיבוב {round}, ניקוד {score}",
+    tapToPlay: "לחץ לשחק",
   },
   auth: {
     loginTitle: "Fun School",
@@ -103,6 +108,7 @@ export const he: Dictionary = {
   subjects: {
     math: {
       title: "חִשּׁוּב",
+      description: "טבלאות כפל, חשבון בשוק וחידות מספרים",
       games: {
         multiplication: { title: "בוס הכפל", description: "הבס את טבלאות הכפל!" },
         shuk: { title: "אתגר השוק", description: "קנה בשוק וחשב עודף!" },
@@ -111,6 +117,7 @@ export const he: Dictionary = {
     },
     hebrew: {
       title: "עִבְרִית",
+      description: "מילים, משפטים והבנת הנקרא",
       games: {
         scramble: { title: "ערבוב אותיות", description: "סדר מילים מעורבבות!" },
         "fix-sentence": { title: "תקן את המשפט", description: "מצא ותקן את הטעות!" },
@@ -119,6 +126,7 @@ export const he: Dictionary = {
     },
     "english-beginners": {
       title: "אַנְגְּלִית (מתחילים)",
+      description: "אוצר מילים, משפטים ויסודות",
       games: {
         vocabulary: { title: "התאמת מילים", description: "התאם מילים באנגלית לעברית!" },
         sentences: { title: "בנה משפט", description: "סדר את המילים בסדר הנכון!" },
@@ -127,6 +135,7 @@ export const he: Dictionary = {
     },
     "english-natives": {
       title: "אַנְגְּלִית (מתקדמים)",
+      description: "דקדוק, קריאה ואוצר מילים מתקדם",
       games: {
         grammar: { title: "משימת דקדוק", description: "זמנים, רבים ועוד!" },
         vocabulary: { title: "קוסם המילים", description: "מילים נרדפות, הפוכים ומילים קשות!" },

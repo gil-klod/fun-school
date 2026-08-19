@@ -40,6 +40,10 @@ export const en: Dictionary = {
     myProgress: "My Progress",
     hi: "Hi",
     logOut: "Log out",
+    menu: "Menu",
+    openMenu: "Open menu",
+    closeMenu: "Close menu",
+    language: "Language",
   },
   home: {
     tagline: "Fun games for 3rd grade",
@@ -47,6 +51,7 @@ export const en: Dictionary = {
     footer: "Made with ❤️ for 3rd grade",
     continueTitle: "Continue where you left off? 🎮",
     continueRound: "{label} — Round {round}, Score {score}",
+    tapToPlay: "Tap to play",
   },
   auth: {
     loginTitle: "Fun School",
@@ -103,6 +108,7 @@ export const en: Dictionary = {
   subjects: {
     math: {
       title: "Math",
+      description: "Times tables, shopping math & number puzzles",
       games: {
         multiplication: { title: "Multiplication Boss", description: "Beat the times-table bosses!" },
         shuk: { title: "Shuk Challenge", description: "Shop with shekels and calculate change!" },
@@ -111,6 +117,7 @@ export const en: Dictionary = {
     },
     hebrew: {
       title: "Hebrew",
+      description: "Words, sentences & story comprehension",
       games: {
         scramble: { title: "Word Scramble", description: "Unscramble Hebrew words!" },
         "fix-sentence": { title: "Fix the Sentence", description: "Find and fix the mistake!" },
@@ -119,6 +126,7 @@ export const en: Dictionary = {
     },
     "english-beginners": {
       title: "English (Beginners)",
+      description: "Vocabulary, sentences & basics",
       games: {
         vocabulary: { title: "Word Match", description: "Match English words to Hebrew!" },
         sentences: { title: "Build a Sentence", description: "Put words in the right order!" },
@@ -127,6 +135,7 @@ export const en: Dictionary = {
     },
     "english-natives": {
       title: "English (Advanced)",
+      description: "Grammar, reading & advanced vocabulary",
       games: {
         grammar: { title: "Grammar Quest", description: "Tenses, plurals, and more!" },
         vocabulary: { title: "Word Wizard", description: "Synonyms, antonyms, and tricky words!" },
