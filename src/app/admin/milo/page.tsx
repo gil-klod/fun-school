@@ -24,6 +24,18 @@ export default function AdminMiloPage() {
     return acc;
   }, {});
 
+  const lineExport = useMemo(
+    () => filtered.map((entry) => entry.text).join("\n"),
+    [filtered]
+  );
+  const [copied, setCopied] = useState(false);
+
+  async function copyLines() {
+    await navigator.clipboard.writeText(lineExport);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  }
+
   async function play(entry: MiloTextEntry) {
     stopSpeaking();
     setPlayingId(entry.id);
@@ -64,6 +76,30 @@ export default function AdminMiloPage() {
         </select>
         <span className="text-sm text-gray-500 self-center">{filtered.length} lines</span>
       </div>
+
+      <section className="bg-white/90 border-2 border-indigo-100 rounded-2xl p-5 mb-6">
+        <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
+          <h2 className="font-bold text-gray-800">Export text (one line per row)</h2>
+          <button
+            type="button"
+            onClick={copyLines}
+            className="px-4 py-2 rounded-xl bg-indigo-600 text-white text-sm font-semibold hover:bg-indigo-700"
+          >
+            {copied ? "Copied!" : "Copy to clipboard"}
+          </button>
+        </div>
+        <textarea
+          readOnly
+          value={lineExport}
+          rows={12}
+          dir="auto"
+          className="w-full font-mono text-sm border-2 border-indigo-100 rounded-xl p-4 focus:outline-none resize-y"
+          onClick={(e) => e.currentTarget.select()}
+        />
+        <p className="text-xs text-gray-500 mt-2">
+          Uses current filters. Click the box to select all.
+        </p>
+      </section>
 
       <div className="space-y-6">
         {Object.entries(grouped).map(([group, entries]) => (
