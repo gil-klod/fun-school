@@ -6,6 +6,9 @@ import { getMiloTextCatalog } from "@/lib/mascot/catalog";
 import {
   formatMiloRecordingExport,
   miloRecordingExportHint,
+  miloRecordingExportInstructions,
+  MILO_RECORDING_PAUSE_MODES,
+  type MiloRecordingPauseMode,
 } from "@/lib/mascot/recordingExport";
 import {
   getMiloReviewRows,
@@ -120,6 +123,20 @@ export default function AdminMiloPage() {
   const [reviewFilter, setReviewFilter] = useState<ReviewFilter>("all");
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
   const [exportOpen, setExportOpen] = useState(false);
+  const [pauseMode, setPauseMode] = useState<MiloRecordingPauseMode>("eleven-v3");
+
+  const englishExport = useMemo(
+    () => formatMiloRecordingExport(englishEntries, pauseMode),
+    [englishEntries, pauseMode]
+  );
+  const hebrewMaleExport = useMemo(
+    () => formatMiloRecordingExport(hebrewMaleEntries, pauseMode),
+    [hebrewMaleEntries, pauseMode]
+  );
+  const hebrewFemaleExport = useMemo(
+    () => formatMiloRecordingExport(hebrewFemaleEntries, pauseMode),
+    [hebrewFemaleEntries, pauseMode]
+  );
 
   useEffect(() => {
     setReviews(loadReviews());
@@ -222,13 +239,35 @@ export default function AdminMiloPage() {
       </div>
 
       {exportOpen && (
-        <section className="mb-6 grid gap-4 lg:grid-cols-3">
+        <section className="mb-6">
+          <div className="mb-3 p-3 rounded-xl bg-amber-50 border border-amber-200 text-sm text-amber-950">
+            <strong>DaVinci ignores line breaks.</strong> Use the pause tags below — do not delete{" "}
+            <code className="bg-amber-100 px-1 rounded">[long pause]</code> or{" "}
+            <code className="bg-amber-100 px-1 rounded">&lt;break /&gt;</code> between lines.
+          </div>
+          <div className="flex flex-wrap gap-3 mb-4">
+            <select
+              value={pauseMode}
+              onChange={(e) => setPauseMode(e.target.value as MiloRecordingPauseMode)}
+              className="px-3 py-2 rounded-xl border-2 border-indigo-100 text-sm font-semibold"
+            >
+              {Object.entries(MILO_RECORDING_PAUSE_MODES).map(([key, { label }]) => (
+                <option key={key} value={key}>
+                  {label}
+                </option>
+              ))}
+            </select>
+            <p className="text-sm text-gray-500 self-center">
+              {miloRecordingExportInstructions(pauseMode)}
+            </p>
+          </div>
+          <div className="grid gap-4 lg:grid-cols-3">
           {[
             {
               key: "en",
               title: "English",
               entries: englishEntries,
-              value: formatMiloRecordingExport(englishEntries),
+              value: englishExport,
               dir: "ltr" as const,
               button: "bg-sky-600 hover:bg-sky-700",
             },
@@ -236,7 +275,7 @@ export default function AdminMiloPage() {
               key: "he-male",
               title: "Hebrew (male)",
               entries: hebrewMaleEntries,
-              value: formatMiloRecordingExport(hebrewMaleEntries),
+              value: hebrewMaleExport,
               dir: "rtl" as const,
               button: "bg-emerald-600 hover:bg-emerald-700",
             },
@@ -244,7 +283,7 @@ export default function AdminMiloPage() {
               key: "he-female",
               title: "Hebrew (female)",
               entries: hebrewFemaleEntries,
-              value: formatMiloRecordingExport(hebrewFemaleEntries),
+              value: hebrewFemaleExport,
               dir: "rtl" as const,
               button: "bg-rose-600 hover:bg-rose-700",
             },
@@ -253,7 +292,9 @@ export default function AdminMiloPage() {
               <div className="flex items-center justify-between gap-2 mb-2">
                 <div>
                   <h3 className="font-bold text-sm">{box.title}</h3>
-                  <p className="text-xs text-gray-500">{miloRecordingExportHint(box.entries.length)}</p>
+                  <p className="text-xs text-gray-500">
+                    {miloRecordingExportHint(box.entries.length, pauseMode)}
+                  </p>
                 </div>
                 <button
                   type="button"
@@ -273,6 +314,7 @@ export default function AdminMiloPage() {
               />
             </div>
           ))}
+          </div>
         </section>
       )}
 
