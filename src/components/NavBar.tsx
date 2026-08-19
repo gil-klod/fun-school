@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useSession } from "next-auth/react";
 import { useLocale } from "@/i18n/LocaleProvider";
 import { SideMenu } from "@/components/SideMenu";
+import { MiloToggleButton } from "@/components/mascot";
 import { APP_CONTAINER } from "@/lib/layout";
 
 function MenuIcon() {
@@ -29,15 +30,18 @@ export function NavBar() {
           </Link>
 
           {session ? (
-            <button
-              type="button"
-              onClick={() => setMenuOpen(true)}
-              className="p-2 rounded-xl text-indigo-700 hover:bg-indigo-50 transition-colors"
-              aria-label={t("nav.openMenu")}
-              aria-expanded={menuOpen}
-            >
-              <MenuIcon />
-            </button>
+            <div className="flex items-center gap-2">
+              <MiloToggleButton />
+              <button
+                type="button"
+                onClick={() => setMenuOpen(true)}
+                className="p-2 rounded-xl text-indigo-700 hover:bg-indigo-50 transition-colors"
+                aria-label={t("nav.openMenu")}
+                aria-expanded={menuOpen}
+              >
+                <MenuIcon />
+              </button>
+            </div>
           ) : null}
         </div>
       </nav>
