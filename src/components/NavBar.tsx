@@ -54,6 +54,7 @@ export function NavBar() {
           open={menuOpen}
           onClose={() => setMenuOpen(false)}
           userName={session.user.name}
+          isAdmin={session.user.isAdmin}
         />
       )}
     </>

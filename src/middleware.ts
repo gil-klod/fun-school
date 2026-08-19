@@ -7,13 +7,34 @@ const { auth } = NextAuth(authConfig);
 export default auth((req) => {
   const { pathname } = req.nextUrl;
   const isLoggedIn = !!req.auth;
+  const isAdmin = !!req.auth?.user?.isAdmin;
 
-  const publicPaths = ["/login", "/register", "/verify-email", "/admin"];
+  const publicPaths = ["/login", "/register", "/verify-email"];
   const isPublic =
     publicPaths.some((p) => pathname.startsWith(p)) ||
     pathname.startsWith("/api/auth") ||
-    pathname.startsWith("/api/admin") ||
     pathname.startsWith("/api/content");
+
+  const isAdminRoute =
+    pathname.startsWith("/admin") || pathname.startsWith("/api/admin");
+
+  if (isAdminRoute) {
+    if (!isLoggedIn) {
+      if (pathname.startsWith("/api/")) {
+        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      }
+      const loginUrl = new URL("/login", req.nextUrl.origin);
+      loginUrl.searchParams.set("callbackUrl", pathname);
+      return NextResponse.redirect(loginUrl);
+    }
+    if (!isAdmin) {
+      if (pathname.startsWith("/api/")) {
+        return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+      }
+      return NextResponse.redirect(new URL("/", req.nextUrl.origin));
+    }
+    return NextResponse.next();
+  }
 
   if (!isLoggedIn && !isPublic) {
     if (pathname.startsWith("/api/")) {

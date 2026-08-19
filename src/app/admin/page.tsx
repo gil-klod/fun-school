@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { DirectionalArrow } from "@/components/DirectionalArrow";
+import { AdminNav } from "@/components/admin/AdminNav";
 import { EXAMPLE_IMPORT_JSON } from "@/lib/content/import";
 
 interface GameStat {
@@ -101,6 +102,7 @@ export default function AdminPage() {
 
   return (
     <main className="flex-1 px-4 py-8 max-w-3xl mx-auto w-full">
+      <AdminNav />
       <div className="flex items-center justify-between mb-8">
         <div>
           <h1 className="text-3xl font-bold text-gray-800">Admin</h1>
@@ -121,15 +123,16 @@ export default function AdminPage() {
             <p className="text-2xl font-bold text-indigo-600 mb-4">{stats.total} items total</p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
               {stats.games.map((g) => (
-                <div
+                <Link
                   key={`${g.subjectId}-${g.gameId}`}
-                  className="bg-indigo-50 rounded-lg px-3 py-2 flex justify-between"
+                  href={`/admin/content/${g.subjectId}/${g.gameId}`}
+                  className="bg-indigo-50 rounded-lg px-3 py-2 flex justify-between hover:bg-indigo-100 transition-colors"
                 >
                   <span className="font-medium">
                     {g.subjectId} / {g.gameId}
                   </span>
-                  <span className="text-indigo-600 font-bold">{g.count}</span>
-                </div>
+                  <span className="text-indigo-600 font-bold">{g.count} →</span>
+                </Link>
               ))}
             </div>
           </>

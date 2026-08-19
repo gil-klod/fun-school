@@ -10,9 +10,10 @@ interface SideMenuProps {
   open: boolean;
   onClose: () => void;
   userName?: string | null;
+  isAdmin?: boolean;
 }
 
-export function SideMenu({ open, onClose, userName }: SideMenuProps) {
+export function SideMenu({ open, onClose, userName, isAdmin }: SideMenuProps) {
   const { t, dir } = useLocale();
   const slideFrom = dir === "rtl" ? "translate-x-full" : "-translate-x-full";
 
@@ -84,6 +85,25 @@ export function SideMenu({ open, onClose, userName }: SideMenuProps) {
             <span className="text-xl" aria-hidden>⚙️</span>
             {t("nav.settings")}
           </Link>
+          {isAdmin && (
+            <>
+              <p className="px-4 pt-3 pb-1 text-xs font-semibold text-gray-400 uppercase tracking-wide">
+                Admin
+              </p>
+              <Link href="/admin" onClick={onClose} className={navLinkClass}>
+                <span className="text-xl" aria-hidden>🛠️</span>
+                Admin overview
+              </Link>
+              <Link href="/admin/content" onClick={onClose} className={navLinkClass}>
+                <span className="text-xl" aria-hidden>📦</span>
+                Game content
+              </Link>
+              <Link href="/admin/milo" onClick={onClose} className={navLinkClass}>
+                <span className="text-xl" aria-hidden>🎒</span>
+                Milo texts
+              </Link>
+            </>
+          )}
         </nav>
 
         <div className="px-4 py-4 border-t border-indigo-100 space-y-4">
