@@ -85,47 +85,114 @@ function detectSilences(input: string): Silence[] {
   return silences;
 }
 
+/** True [long pause] — ignore brief gaps when a longer pause follows soon after. */
+function isLineBreak(silence: Silence, silences: Silence[]): boolean {
+  if (silence.duration >= 1.0) return true;
+  if (silence.duration < 0.45) return false;
+  const ahead = silences.filter((s) => s.start >= silence.end && s.start <= silence.end + 4);
+  if (ahead.some((s) => s.duration > silence.duration + 0.35)) return false;
+  return true;
+}
+
+function segmentsFromBoundaries(
+  duration: number,
+  boundaries: Silence[]
+): Array<{ start: number; end: number }> {
+  const segments: Array<{ start: number; end: number }> = [];
+  let cursor = 0;
+  for (const silence of boundaries) {
+    if (silence.start <= cursor + 0.05) continue;
+    segments.push({ start: cursor, end: silence.start });
+    cursor = silence.end;
+  }
+  if (duration - cursor > 0.05) segments.push({ start: cursor, end: duration });
+  return segments;
+}
+
+function splitLongestSegment(
+  segments: Array<{ start: number; end: number }>,
+  silences: Silence[],
+  minPart: number,
+  minSilence: number,
+  protectStartBefore = 0
+): boolean {
+  let longestIdx = -1;
+  let longestDur = 0;
+  for (let i = 0; i < segments.length; i++) {
+    const seg = segments[i];
+    if (seg.start < protectStartBefore) continue;
+    const dur = seg.end - seg.start;
+    if (dur > longestDur) {
+      longestDur = dur;
+      longestIdx = i;
+    }
+  }
+  if (longestIdx < 0 || longestDur < minPart * 2) return false;
+
+  const seg = segments[longestIdx];
+  const internal = silences.filter(
+    (s) =>
+      s.duration >= minSilence &&
+      s.start > seg.start + 0.08 &&
+      s.end < seg.end - 0.08 &&
+      s.start - seg.start >= minPart &&
+      seg.end - s.end >= minPart
+  );
+  if (internal.length === 0) return false;
+
+  internal.sort((a, b) => b.duration - a.duration);
+  const cut = internal[0];
+  segments.splice(
+    longestIdx,
+    1,
+    { start: seg.start, end: cut.start },
+    { start: cut.end, end: seg.end }
+  );
+  return true;
+}
+
+function mergeTinyLeadingSegment(segments: Array<{ start: number; end: number }>) {
+  while (segments.length > 1 && segments[0].end - segments[0].start < 1.0) {
+    segments[1].start = segments[0].start;
+    segments.shift();
+  }
+}
+
 function segmentsFromSilences(duration: number, silences: Silence[], expectedCount: number) {
   if (expectedCount < 1) throw new Error("expectedCount must be >= 1");
   if (expectedCount === 1) return [{ start: 0, end: duration }];
 
-  const build = (minDuration: number) => {
-    const boundaries = silences.filter((s) => s.duration >= minDuration);
-    const segments: Array<{ start: number; end: number }> = [];
-    let cursor = 0;
-    for (const silence of boundaries) {
-      if (silence.start <= cursor + 0.05) continue;
-      segments.push({ start: cursor, end: silence.start });
-      cursor = silence.end;
-    }
-    if (duration - cursor > 0.05) segments.push({ start: cursor, end: duration });
-    return segments;
-  };
+  const lineBreaks = silences.filter((s) => isLineBreak(s, silences));
+  const segments = segmentsFromBoundaries(duration, lineBreaks);
+  mergeTinyLeadingSegment(segments);
+  const protectWelcomeBefore = segments[0]?.end ?? 0;
 
-  for (let minDuration = 0.15; minDuration <= 1.2; minDuration += 0.001) {
-    const segments = build(minDuration);
-    if (segments.length === expectedCount) return segments;
+  const splitPasses: Array<[number, number, number]> = [
+    [0.55, 0.45, protectWelcomeBefore],
+    [0.5, 0.42, protectWelcomeBefore],
+    [0.45, 0.4, protectWelcomeBefore],
+  ];
+
+  for (const [minPart, minSilence, protectStartBefore] of splitPasses) {
+    while (segments.length < expectedCount) {
+      if (!splitLongestSegment(segments, silences, minPart, minSilence, protectStartBefore)) break;
+    }
+    if (segments.length === expectedCount) break;
   }
 
-  const fallback = build(0.5);
-  if (fallback.length === expectedCount + 1) {
-    let shortestIdx = 0;
-    for (let i = 1; i < fallback.length; i++) {
-      const dur = fallback[i].end - fallback[i].start;
-      const best = fallback[shortestIdx].end - fallback[shortestIdx].start;
-      if (dur < best) shortestIdx = i;
-    }
-    const prev = fallback[shortestIdx - 1];
-    const next = fallback[shortestIdx];
-    if (prev) {
-      prev.end = next.end;
-      return fallback.filter((_, i) => i !== shortestIdx);
+  if (segments.length < expectedCount) {
+    while (segments.length < expectedCount) {
+      if (!splitLongestSegment(segments, silences, 0.45, 0.4, protectWelcomeBefore)) break;
     }
   }
 
-  throw new Error(
-    `Expected ${expectedCount} segments, closest was ${fallback.length}. Re-record with clearer pauses between lines.`
-  );
+  if (segments.length !== expectedCount) {
+    throw new Error(
+      `Expected ${expectedCount} segments, built ${segments.length}. Some [long pause] markers may be missing — re-export from admin and re-record.`
+    );
+  }
+
+  return segments;
 }
 
 function catalogForVariant(variant: Variant) {
@@ -164,7 +231,7 @@ async function main() {
   console.log(`Input: ${input}`);
   console.log(`Variant: ${variant}`);
   console.log(`Duration: ${duration.toFixed(2)}s`);
-  console.log(`Silences detected: ${silences.length}`);
+  console.log(`Line-break silences: ${silences.filter((s) => isLineBreak(s, silences)).length}`);
   console.log(`Writing ${entries.length} clips to ${OUT_DIR}\n`);
 
   entries.forEach((entry, index) => {
@@ -173,7 +240,9 @@ async function main() {
     const output = path.join(OUT_DIR, filename);
     cutSegment(input, segment.start, segment.end, output);
     const sizeKb = (fs.statSync(output).size / 1024).toFixed(1);
-    console.log(`${index + 1}/${entries.length} ${filename} (${(segment.end - segment.start).toFixed(2)}s, ${sizeKb}KB)`);
+    console.log(
+      `${index + 1}/${entries.length} ${filename} (${(segment.end - segment.start).toFixed(2)}s, ${sizeKb}KB) — ${entry.text.slice(0, 40)}…`
+    );
   });
 
   console.log("\nDone.");
