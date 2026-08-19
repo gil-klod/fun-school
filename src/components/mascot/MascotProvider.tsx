@@ -13,7 +13,7 @@ import { usePathname } from "next/navigation";
 import { useLocale } from "@/i18n/LocaleProvider";
 import { pickContextLine, resolveMascotContext } from "@/lib/mascot/lines";
 import { Mascot } from "./Mascot";
-import { isMascotMuted, setMascotMuted, speakText, stopSpeaking } from "./speech";
+import { isMascotMuted, setMascotMuted, speakText, stopSpeaking, warmSpeechVoices } from "./speech";
 import type { MascotAnimation, MascotContextValue, MascotShowOptions } from "./types";
 
 const WELCOME_KEY = "fun-school-mascot-welcome";
@@ -45,6 +45,7 @@ export function MascotProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     setPinned(localStorage.getItem(PINNED_KEY) === "1");
     setMuted(isMascotMuted());
+    warmSpeechVoices();
     setPrefsLoaded(true);
   }, []);
 

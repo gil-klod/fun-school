@@ -3,7 +3,9 @@ import type { Locale } from "@/i18n/types";
 const MUTE_KEY = "fun-school-mascot-muted";
 
 let speaking = false;
-let voicesReady = false;
+let cachedVoices: SpeechSynthesisVoice[] = [];
+let currentAudio: HTMLAudioElement | null = null;
+let audioUrl: string | null = null;
 
 export function isMascotMuted(): boolean {
   if (typeof window === "undefined") return false;
@@ -25,7 +27,29 @@ export function textForSpeech(text: string): string {
     .trim();
 }
 
-function waitForVoices(): Promise<SpeechSynthesisVoice[]> {
+function hebrewVoices(voices: SpeechSynthesisVoice[]) {
+  return voices.filter(
+    (v) => v.lang.startsWith("he") || /hebrew|עברית/i.test(v.name)
+  );
+}
+
+export function hasHebrewBrowserVoice(): boolean {
+  if (typeof window === "undefined" || !window.speechSynthesis) return false;
+  const voices = cachedVoices.length ? cachedVoices : window.speechSynthesis.getVoices();
+  return hebrewVoices(voices).length > 0;
+}
+
+/** Call once after user interaction so Chrome loads voice list. */
+export function warmSpeechVoices() {
+  if (typeof window === "undefined" || !window.speechSynthesis) return;
+  const load = () => {
+    cachedVoices = window.speechSynthesis.getVoices();
+  };
+  load();
+  window.speechSynthesis.addEventListener("voiceschanged", load);
+}
+
+function waitForVoices(maxMs = 2000): Promise<SpeechSynthesisVoice[]> {
   return new Promise((resolve) => {
     if (typeof window === "undefined" || !window.speechSynthesis) {
       resolve([]);
@@ -33,31 +57,42 @@ function waitForVoices(): Promise<SpeechSynthesisVoice[]> {
     }
 
     const synth = window.speechSynthesis;
-    const existing = synth.getVoices();
-    if (existing.length > 0) {
-      voicesReady = true;
-      resolve(existing);
-      return;
-    }
+    const tryResolve = () => {
+      const voices = synth.getVoices();
+      if (voices.length > 0) {
+        cachedVoices = voices;
+        resolve(voices);
+        return true;
+      }
+      return false;
+    };
+
+    if (tryResolve()) return;
 
     const onVoices = () => {
-      voicesReady = true;
-      synth.removeEventListener("voiceschanged", onVoices);
-      resolve(synth.getVoices());
+      if (tryResolve()) synth.removeEventListener("voiceschanged", onVoices);
     };
     synth.addEventListener("voiceschanged", onVoices);
-    // Chrome loads voices async; nudge once
     synth.getVoices();
-    setTimeout(() => resolve(synth.getVoices()), 250);
+
+    const start = Date.now();
+    const poll = setInterval(() => {
+      if (tryResolve() || Date.now() - start > maxMs) {
+        clearInterval(poll);
+        synth.removeEventListener("voiceschanged", onVoices);
+        resolve(synth.getVoices());
+      }
+    }, 100);
   });
 }
 
 function pickVoice(voices: SpeechSynthesisVoice[], locale: Locale): SpeechSynthesisVoice | undefined {
   if (locale === "he") {
+    const he = hebrewVoices(voices);
     return (
-      voices.find((v) => v.lang === "he-IL") ??
-      voices.find((v) => v.lang.startsWith("he")) ??
-      voices.find((v) => /hebrew|עברית/i.test(v.name))
+      he.find((v) => v.lang === "he-IL") ??
+      he.find((v) => /google/i.test(v.name)) ??
+      he[0]
     );
   }
   return (
@@ -67,52 +102,146 @@ function pickVoice(voices: SpeechSynthesisVoice[], locale: Locale): SpeechSynthe
   );
 }
 
+function clearAudio() {
+  if (currentAudio) {
+    currentAudio.pause();
+    currentAudio.src = "";
+    currentAudio = null;
+  }
+  if (audioUrl) {
+    URL.revokeObjectURL(audioUrl);
+    audioUrl = null;
+  }
+}
+
 export interface SpeakOptions {
   muted?: boolean;
   onStart?: () => void;
   onEnd?: () => void;
 }
 
+async function speakViaApi(
+  text: string,
+  locale: Locale,
+  { onStart, onEnd }: SpeakOptions
+): Promise<boolean> {
+  try {
+    const res = await fetch(
+      `/api/tts?lang=${locale}&text=${encodeURIComponent(text)}`
+    );
+    if (!res.ok) return false;
+
+    const blob = await res.blob();
+    clearAudio();
+    audioUrl = URL.createObjectURL(blob);
+    currentAudio = new Audio(audioUrl);
+
+    return await new Promise((resolve) => {
+      if (!currentAudio) {
+        resolve(false);
+        return;
+      }
+      currentAudio.onplay = () => {
+        speaking = true;
+        onStart?.();
+      };
+      currentAudio.onended = () => {
+        speaking = false;
+        clearAudio();
+        onEnd?.();
+        resolve(true);
+      };
+      currentAudio.onerror = () => {
+        speaking = false;
+        clearAudio();
+        onEnd?.();
+        resolve(false);
+      };
+      currentAudio.play().catch(() => {
+        speaking = false;
+        clearAudio();
+        onEnd?.();
+        resolve(false);
+      });
+    });
+  } catch {
+    return false;
+  }
+}
+
+function speakViaBrowser(
+  spoken: string,
+  locale: Locale,
+  voice: SpeechSynthesisVoice | undefined,
+  { onStart, onEnd }: SpeakOptions
+): Promise<boolean> {
+  return new Promise((resolve) => {
+    if (!window.speechSynthesis) {
+      resolve(false);
+      return;
+    }
+
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(spoken);
+    utterance.lang = locale === "he" ? "he-IL" : "en-US";
+    utterance.rate = locale === "he" ? 0.92 : 0.98;
+    utterance.pitch = locale === "he" ? 1.05 : 1;
+    if (voice) utterance.voice = voice;
+
+    utterance.onstart = () => {
+      speaking = true;
+      onStart?.();
+    };
+    utterance.onend = () => {
+      speaking = false;
+      onEnd?.();
+      resolve(true);
+    };
+    utterance.onerror = () => {
+      speaking = false;
+      resolve(false);
+    };
+
+    window.speechSynthesis.speak(utterance);
+  });
+}
+
 export async function speakText(
   text: string,
   locale: Locale,
-  { muted, onStart, onEnd }: SpeakOptions = {}
+  options: SpeakOptions = {}
 ) {
-  if (typeof window === "undefined" || !window.speechSynthesis) return;
-  if (muted ?? isMascotMuted()) return;
+  if (typeof window === "undefined") return;
+  if (options.muted ?? isMascotMuted()) return;
 
   const spoken = textForSpeech(text);
   if (!spoken) return;
 
-  window.speechSynthesis.cancel();
+  stopSpeaking();
 
-  const voices = voicesReady ? window.speechSynthesis.getVoices() : await waitForVoices();
-  const utterance = new SpeechSynthesisUtterance(spoken);
-  utterance.lang = locale === "he" ? "he-IL" : "en-US";
-  utterance.rate = locale === "he" ? 0.92 : 0.98;
-  utterance.pitch = locale === "he" ? 1.05 : 1;
-
+  const voices = cachedVoices.length ? cachedVoices : await waitForVoices();
   const voice = pickVoice(voices, locale);
-  if (voice) utterance.voice = voice;
 
-  speaking = true;
-  utterance.onstart = () => onStart?.();
-  utterance.onend = () => {
-    speaking = false;
-    onEnd?.();
-  };
-  utterance.onerror = () => {
-    speaking = false;
-    onEnd?.();
-  };
+  // Hebrew: many desktops (esp. Linux) have no he-IL voice — use server TTS.
+  const useApiFirst = locale === "he" && !voice;
 
-  window.speechSynthesis.speak(utterance);
+  if (useApiFirst) {
+    const ok = await speakViaApi(spoken, locale, options);
+    if (ok) return;
+  }
+
+  const browserOk = await speakViaBrowser(spoken, locale, voice, options);
+
+  if (!browserOk && locale === "he") {
+    await speakViaApi(spoken, locale, options);
+  }
 }
 
 export function stopSpeaking() {
   if (typeof window !== "undefined" && window.speechSynthesis) {
     window.speechSynthesis.cancel();
   }
+  clearAudio();
   speaking = false;
 }
 

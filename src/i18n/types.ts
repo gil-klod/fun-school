@@ -137,6 +137,7 @@ export interface Dictionary {
     wrong0: string;
     wrong1: string;
     wrong2: string;
+    noHebrewVoice: string;
   };
   games: {
     correct: string;

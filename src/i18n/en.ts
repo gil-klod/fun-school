@@ -160,6 +160,7 @@ export const en: Dictionary = {
     wrong0: "Almost! Try again — you've got this!",
     wrong1: "No worries! Every mistake helps us learn.",
     wrong2: "Close one! Let's crush the next question!",
+    noHebrewVoice: "Using online Hebrew voice (no Hebrew voice on this device).",
   },
   games: {
     correct: "Correct! 🌟",
