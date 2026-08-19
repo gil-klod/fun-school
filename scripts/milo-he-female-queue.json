@@ -1,0 +1,327 @@
+[
+  {
+    "filename": "he--mascot.welcome--female.mp3",
+    "text": "היי! אני מילו בחרי נושא ובואי נשחק!",
+    "id": "he:mascot.welcome:female"
+  },
+  {
+    "filename": "he--mascot.correct0--female.mp3",
+    "text": "מדהימה! כפיים כפיים!",
+    "id": "he:mascot.correct0:female"
+  },
+  {
+    "filename": "he--mascot.correct1--female.mp3",
+    "text": "את בוערת! המשיכי כך!",
+    "id": "he:mascot.correct1:female"
+  },
+  {
+    "filename": "he--mascot.correct2--female.mp3",
+    "text": "מבריקה! ידעתי שתצליחי!",
+    "id": "he:mascot.correct2:female"
+  },
+  {
+    "filename": "he--mascot.correct3--female.mp3",
+    "text": "כוכבת על!",
+    "id": "he:mascot.correct3:female"
+  },
+  {
+    "filename": "he--mascot.wrong0--female.mp3",
+    "text": "כמעט! נסי שוב — את יכולה!",
+    "id": "he:mascot.wrong0:female"
+  },
+  {
+    "filename": "he--mascot.wrong1--female.mp3",
+    "text": "לא נורא! מכל טעות לומדים.",
+    "id": "he:mascot.wrong1:female"
+  },
+  {
+    "filename": "he--mascot.wrong2--female.mp3",
+    "text": "קרוב! נעיף את השאלה הבאה!",
+    "id": "he:mascot.wrong2:female"
+  },
+  {
+    "filename": "he--context--home--female--0.mp3",
+    "text": "אני מילו! בחרי נושא — אני כבר מחזיקה את התשובות... סתם, לא באמת.",
+    "id": "he:context:home:female:0"
+  },
+  {
+    "filename": "he--context--home--female--1.mp3",
+    "text": "ארבעה נושאים, הרבה משחקים, אפס שיעורי בית משעממים!",
+    "id": "he:context:home:female:1"
+  },
+  {
+    "filename": "he--context--home--female--2.mp3",
+    "text": "טיפ מילו: התחל מחשבון — שם המספרים לא מתווכחים. בניגוד לי.",
+    "id": "he:context:home:female:2"
+  },
+  {
+    "filename": "he--context--dashboard--female--0.mp3",
+    "text": "הנה ההתקדמות שלך! אני גאה — כמעט כמו שאמא שלך גאה. כמעט.",
+    "id": "he:context:dashboard:female:0"
+  },
+  {
+    "filename": "he--context--dashboard--female--1.mp3",
+    "text": "סטטיסטיקות! נשמע מבוגר, אבל הגרפים צבעוניים.",
+    "id": "he:context:dashboard:female:1"
+  },
+  {
+    "filename": "he--context--dashboard--female--2.mp3",
+    "text": "אם המספרים נמוכים — זה רק כי לא שיחקת עדיין היום!",
+    "id": "he:context:dashboard:female:2"
+  },
+  {
+    "filename": "he--context--subject.math--female--0.mp3",
+    "text": "חשבון! המקום שבו מספרים לא מתלוננים. בניגוד לי.",
+    "id": "he:context:subject.math:female:0"
+  },
+  {
+    "filename": "he--context--subject.math--female--1.mp3",
+    "text": "כפל, שוק וחידות — מי אמר שמתמטיקה לא יכולה להיות כיפית?",
+    "id": "he:context:subject.math:female:1"
+  },
+  {
+    "filename": "he--context--subject.math--female--2.mp3",
+    "text": "בואי נראה אם הכפל יכול לעמוד בקצב שלך!",
+    "id": "he:context:subject.math:female:2"
+  },
+  {
+    "filename": "he--context--subject.hebrew--female--0.mp3",
+    "text": "עברית! האותיות הולכות לכל הכיוונים ואני עדיין מבולבל.",
+    "id": "he:context:subject.hebrew:female:0"
+  },
+  {
+    "filename": "he--context--subject.hebrew--female--1.mp3",
+    "text": "ערבוב אותיות, תיקון משפטים — בלש עברי בדרך!",
+    "id": "he:context:subject.hebrew:female:1"
+  },
+  {
+    "filename": "he--context--subject.hebrew--female--2.mp3",
+    "text": "מילה טובה ביום שומרת את המורה רחוקה. או משהו כזה.",
+    "id": "he:context:subject.hebrew:female:2"
+  },
+  {
+    "filename": "he--context--subject.english-beginners--female--0.mp3",
+    "text": "זמן אנגלית! אל תדאג — גם אני מתבלבל לפעמים.",
+    "id": "he:context:subject.english-beginners:female:0"
+  },
+  {
+    "filename": "he--context--subject.english-beginners--female--1.mp3",
+    "text": "אנגלית למתחילים — מילים, משפטים, צבעים. קדימה!",
+    "id": "he:context:subject.english-beginners:female:1"
+  },
+  {
+    "filename": "he--context--subject.english-beginners--female--2.mp3",
+    "text": "מילה אחת בכל פעם — ואת כבר מדברת אנגלית. כמעט!",
+    "id": "he:context:subject.english-beginners:female:2"
+  },
+  {
+    "filename": "he--context--subject.english-natives--female--0.mp3",
+    "text": "אנגלית מתקדמת! עכשיו מדברים ברצינות.",
+    "id": "he:context:subject.english-natives:female:0"
+  },
+  {
+    "filename": "he--context--subject.english-natives--female--1.mp3",
+    "text": "דקדוק, אוצר מילים, קריאה — את כבר כמעט שם.",
+    "id": "he:context:subject.english-natives:female:1"
+  },
+  {
+    "filename": "he--context--subject.english-natives--female--2.mp3",
+    "text": "מילה מוזרה? אני ממציא הגדרות. בטוח.",
+    "id": "he:context:subject.english-natives:female:2"
+  },
+  {
+    "filename": "he--context--game.math.multiplication--female--0.mp3",
+    "text": "טבלאות כפל! כמו לחץ, אבל עם מספרים.",
+    "id": "he:context:game.math.multiplication:female:0"
+  },
+  {
+    "filename": "he--context--game.math.multiplication--female--1.mp3",
+    "text": "בוס הכפל לא מפחיד. רק נראה רציני בגלל החרב.",
+    "id": "he:context:game.math.multiplication:female:1"
+  },
+  {
+    "filename": "he--context--game.math.multiplication--female--2.mp3",
+    "text": "שבע כפול שמונה? קל. שש כפול שבע? ...תני לי שנייה. את קודם!",
+    "id": "he:context:game.math.multiplication:female:2"
+  },
+  {
+    "filename": "he--context--game.math.shuk--female--0.mp3",
+    "text": "שוק! קנה, שלם, קבל עודף — ואל תשכח לחייך לירקן.",
+    "id": "he:context:game.math.shuk:female:0"
+  },
+  {
+    "filename": "he--context--game.math.shuk--female--1.mp3",
+    "text": "עודף זה לא מתנה. לצערי.",
+    "id": "he:context:game.math.shuk:female:1"
+  },
+  {
+    "filename": "he--context--game.math.shuk--female--2.mp3",
+    "text": "חשבון וקניות — אתגר שוק!",
+    "id": "he:context:game.math.shuk:female:2"
+  },
+  {
+    "filename": "he--context--game.math.mystery--female--0.mp3",
+    "text": "מספר מסתורי! אני חושב שזה ארבעים ושתיים. תמיד. לא? אוקיי.",
+    "id": "he:context:game.math.mystery:female:0"
+  },
+  {
+    "filename": "he--context--game.math.mystery--female--1.mp3",
+    "text": "רמז: זה מספר. עזרתי?",
+    "id": "he:context:game.math.mystery:female:1"
+  },
+  {
+    "filename": "he--context--game.math.mystery--female--2.mp3",
+    "text": "בלש מספרים — המשקפיים על!",
+    "id": "he:context:game.math.mystery:female:2"
+  },
+  {
+    "filename": "he--context--game.hebrew.scramble--female--0.mp3",
+    "text": "ערבוב אותיות! מ-כ-ח-ו-ל ל... משהו כחול. כנראה.",
+    "id": "he:context:game.hebrew.scramble:female:0"
+  },
+  {
+    "filename": "he--context--game.hebrew.scramble--female--1.mp3",
+    "text": "אותיות מבולבלות? אני מרגיש בבית.",
+    "id": "he:context:game.hebrew.scramble:female:1"
+  },
+  {
+    "filename": "he--context--game.hebrew.scramble--female--2.mp3",
+    "text": "אם נראה לך שזה כלב — בדקי שוב!",
+    "id": "he:context:game.hebrew.scramble:female:2"
+  },
+  {
+    "filename": "he--context--game.hebrew.fix-sentence--female--0.mp3",
+    "text": "איזו מילה לא שייכת? כמו חתול במקלחת.",
+    "id": "he:context:game.hebrew.fix-sentence:female:0"
+  },
+  {
+    "filename": "he--context--game.hebrew.fix-sentence--female--1.mp3",
+    "text": "תקני את המשפט — המורה תגיד וואו. אולי.",
+    "id": "he:context:game.hebrew.fix-sentence:female:1"
+  },
+  {
+    "filename": "he--context--game.hebrew.fix-sentence--female--2.mp3",
+    "text": "טעות קטנה, תיקון גדול!",
+    "id": "he:context:game.hebrew.fix-sentence:female:2"
+  },
+  {
+    "filename": "he--context--game.hebrew.comprehension--female--0.mp3",
+    "text": "קראי את הסיפור — יש שאלות. בלי לחשוף את הסוף!",
+    "id": "he:context:game.hebrew.comprehension:female:0"
+  },
+  {
+    "filename": "he--context--game.hebrew.comprehension--female--1.mp3",
+    "text": "בלש סיפורים! מי? מה? איפה?",
+    "id": "he:context:game.hebrew.comprehension:female:1"
+  },
+  {
+    "filename": "he--context--game.hebrew.comprehension--female--2.mp3",
+    "text": "לא הבנת? קראי שוב. בקול. עובד!",
+    "id": "he:context:game.hebrew.comprehension:female:2"
+  },
+  {
+    "filename": "he--context--game.english-beginners.vocabulary--female--0.mp3",
+    "text": "התאמת מילים! חתול באנגלית זה קט. כלב זה...",
+    "id": "he:context:game.english-beginners.vocabulary:female:0"
+  },
+  {
+    "filename": "he--context--game.english-beginners.vocabulary--female--1.mp3",
+    "text": "אנגלית ועברית — מילה אחת בכל פעם.",
+    "id": "he:context:game.english-beginners.vocabulary:female:1"
+  },
+  {
+    "filename": "he--context--game.english-beginners.vocabulary--female--2.mp3",
+    "text": "טעות? זה רק סוף השאלה. הבאה!",
+    "id": "he:context:game.english-beginners.vocabulary:female:2"
+  },
+  {
+    "filename": "he--context--game.english-beginners.sentences--female--0.mp3",
+    "text": "בני משפט! סדרי את המילים נכון — אני סומכת עלייך.",
+    "id": "he:context:game.english-beginners.sentences:female:0"
+  },
+  {
+    "filename": "he--context--game.english-beginners.sentences--female--1.mp3",
+    "text": "סדר מילים כמו קוביות — רק בלי לדרוך עליהן.",
+    "id": "he:context:game.english-beginners.sentences:female:1"
+  },
+  {
+    "filename": "he--context--game.english-beginners.sentences--female--2.mp3",
+    "text": "משפט מושלם שווה נקודות וכבוד!",
+    "id": "he:context:game.english-beginners.sentences:female:2"
+  },
+  {
+    "filename": "he--context--game.english-beginners.colors-numbers--female--0.mp3",
+    "text": "צבעים ומספרים! אדום, כחול, אחד, שתיים, שלוש.",
+    "id": "he:context:game.english-beginners.colors-numbers:female:0"
+  },
+  {
+    "filename": "he--context--game.english-beginners.colors-numbers--female--1.mp3",
+    "text": "באיזה צבע השמיים? ...ביום. לא בלילה.",
+    "id": "he:context:game.english-beginners.colors-numbers:female:1"
+  },
+  {
+    "filename": "he--context--game.english-beginners.colors-numbers--female--2.mp3",
+    "text": "מספרים לא משקרים!",
+    "id": "he:context:game.english-beginners.colors-numbers:female:2"
+  },
+  {
+    "filename": "he--context--game.english-natives.grammar--female--0.mp3",
+    "text": "משימת דקדוק! זמנים, רבים, ועוד הפתעות.",
+    "id": "he:context:game.english-natives.grammar:female:0"
+  },
+  {
+    "filename": "he--context--game.english-natives.grammar--female--1.mp3",
+    "text": "עבר, הווה, עתיד — אני מבולבל בכל הזמנים.",
+    "id": "he:context:game.english-natives.grammar:female:1"
+  },
+  {
+    "filename": "he--context--game.english-natives.grammar--female--2.mp3",
+    "text": "דקדוק נכון נשמע חכם!",
+    "id": "he:context:game.english-natives.grammar:female:2"
+  },
+  {
+    "filename": "he--context--game.english-natives.vocabulary--female--0.mp3",
+    "text": "קוסם המילים! מילים גדולות מרשימות.",
+    "id": "he:context:game.english-natives.vocabulary:female:0"
+  },
+  {
+    "filename": "he--context--game.english-natives.vocabulary--female--1.mp3",
+    "text": "מילים נרדפות, הפכים, ומילים שנשמעות מומצאות.",
+    "id": "he:context:game.english-natives.vocabulary:female:1"
+  },
+  {
+    "filename": "he--context--game.english-natives.vocabulary--female--2.mp3",
+    "text": "לא יודעת? נחשי. לפעמים זה עובד!",
+    "id": "he:context:game.english-natives.vocabulary:female:2"
+  },
+  {
+    "filename": "he--context--game.english-natives.comprehension--female--0.mp3",
+    "text": "אתגר קריאה! סיפור ארוך, מוח חד.",
+    "id": "he:context:game.english-natives.comprehension:female:0"
+  },
+  {
+    "filename": "he--context--game.english-natives.comprehension--female--1.mp3",
+    "text": "קראי בעיון. התשובה מסתתרת שם.",
+    "id": "he:context:game.english-natives.comprehension:female:1"
+  },
+  {
+    "filename": "he--context--game.english-natives.comprehension--female--2.mp3",
+    "text": "הבנה ותשובה — זה הניצחון!",
+    "id": "he:context:game.english-natives.comprehension:female:2"
+  },
+  {
+    "filename": "he--context--default--female--0.mp3",
+    "text": "היי! אני מילו — לחצי עליי לעוד חוכמה. או צחוק.",
+    "id": "he:context:default:female:0"
+  },
+  {
+    "filename": "he--context--default--female--1.mp3",
+    "text": "אני כאן! לא עושה שיעורי בית במקומך.",
+    "id": "he:context:default:female:1"
+  },
+  {
+    "filename": "he--context--default--female--2.mp3",
+    "text": "בואי נשחק! המוח שלך מודה לי.",
+    "id": "he:context:default:female:2"
+  }
+]

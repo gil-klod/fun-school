@@ -9,6 +9,7 @@
     "lint": "eslint",
     "seed": "npx tsx scripts/seed-content.ts",
     "generate-milo-audio": "npx tsx scripts/generate-milo-audio.ts",
+    "generate-milo-edge-tts-he-female": "npx tsx scripts/export-milo-he-female-queue.ts && python3 scripts/generate-milo-edge-tts.py",
     "split-milo-audio": "npx tsx scripts/split-milo-audio.ts"
   },
   "dependencies": {
