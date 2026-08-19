@@ -7,6 +7,7 @@ const MUTE_KEY = "fun-school-mascot-muted";
 let speaking = false;
 let cachedVoices: SpeechSynthesisVoice[] = [];
 let currentAudio: HTMLAudioElement | null = null;
+let audioUrl: string | null = null;
 
 export function isMascotMuted(): boolean {
   if (typeof window === "undefined") return false;
@@ -117,6 +118,10 @@ function clearAudio() {
     currentAudio.src = "";
     currentAudio = null;
   }
+  if (audioUrl) {
+    URL.revokeObjectURL(audioUrl);
+    audioUrl = null;
+  }
 }
 
 export interface SpeakOptions {
@@ -153,6 +158,55 @@ function playAudioFile(src: string, options: SpeakOptions): Promise<boolean> {
       resolve(false);
     });
   });
+}
+
+async function speakViaApi(
+  text: string,
+  locale: Locale,
+  options: SpeakOptions
+): Promise<boolean> {
+  try {
+    const res = await fetch(
+      `/api/tts?lang=${locale}&text=${encodeURIComponent(text)}`
+    );
+    if (!res.ok) return false;
+
+    const blob = await res.blob();
+    clearAudio();
+    audioUrl = URL.createObjectURL(blob);
+    currentAudio = new Audio(audioUrl);
+
+    return await new Promise((resolve) => {
+      if (!currentAudio) {
+        resolve(false);
+        return;
+      }
+      currentAudio.onplay = () => {
+        speaking = true;
+        options.onStart?.();
+      };
+      currentAudio.onended = () => {
+        speaking = false;
+        clearAudio();
+        options.onEnd?.();
+        resolve(true);
+      };
+      currentAudio.onerror = () => {
+        speaking = false;
+        clearAudio();
+        options.onEnd?.();
+        resolve(false);
+      };
+      currentAudio.play().catch(() => {
+        speaking = false;
+        clearAudio();
+        options.onEnd?.();
+        resolve(false);
+      });
+    });
+  } catch {
+    return false;
+  }
 }
 
 function speakViaBrowser(
@@ -195,8 +249,8 @@ function speakViaBrowser(
 
 /**
  * 1. Pre-recorded MP3 (public/audio/milo/) when audioId is set
- * 2. Device TTS — Hebrew on mobile only; English everywhere
- * No online Translate TTS fallback.
+ * 2. Simple online TTS (/api/tts) when clip is missing or fails
+ * 3. Device TTS as last resort (English everywhere; Hebrew on mobile with voice)
  */
 export async function speakText(
   text: string,
@@ -216,6 +270,9 @@ export async function speakText(
     if (played) return;
   }
 
+  const apiOk = await speakViaApi(spoken, locale, options);
+  if (apiOk) return;
+
   const voices = cachedVoices.length ? cachedVoices : await waitForVoices();
   const voice = pickVoice(voices, locale);
 
@@ -227,7 +284,6 @@ export async function speakText(
     return;
   }
 
-  // Desktop Hebrew without MP3: bubble text only (no bad TTS)
   options.onEnd?.();
 }
 

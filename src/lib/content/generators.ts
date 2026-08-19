@@ -136,6 +136,46 @@ export function buildOptions(correct: number, count = 3): number[] {
   return shuffleArray([correct, ...generateWrongAnswers(correct, count)]);
 }
 
+export function normalizeShukChallenge(raw: unknown): ShukChallenge | null {
+  if (!raw || typeof raw !== "object") return null;
+  const c = raw as Record<string, unknown>;
+  if (Array.isArray(c.lines) && typeof c.total === "number") {
+    return c as unknown as ShukChallenge;
+  }
+  if (Array.isArray(c.items) && typeof c.total === "number") {
+    const items = c.items as ShukItem[];
+    return {
+      lines: items.map((item) => ({ item, quantity: 1 })),
+      total: c.total as number,
+      paid: c.paid as number,
+      change: c.change as number,
+    };
+  }
+  return null;
+}
+
+export function normalizeShukRound(
+  raw: unknown,
+  items: ShukItem[],
+  config: ShukConfig
+): { challenge: ShukChallenge; options: number[] } {
+  if (raw && typeof raw === "object") {
+    const r = raw as { challenge?: unknown; options?: number[] };
+    const challenge = normalizeShukChallenge(r.challenge);
+    if (challenge) {
+      return {
+        challenge,
+        options:
+          Array.isArray(r.options) && r.options.length > 0
+            ? r.options
+            : buildOptions(challenge.change),
+      };
+    }
+  }
+  const challenge = generateShukChallenge(items, config);
+  return { challenge, options: buildOptions(challenge.change) };
+}
+
 export function scrambleWord(word: string): string {
   const chars = word.split("");
   for (let i = chars.length - 1; i > 0; i--) {

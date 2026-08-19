@@ -11,16 +11,15 @@ import { MathLtr } from "@/components/MathLtr";
 import { useQuestionCounter } from "@/hooks/useQuestionCounter";
 import { useLocale } from "@/i18n/LocaleProvider";
 import {
-  generateShukChallenge,
   buildOptions,
   getShukItemName,
+  normalizeShukRound,
   type ShukItem,
 } from "@/lib/content/generators";
 import type { ShukConfig } from "@/lib/content/types";
 
 function newChallenge(items: ShukItem[], config: ShukConfig) {
-  const c = generateShukChallenge(items, config);
-  return { challenge: c, options: buildOptions(c.change) };
+  return normalizeShukRound(null, items, config);
 }
 
 function ShukPlay({
@@ -40,7 +39,10 @@ function ShukPlay({
 }) {
   const { t, gameTitle, locale } = useLocale();
   const [round, setRound] = useState(() => newChallenge(items, config));
-  const { challenge, options } = round;
+  const { challenge, options } = useMemo(
+    () => normalizeShukRound(round, items, config),
+    [round, items, config]
+  );
   const [feedback, setFeedback] = useState<{
     type: "correct" | "wrong";
     message: string;
@@ -62,7 +64,7 @@ function ShukPlay({
     progress.gameState,
     (s) => {
       if (s.round) {
-        setRound(s.round as ReturnType<typeof newChallenge>);
+        setRound(normalizeShukRound(s.round, items, config));
         setAnswered(!!s.answered);
         if (s.feedback) setFeedback(s.feedback as typeof feedback);
         if (typeof s.questionNum === "number") setQuestionNum(s.questionNum);
