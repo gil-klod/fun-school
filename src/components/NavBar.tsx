@@ -6,6 +6,7 @@ import { useSession } from "next-auth/react";
 import { useLocale } from "@/i18n/LocaleProvider";
 import { SideMenu } from "@/components/SideMenu";
 import { MiloToggleButton, MascotMuteButton } from "@/components/mascot";
+import { StudentSelector } from "@/components/students";
 import { APP_CONTAINER } from "@/lib/layout";
 
 function MenuIcon() {
@@ -31,6 +32,7 @@ export function NavBar() {
 
           {session ? (
             <div className="flex items-center gap-1 sm:gap-2">
+              <StudentSelector compact />
               <MascotMuteButton />
               <MiloToggleButton />
               <button

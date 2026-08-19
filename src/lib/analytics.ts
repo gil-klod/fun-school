@@ -11,8 +11,8 @@ function accuracy(correct: number, wrong: number) {
   return total === 0 ? 0 : Math.round((correct / total) * 100);
 }
 
-export async function computeAnalytics(userId: string) {
-  const progresses = await GameProgress.find({ userId });
+export async function computeAnalytics(studentId: string) {
+  const progresses = await GameProgress.find({ studentId });
 
   const subjectMap = new Map<string, SubjectStat>();
   const gameStats: GameStat[] = [];
@@ -86,7 +86,7 @@ export async function computeAnalytics(userId: string) {
   }
 
   return UserAnalytics.findOneAndUpdate(
-    { userId },
+    { studentId },
     {
       subjectStats,
       gameStats,

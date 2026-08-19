@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import type { DifficultyLevel } from "@/lib/content/types";
+import { useStudent } from "@/components/students";
 
 export interface ProgressData {
   score: number;
@@ -39,6 +40,8 @@ export function useGameProgress({
   difficulty,
   defaultState = EMPTY_GAME_STATE,
 }: UseGameProgressOptions) {
+  const { activeStudent, ready: studentReady } = useStudent();
+  const studentId = activeStudent?.id;
   const [loaded, setLoaded] = useState(false);
   const [hasSavedProgress, setHasSavedProgress] = useState(false);
   const [score, setScore] = useState(0);
@@ -69,9 +72,17 @@ export function useGameProgress({
     let cancelled = false;
 
     async function load() {
+      if (!studentReady) return;
+      if (!studentId) {
+        resetProgress();
+        if (!cancelled) setLoaded(true);
+        return;
+      }
+
+      setLoaded(false);
       try {
         const res = await fetch(
-          `/api/progress?subjectId=${subjectId}&gameId=${gameId}&difficulty=${difficulty}`
+          `/api/progress?subjectId=${subjectId}&gameId=${gameId}&difficulty=${difficulty}&studentId=${studentId}`
         );
         if (res.ok) {
           const { progress } = await res.json();
@@ -99,11 +110,11 @@ export function useGameProgress({
     return () => {
       cancelled = true;
     };
-  }, [subjectId, gameId, difficulty, resetProgress]);
+  }, [subjectId, gameId, difficulty, studentId, studentReady, resetProgress]);
 
   const save = useCallback(
     (overrides?: Partial<ProgressData>) => {
-      if (!loaded) return;
+      if (!loaded || !studentId) return;
 
       const data: ProgressData = {
         ...latest.current,
@@ -118,14 +129,14 @@ export function useGameProgress({
           await fetch("/api/progress", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ subjectId, gameId, difficulty, ...data }),
+            body: JSON.stringify({ studentId, subjectId, gameId, difficulty, ...data }),
           });
         } catch (err) {
           console.error("Failed to save progress:", err);
         }
       }, 500);
     },
-    [loaded, subjectId, gameId, difficulty]
+    [loaded, studentId, subjectId, gameId, difficulty]
   );
 
   const markCompleted = useCallback(() => {

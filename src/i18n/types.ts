@@ -58,6 +58,7 @@ export interface Dictionary {
     openMenu: string;
     closeMenu: string;
     language: string;
+    settings: string;
   };
   home: {
     tagline: string;
@@ -76,9 +77,6 @@ export interface Dictionary {
     password: string;
     name: string;
     passwordHint: string;
-    gender: string;
-    genderMale: string;
-    genderFemale: string;
     login: string;
     loggingIn: string;
     signUp: string;
@@ -123,6 +121,30 @@ export interface Dictionary {
     recPractice: string;
   };
   subjects: Record<string, SubjectStrings>;
+  students: {
+    title: string;
+    add: string;
+    name: string;
+    age: string;
+    ageHint: string;
+    gender: string;
+    genderMale: string;
+    genderFemale: string;
+    avatar: string;
+    create: string;
+    creating: string;
+    select: string;
+    noStudents: string;
+    onboardingTitle: string;
+    onboardingSubtitle: string;
+    delete: string;
+    deleteConfirm: string;
+    deleteFailed: string;
+    settingsTitle: string;
+    settingsSubtitle: string;
+    formError: string;
+    playingAs: string;
+  };
   mascot: {
     name: string;
     dismiss: string;

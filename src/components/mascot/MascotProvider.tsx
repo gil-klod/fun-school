@@ -10,8 +10,8 @@ import {
   useState,
 } from "react";
 import { usePathname } from "next/navigation";
-import { useSession } from "next-auth/react";
 import { useLocale } from "@/i18n/LocaleProvider";
+import { useStudent } from "@/components/students";
 import { normalizeGender, type UserGender } from "@/lib/gender";
 import type { Locale } from "@/i18n/types";
 import {
@@ -38,8 +38,8 @@ function pickRandom(keys: string[], locale: Locale, gender: UserGender, t: (key:
 
 export function MascotProvider({ children }: { children: React.ReactNode }) {
   const { t, locale } = useLocale();
-  const { data: session } = useSession();
-  const gender = normalizeGender(session?.user?.gender);
+  const { activeStudent } = useStudent();
+  const gender = normalizeGender(activeStudent?.gender);
   const pathname = usePathname();
   const [pinned, setPinned] = useState(false);
   const [muted, setMuted] = useState(false);

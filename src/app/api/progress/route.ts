@@ -1,8 +1,17 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { connectDB } from "@/lib/db";
+import { requireOwnedStudent } from "@/lib/students/server";
 import { GameProgress } from "@/models/GameProgress";
 import { computeAnalytics } from "@/lib/analytics";
+
+async function resolveStudentId(request: Request, userId: string): Promise<string | null> {
+  const url = new URL(request.url);
+  const studentId = url.searchParams.get("studentId");
+  if (!studentId) return null;
+  const owned = await requireOwnedStudent(studentId, userId);
+  return owned ? studentId : null;
+}
 
 export async function GET(request: Request) {
   const session = await auth();
@@ -11,6 +20,11 @@ export async function GET(request: Request) {
   }
 
   await connectDB();
+  const studentId = await resolveStudentId(request, session.user.id);
+  if (!studentId) {
+    return NextResponse.json({ error: "studentId required" }, { status: 400 });
+  }
+
   const { searchParams } = new URL(request.url);
   const subjectId = searchParams.get("subjectId");
   const gameId = searchParams.get("gameId");
@@ -19,7 +33,7 @@ export async function GET(request: Request) {
 
   if (recent === "true") {
     const last = await GameProgress.findOne({
-      userId: session.user.id,
+      studentId,
       status: "in_progress",
     }).sort({ lastPlayedAt: -1 });
 
@@ -28,7 +42,7 @@ export async function GET(request: Request) {
 
   if (subjectId && gameId) {
     const query: Record<string, unknown> = {
-      userId: session.user.id,
+      studentId,
       subjectId,
       gameId,
     };
@@ -43,7 +57,7 @@ export async function GET(request: Request) {
     return NextResponse.json({ progress });
   }
 
-  const all = await GameProgress.find({ userId: session.user.id }).sort({ lastPlayedAt: -1 });
+  const all = await GameProgress.find({ studentId }).sort({ lastPlayedAt: -1 });
   return NextResponse.json({ progresses: all });
 }
 
@@ -55,11 +69,16 @@ export async function POST(request: Request) {
 
   try {
     const body = await request.json();
-    const { subjectId, gameId, difficulty, score, streak, round, correct, wrong, state, status } =
+    const { studentId, subjectId, gameId, difficulty, score, streak, round, correct, wrong, state, status } =
       body;
 
-    if (!subjectId || !gameId) {
-      return NextResponse.json({ error: "subjectId and gameId required" }, { status: 400 });
+    if (!studentId || !subjectId || !gameId) {
+      return NextResponse.json({ error: "studentId, subjectId and gameId required" }, { status: 400 });
+    }
+
+    const owned = await requireOwnedStudent(String(studentId), session.user.id);
+    if (!owned) {
+      return NextResponse.json({ error: "Student not found" }, { status: 404 });
     }
 
     const diff = [1, 2, 3].includes(Number(difficulty)) ? Number(difficulty) : 2;
@@ -67,7 +86,7 @@ export async function POST(request: Request) {
     await connectDB();
 
     const progress = await GameProgress.findOneAndUpdate(
-      { userId: session.user.id, subjectId, gameId, difficulty: diff },
+      { studentId, subjectId, gameId, difficulty: diff },
       {
         difficulty: diff,
         score: score ?? 0,
@@ -82,8 +101,7 @@ export async function POST(request: Request) {
       { upsert: true, new: true }
     );
 
-    // Refresh analytics in background (don't block save)
-    computeAnalytics(session.user.id).catch(console.error);
+    computeAnalytics(studentId).catch(console.error);
 
     return NextResponse.json({ progress });
   } catch (err) {

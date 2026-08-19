@@ -80,6 +80,10 @@ export function SideMenu({ open, onClose, userName }: SideMenuProps) {
             <span className="text-xl" aria-hidden>📊</span>
             {t("nav.myProgress")}
           </Link>
+          <Link href="/settings" onClick={onClose} className={navLinkClass}>
+            <span className="text-xl" aria-hidden>⚙️</span>
+            {t("nav.settings")}
+          </Link>
         </nav>
 
         <div className="px-4 py-4 border-t border-indigo-100 space-y-4">

@@ -11,6 +11,7 @@ import {
 } from "@/lib/dashboardFeedback";
 import type { Locale } from "@/i18n/types";
 import { APP_CONTAINER } from "@/lib/layout";
+import { StudentSelector, useStudent } from "@/components/students";
 
 interface Analytics {
   strengths: string[];
@@ -45,12 +46,21 @@ function parseStoredRecommendations(raw: string[], locale: Locale): string[] | n
 
 export default function DashboardPage() {
   const { t, locale, subjectTitle, gameTitle } = useLocale();
+  const { activeStudent, ready: studentReady } = useStudent();
   const [analytics, setAnalytics] = useState<Analytics | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
-    fetch("/api/analytics")
+    if (!studentReady) return;
+    if (!activeStudent?.id) {
+      setAnalytics(null);
+      setLoading(false);
+      return;
+    }
+
+    setLoading(true);
+    fetch(`/api/analytics?studentId=${activeStudent.id}`)
       .then(async (res) => {
         if (res.ok) {
           const data = await res.json();
@@ -59,12 +69,13 @@ export default function DashboardPage() {
       })
       .catch(console.error)
       .finally(() => setLoading(false));
-  }, []);
+  }, [activeStudent?.id, studentReady]);
 
   async function refresh() {
+    if (!activeStudent?.id) return;
     setRefreshing(true);
     try {
-      const res = await fetch("/api/analytics", { method: "POST" });
+      const res = await fetch(`/api/analytics?studentId=${activeStudent.id}`, { method: "POST" });
       if (res.ok) {
         const data = await res.json();
         setAnalytics(data.analytics);
@@ -125,9 +136,19 @@ export default function DashboardPage() {
         <span className="text-5xl">📊</span>
         <h1 className="text-3xl font-bold text-gray-800 mt-2">{t("dashboard.title")}</h1>
         <p className="text-gray-500">{t("dashboard.subtitle")}</p>
+        <div className="mt-4 flex justify-center">
+          <StudentSelector />
+        </div>
       </header>
 
-      {!hasData ? (
+      {!activeStudent ? (
+        <div className="bg-white/90 rounded-3xl p-8 text-center border-2 border-indigo-100">
+          <p className="text-xl text-gray-600 mb-4">{t("students.noStudents")}</p>
+          <Link href="/settings" className="game-btn game-btn-primary inline-block">
+            {t("students.add")}
+          </Link>
+        </div>
+      ) : !hasData ? (
         <div className="bg-white/90 rounded-3xl p-8 text-center border-2 border-indigo-100">
           <p className="text-xl text-gray-600 mb-4">{t("dashboard.empty")}</p>
           <Link href="/" className="game-btn game-btn-primary inline-block">

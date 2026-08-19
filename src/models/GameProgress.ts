@@ -2,7 +2,7 @@ import mongoose, { Schema, models, model } from "mongoose";
 
 export interface IGameProgress {
   _id: mongoose.Types.ObjectId;
-  userId: mongoose.Types.ObjectId;
+  studentId: mongoose.Types.ObjectId;
   subjectId: string;
   gameId: string;
   difficulty: 1 | 2 | 3;
@@ -18,7 +18,7 @@ export interface IGameProgress {
 
 const GameProgressSchema = new Schema<IGameProgress>(
   {
-    userId: { type: Schema.Types.ObjectId, ref: "User", required: true },
+    studentId: { type: Schema.Types.ObjectId, ref: "Student", required: true },
     subjectId: { type: String, required: true },
     gameId: { type: String, required: true },
     difficulty: { type: Number, enum: [1, 2, 3], default: 2, required: true },
@@ -35,10 +35,10 @@ const GameProgressSchema = new Schema<IGameProgress>(
 );
 
 GameProgressSchema.index(
-  { userId: 1, subjectId: 1, gameId: 1, difficulty: 1 },
+  { studentId: 1, subjectId: 1, gameId: 1, difficulty: 1 },
   { unique: true }
 );
-GameProgressSchema.index({ userId: 1, lastPlayedAt: -1 });
+GameProgressSchema.index({ studentId: 1, lastPlayedAt: -1 });
 
 export const GameProgress =
   models.GameProgress ?? model<IGameProgress>("GameProgress", GameProgressSchema);

@@ -19,7 +19,7 @@ export interface GameStat {
 
 export interface IUserAnalytics {
   _id: mongoose.Types.ObjectId;
-  userId: mongoose.Types.ObjectId;
+  studentId: mongoose.Types.ObjectId;
   subjectStats: SubjectStat[];
   gameStats: GameStat[];
   strengths: string[];
@@ -54,7 +54,7 @@ const GameStatSchema = new Schema(
 
 const UserAnalyticsSchema = new Schema<IUserAnalytics>(
   {
-    userId: { type: Schema.Types.ObjectId, ref: "User", required: true, unique: true },
+    studentId: { type: Schema.Types.ObjectId, ref: "Student", required: true, unique: true },
     subjectStats: { type: [SubjectStatSchema], default: [] },
     gameStats: { type: [GameStatSchema], default: [] },
     strengths: { type: [String], default: [] },

@@ -2,6 +2,7 @@
 
 import { useLocale } from "@/i18n/LocaleProvider";
 import { getGameHref } from "@/lib/gamePaths";
+import { useStudent } from "@/components/students";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 
@@ -14,16 +15,23 @@ interface RecentProgress {
 
 export function ContinueBanner() {
   const { t, gameTitle } = useLocale();
+  const { activeStudent, ready } = useStudent();
   const [recent, setRecent] = useState<RecentProgress | null>(null);
 
   useEffect(() => {
-    fetch("/api/progress?recent=true")
+    if (!ready || !activeStudent?.id) {
+      setRecent(null);
+      return;
+    }
+
+    fetch(`/api/progress?recent=true&studentId=${activeStudent.id}`)
       .then((r) => r.json())
       .then((data) => {
         if (data.progress) setRecent(data.progress);
+        else setRecent(null);
       })
-      .catch(() => {});
-  }, []);
+      .catch(() => setRecent(null));
+  }, [activeStudent?.id, ready]);
 
   if (!recent) return null;
 
