@@ -4,7 +4,7 @@ export const subjects: SubjectInfo[] = [
   {
     id: "math",
     title: "Math",
-    titleHe: "חִשּׁוּב",
+    titleHe: "חשבון",
     emoji: "🔢",
     color: "bg-amber-100",
     borderColor: "border-amber-400",

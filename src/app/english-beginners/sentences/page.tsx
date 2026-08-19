@@ -3,11 +3,9 @@
 import { useState, useCallback, useMemo, useEffect } from "react";
 import { useGameResume } from "@/hooks/useGameResume";
 import { useGameSession } from "@/hooks/useGameSession";
-import { BackButton } from "@/components/BackButton";
-import { GameShell } from "@/components/GameShell";
+import { GameShell, GamePage } from "@/components/GameShell";
 import { GameStatus } from "@/components/GameStatus";
 import { Feedback } from "@/components/Feedback";
-import { DifficultySelector } from "@/components/DifficultySelector";
 import { GameContentGate } from "@/components/GameContentGate";
 import { useLocale } from "@/i18n/LocaleProvider";
 
@@ -196,16 +194,14 @@ function SentencesPlay({
   };
 
   return (
-    <main className="flex-1 px-4 py-3 max-w-2xl mx-auto w-full">
-      <BackButton href="/english-beginners" />
-
-      <GameShell title={gameTitle("english-beginners", "sentences")} emoji="🧩">
-        <DifficultySelector
-          value={difficulty}
-          onChange={changeDifficulty}
-          disabled={answered}
-        />
-
+    <GamePage>
+      <GameShell
+        title={gameTitle("english-beginners", "sentences")}
+        emoji="🧩"
+        difficulty={difficulty}
+        onDifficultyChange={changeDifficulty}
+        difficultyDisabled={answered}
+      >
         <GameStatus
           current={index + 1}
           total={challenges.length}
@@ -214,70 +210,72 @@ function SentencesPlay({
           score={progress.score}
         />
 
-        <p className="text-center text-gray-600 mb-4" dir="rtl">
-          {challenge.translation}
-        </p>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
+          <div>
+            <p className="text-center text-gray-600 mb-4" dir="rtl">
+              {challenge.translation}
+            </p>
 
-        <div
-          className="bg-white/90 rounded-2xl p-4 min-h-[60px] shadow-inner border-2 border-green-200 mb-4 flex flex-wrap gap-2 items-center justify-center"
-          onClick={() => {
-            if (selected.length > 0 && !answered) removeWord(selected.length - 1);
-          }}
-        >
-          {selected.length === 0 ? (
-            <span className="text-gray-400">{t("games.tapWords")}</span>
-          ) : (
-            selected.map((token, i) => (
-              <span
-                key={token.id}
-                className="bg-green-100 text-green-800 px-4 py-2 rounded-xl font-semibold cursor-pointer hover:bg-green-200"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  removeWord(i);
-                }}
-              >
-                {token.word}
-              </span>
-            ))
-          )}
-        </div>
-
-        <div className="flex flex-wrap gap-2 justify-center mb-4">
-          {availableWords.map((token) => (
-            <button
-              key={token.id}
-              onClick={() => addWord(token)}
-              disabled={answered}
-              className="game-btn-option py-3 px-5"
+            <div
+              className="bg-white/90 rounded-2xl p-4 min-h-[60px] shadow-inner border-2 border-green-200 flex flex-wrap gap-2 items-center justify-center"
+              onClick={() => {
+                if (selected.length > 0 && !answered) removeWord(selected.length - 1);
+              }}
             >
-              {token.word}
-            </button>
-          ))}
-        </div>
-
-        {!answered && (
-          <button
-            onClick={checkAnswer}
-            disabled={selected.length !== challenge.words.length}
-            className="game-btn game-btn-primary w-full mb-4 disabled:opacity-40"
-          >
-            {t("games.checkSentence")}
-          </button>
-        )}
-
-        {feedback && (
-          <div className="mb-4">
-            <Feedback type={feedback.type} message={feedback.message} />
+              {selected.length === 0 ? (
+                <span className="text-gray-400">{t("games.tapWords")}</span>
+              ) : (
+                selected.map((token, i) => (
+                  <span
+                    key={token.id}
+                    className="bg-green-100 text-green-800 px-4 py-2 rounded-xl font-semibold cursor-pointer hover:bg-green-200"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      removeWord(i);
+                    }}
+                  >
+                    {token.word}
+                  </span>
+                ))
+              )}
+            </div>
           </div>
-        )}
 
-        {answered && (
-          <button onClick={nextChallenge} className="game-btn game-btn-primary w-full">
-            {t("games.nextSentence")}
-          </button>
-        )}
+          <div>
+            <div className="flex flex-wrap gap-2 justify-center mb-4">
+              {availableWords.map((token) => (
+                <button
+                  key={token.id}
+                  onClick={() => addWord(token)}
+                  disabled={answered}
+                  className="game-btn-option py-3 px-5"
+                >
+                  {token.word}
+                </button>
+              ))}
+            </div>
+
+            {!answered && (
+              <button
+                onClick={checkAnswer}
+                disabled={selected.length !== challenge.words.length}
+                className="game-btn game-btn-primary w-full mb-4 disabled:opacity-40"
+              >
+                {t("games.checkSentence")}
+              </button>
+            )}
+
+            {feedback && <Feedback type={feedback.type} message={feedback.message} />}
+
+            {answered && (
+              <button onClick={nextChallenge} className="game-btn game-btn-primary w-full mt-4">
+                {t("games.nextSentence")}
+              </button>
+            )}
+          </div>
+        </div>
       </GameShell>
-    </main>
+    </GamePage>
   );
 }
 

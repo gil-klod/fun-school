@@ -2,7 +2,6 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { BackButton } from "@/components/BackButton";
 import { DirectionalArrow } from "@/components/DirectionalArrow";
 import { useLocale } from "@/i18n/LocaleProvider";
 import { localizeAnalyticsKey } from "@/lib/analyticsKeys";
@@ -120,9 +119,7 @@ export default function DashboardPage() {
   const hasData = analytics && analytics.gameStats.some((g) => g.correct + g.wrong > 0);
 
   return (
-    <main className="flex-1 px-4 py-8 max-w-3xl mx-auto w-full">
-      <BackButton href="/" label={t("common.home")} />
-
+    <main className="flex-1 px-4 py-6 sm:py-8 max-w-5xl mx-auto w-full">
       <header className="text-center mb-8">
         <span className="text-5xl">📊</span>
         <h1 className="text-3xl font-bold text-gray-800 mt-2">{t("dashboard.title")}</h1>

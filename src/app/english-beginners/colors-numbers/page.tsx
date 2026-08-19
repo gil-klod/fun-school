@@ -3,11 +3,9 @@
 import { useState, useCallback, useEffect, useMemo } from "react";
 import { useGameResume } from "@/hooks/useGameResume";
 import { useGameSession } from "@/hooks/useGameSession";
-import { BackButton } from "@/components/BackButton";
-import { GameShell } from "@/components/GameShell";
+import { GameShell, GamePage, GameOptionsGrid } from "@/components/GameShell";
 import { GameStatus } from "@/components/GameStatus";
 import { Feedback } from "@/components/Feedback";
-import { DifficultySelector } from "@/components/DifficultySelector";
 import { GameContentGate } from "@/components/GameContentGate";
 import { useLocale } from "@/i18n/LocaleProvider";
 import { shuffleArray } from "@/lib/content/generators";
@@ -144,12 +142,14 @@ export default function ColorsNumbersPage() {
   const prompt = locale === "he" ? item.promptHe : item.prompt;
 
   return (
-    <main className="flex-1 px-4 py-3 max-w-2xl mx-auto w-full">
-      <BackButton href="/english-beginners" />
-
-      <GameShell title={gameTitle("english-beginners", "colors-numbers")} emoji="🌈">
-        <DifficultySelector value={difficulty} onChange={changeDifficulty} disabled={answered} />
-
+    <GamePage>
+      <GameShell
+        title={gameTitle("english-beginners", "colors-numbers")}
+        emoji="🌈"
+        difficulty={difficulty}
+        onDifficultyChange={changeDifficulty}
+        difficultyDisabled={answered}
+      >
         <GameStatus
           current={index + 1}
           total={items.length}
@@ -158,22 +158,24 @@ export default function ColorsNumbersPage() {
           score={progress.score}
         />
 
-        <div className="bg-white/90 rounded-3xl p-5 shadow-lg border-2 border-green-100 mb-4 text-center">
-          <span className="text-6xl">{item.emoji}</span>
-          <p className="text-xl font-bold text-gray-800 mt-4">{prompt}</p>
-        </div>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4 items-center">
+          <div className="bg-white/90 rounded-2xl p-5 sm:p-8 shadow border-2 border-green-100 text-center">
+            <span className="text-6xl">{item.emoji}</span>
+            <p className="text-xl font-bold text-gray-800 mt-4">{prompt}</p>
+          </div>
 
-        <div className="grid grid-cols-2 gap-3 mb-4">
-          {options.map((opt) => (
-            <button
-              key={opt}
-              onClick={() => handleAnswer(opt)}
-              disabled={answered}
-              className={`game-btn-option text-lg py-4 ${answered && opt === item.answer ? "correct" : ""} ${answered && opt !== item.answer ? "opacity-50" : ""}`}
-            >
-              {opt}
-            </button>
-          ))}
+          <GameOptionsGrid>
+            {options.map((opt) => (
+              <button
+                key={opt}
+                onClick={() => handleAnswer(opt)}
+                disabled={answered}
+                className={`game-btn-option text-lg py-4 ${answered && opt === item.answer ? "correct" : ""} ${answered && opt !== item.answer ? "opacity-50" : ""}`}
+              >
+                {opt}
+              </button>
+            ))}
+          </GameOptionsGrid>
         </div>
 
         {feedback && (
@@ -183,11 +185,11 @@ export default function ColorsNumbersPage() {
         )}
 
         {answered && (
-          <button onClick={nextQuestion} className="game-btn game-btn-primary w-full">
+          <button onClick={nextQuestion} className="game-btn game-btn-primary w-full sm:max-w-md sm:mx-auto sm:block">
             {t("common.continue")}
           </button>
         )}
       </GameShell>
-    </main>
+    </GamePage>
   );
 }

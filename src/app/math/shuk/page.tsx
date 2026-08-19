@@ -3,12 +3,11 @@
 import { useState, useCallback, useEffect, useMemo } from "react";
 import { useGameResume } from "@/hooks/useGameResume";
 import { useGameSession } from "@/hooks/useGameSession";
-import { BackButton } from "@/components/BackButton";
-import { GameShell } from "@/components/GameShell";
+import { GameShell, GamePage, GameOptionsGrid } from "@/components/GameShell";
 import { GameStatus } from "@/components/GameStatus";
 import { Feedback } from "@/components/Feedback";
-import { DifficultySelector } from "@/components/DifficultySelector";
 import { GameContentGate } from "@/components/GameContentGate";
+import { MathLtr } from "@/components/MathLtr";
 import { useQuestionCounter } from "@/hooks/useQuestionCounter";
 import { useLocale } from "@/i18n/LocaleProvider";
 import {
@@ -143,16 +142,14 @@ function ShukPlay({
   };
 
   return (
-    <main className="flex-1 px-4 py-3 max-w-2xl mx-auto w-full">
-      <BackButton href="/math" />
-
-      <GameShell title={gameTitle("math", "shuk")} emoji="🛒">
-        <DifficultySelector
-          value={difficulty}
-          onChange={changeDifficulty}
-          disabled={answered}
-        />
-
+    <GamePage>
+      <GameShell
+        title={gameTitle("math", "shuk")}
+        emoji="🛒"
+        difficulty={difficulty}
+        onDifficultyChange={changeDifficulty}
+        difficultyDisabled={answered}
+      >
         <GameStatus
           current={questionNum}
           total={sessionSize}
@@ -161,41 +158,44 @@ function ShukPlay({
           score={progress.score}
         />
 
-        <div className="bg-white/90 rounded-2xl p-4 shadow border-2 border-amber-100 mb-3">
-          <p className="text-base font-semibold text-amber-700 mb-3">{t("games.shoppingList")}</p>
-          <div className="space-y-2">
-            {challenge.items.map((item, i) => (
-              <div
-                key={i}
-                className="flex items-center justify-between bg-amber-50 rounded-xl px-3 py-2"
-              >
-                <span className="text-xl">{item.emoji}</span>
-                <span className="font-medium">{getShukItemName(item, locale)}</span>
-                <span className="font-bold text-amber-700">₪{item.price}</span>
-              </div>
-            ))}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
+          <div className="bg-white/90 rounded-2xl p-4 shadow border-2 border-amber-100">
+            <p className="text-base font-semibold text-amber-700 mb-3">{t("games.shoppingList")}</p>
+            <div className="space-y-2">
+              {challenge.items.map((item, i) => (
+                <div
+                  key={i}
+                  className="flex items-center justify-between bg-amber-50 rounded-xl px-3 py-2 gap-2"
+                >
+                  <span className="text-xl shrink-0">{item.emoji}</span>
+                  <span className="font-medium flex-1 min-w-0 truncate">{getShukItemName(item, locale)}</span>
+                  <MathLtr className="font-bold text-amber-700 shrink-0">₪{item.price}</MathLtr>
+                </div>
+              ))}
+            </div>
+            <div className="border-t border-amber-200 mt-3 pt-3 flex justify-between text-base gap-2">
+              <span className="font-semibold">{t("games.youPay")}</span>
+              <MathLtr className="font-bold text-green-700">₪{challenge.paid}</MathLtr>
+            </div>
           </div>
-          <div className="border-t border-amber-200 mt-3 pt-3 flex justify-between text-base">
-            <span className="font-semibold">{t("games.youPay")}</span>
-            <span className="font-bold text-green-700">₪{challenge.paid}</span>
+
+          <div>
+            <p className="text-center text-lg sm:text-xl font-bold text-gray-700 mb-4">
+              {t("games.howMuchChange")}
+            </p>
+            <GameOptionsGrid>
+              {options.map((opt) => (
+                <button
+                  key={opt}
+                  onClick={() => handleAnswer(opt)}
+                  disabled={answered}
+                  className={`game-btn-option text-xl py-4 ${answered && opt === correct ? "correct" : ""} ${answered && opt !== correct ? "opacity-50" : ""}`}
+                >
+                  <MathLtr>₪{opt}</MathLtr>
+                </button>
+              ))}
+            </GameOptionsGrid>
           </div>
-        </div>
-
-        <p className="text-center text-xl font-bold text-gray-700 mb-4">
-          {t("games.howMuchChange")}
-        </p>
-
-        <div className="grid grid-cols-2 gap-3 mb-4">
-          {options.map((opt) => (
-            <button
-              key={opt}
-              onClick={() => handleAnswer(opt)}
-              disabled={answered}
-              className={`game-btn-option text-xl py-4 ${answered && opt === correct ? "correct" : ""} ${answered && opt !== correct ? "opacity-50" : ""}`}
-            >
-              ₪{opt}
-            </button>
-          ))}
         </div>
 
         {feedback && (
@@ -205,12 +205,12 @@ function ShukPlay({
         )}
 
         {answered && (
-          <button onClick={nextChallenge} className="game-btn game-btn-primary w-full">
+          <button onClick={nextChallenge} className="game-btn game-btn-primary w-full sm:max-w-md sm:mx-auto sm:block">
             {t("games.nextShopping")}
           </button>
         )}
       </GameShell>
-    </main>
+    </GamePage>
   );
 }
 

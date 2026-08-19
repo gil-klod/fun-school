@@ -3,11 +3,9 @@
 import { useState, useCallback, useMemo } from "react";
 import { useGameResume } from "@/hooks/useGameResume";
 import { useGameSession } from "@/hooks/useGameSession";
-import { BackButton } from "@/components/BackButton";
-import { GameShell } from "@/components/GameShell";
+import { GameShell, GamePage } from "@/components/GameShell";
 import { GameStatus } from "@/components/GameStatus";
 import { Feedback } from "@/components/Feedback";
-import { DifficultySelector } from "@/components/DifficultySelector";
 import { GameContentGate } from "@/components/GameContentGate";
 import { useLocale } from "@/i18n/LocaleProvider";
 import type { QuizQuestion } from "@/lib/types";
@@ -139,16 +137,15 @@ function QuizGamePlay({
   };
 
   return (
-    <main className="flex-1 px-4 py-3 max-w-2xl mx-auto w-full">
-      <BackButton href={backHref} />
-
-      <GameShell title={gameTitle(subjectId, gameId)} emoji={emoji} contentDir={contentDir}>
-        <DifficultySelector
-          value={difficulty}
-          onChange={changeDifficulty}
-          disabled={answered && !finished}
-        />
-
+    <GamePage>
+      <GameShell
+        title={gameTitle(subjectId, gameId)}
+        emoji={emoji}
+        contentDir={contentDir}
+        difficulty={difficulty}
+        onDifficultyChange={changeDifficulty}
+        difficultyDisabled={answered && !finished}
+      >
         <GameStatus
           current={index + 1}
           total={questions.length}
@@ -158,12 +155,12 @@ function QuizGamePlay({
         />
 
         {!finished ? (
-          <>
-            <div className="bg-white/90 rounded-2xl p-4 shadow border-2 border-pink-100 mb-3">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4 items-start">
+            <div className="bg-white/90 rounded-2xl p-4 shadow border-2 border-pink-100">
               <p className="text-lg font-bold text-gray-800">{question.question}</p>
             </div>
 
-            <div className="grid grid-cols-1 gap-2 mb-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               {question.options.map((opt, i) => (
                 <button
                   key={i}
@@ -175,7 +172,11 @@ function QuizGamePlay({
                 </button>
               ))}
             </div>
+          </div>
+        ) : null}
 
+        {!finished ? (
+          <>
             {feedback && (
               <div className="mb-3">
                 <Feedback
@@ -187,7 +188,7 @@ function QuizGamePlay({
             )}
 
             {answered && (
-              <button onClick={nextQuestion} className="game-btn game-btn-primary w-full">
+              <button onClick={nextQuestion} className="game-btn game-btn-primary w-full sm:max-w-md sm:mx-auto sm:block">
                 {index + 1 >= questions.length ? t("common.seeResults") : t("common.nextQuestion")}
               </button>
             )}
@@ -216,14 +217,14 @@ function QuizGamePlay({
                   state: { index: 0, answered: false, feedback: null, finished: false },
                 });
               }}
-              className="game-btn game-btn-primary w-full mt-4"
+              className="game-btn game-btn-primary w-full mt-4 sm:max-w-md sm:mx-auto sm:block"
             >
               {t("common.playAgain")}
             </button>
           </div>
         )}
       </GameShell>
-    </main>
+    </GamePage>
   );
 }
 

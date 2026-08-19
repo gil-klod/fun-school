@@ -3,11 +3,9 @@
 import { useState, useCallback, useEffect, useMemo } from "react";
 import { useGameResume } from "@/hooks/useGameResume";
 import { useGameSession } from "@/hooks/useGameSession";
-import { BackButton } from "@/components/BackButton";
-import { GameShell } from "@/components/GameShell";
+import { GameShell, GamePage, GameOptionsGrid } from "@/components/GameShell";
 import { GameStatus } from "@/components/GameStatus";
 import { Feedback } from "@/components/Feedback";
-import { DifficultySelector } from "@/components/DifficultySelector";
 import { GameContentGate } from "@/components/GameContentGate";
 import { useLocale } from "@/i18n/LocaleProvider";
 
@@ -125,16 +123,15 @@ function FixSentencePlay({
   };
 
   return (
-    <main className="flex-1 px-4 py-3 max-w-2xl mx-auto w-full">
-      <BackButton href="/hebrew" />
-
-      <GameShell title={gameTitle("hebrew", "fix-sentence")} emoji="✏️" contentDir="rtl">
-        <DifficultySelector
-          value={difficulty}
-          onChange={changeDifficulty}
-          disabled={answered}
-        />
-
+    <GamePage>
+      <GameShell
+        title={gameTitle("hebrew", "fix-sentence")}
+        emoji="✏️"
+        contentDir="rtl"
+        difficulty={difficulty}
+        onDifficultyChange={changeDifficulty}
+        difficultyDisabled={answered}
+      >
         <GameStatus
           current={index + 1}
           total={sentences.length}
@@ -143,26 +140,29 @@ function FixSentencePlay({
           score={progress.score}
         />
 
-        <div className="bg-white/90 rounded-3xl p-5 shadow-lg border-2 border-blue-100 mb-4 text-center">
-          <p className="text-sm text-blue-500 font-medium mb-3">{t("games.findMistake")}</p>
-          <p className="text-2xl font-bold text-gray-800 leading-relaxed">{question.wrong}</p>
-        </div>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4 items-start">
+          <div>
+            <div className="bg-white/90 rounded-2xl p-5 shadow border-2 border-blue-100 text-center">
+              <p className="text-sm text-blue-500 font-medium mb-3">{t("games.findMistake")}</p>
+              <p className="text-2xl font-bold text-gray-800 leading-relaxed">{question.wrong}</p>
+            </div>
+            <p className="text-center text-lg font-semibold text-gray-600 mt-4">
+              {t("games.whichWordWrong")}
+            </p>
+          </div>
 
-        <p className="text-center text-lg font-semibold text-gray-600 mb-4">
-          {t("games.whichWordWrong")}
-        </p>
-
-        <div className="grid grid-cols-2 gap-3 mb-4">
-          {question.options.map((opt) => (
-            <button
-              key={opt}
-              onClick={() => handleAnswer(opt)}
-              disabled={answered}
-              className={`game-btn-option text-xl py-4 ${answered && opt === question.mistake ? "correct" : ""} ${answered && opt !== question.mistake ? "opacity-50" : ""}`}
-            >
-              {opt}
-            </button>
-          ))}
+          <GameOptionsGrid>
+            {question.options.map((opt) => (
+              <button
+                key={opt}
+                onClick={() => handleAnswer(opt)}
+                disabled={answered}
+                className={`game-btn-option text-xl py-4 ${answered && opt === question.mistake ? "correct" : ""} ${answered && opt !== question.mistake ? "opacity-50" : ""}`}
+              >
+                {opt}
+              </button>
+            ))}
+          </GameOptionsGrid>
         </div>
 
         {answered && (
@@ -183,12 +183,12 @@ function FixSentencePlay({
         )}
 
         {answered && (
-          <button onClick={nextQuestion} className="game-btn game-btn-primary w-full">
+          <button onClick={nextQuestion} className="game-btn game-btn-primary w-full sm:max-w-md sm:mx-auto sm:block">
             {t("games.nextSentence")}
           </button>
         )}
       </GameShell>
-    </main>
+    </GamePage>
   );
 }
 

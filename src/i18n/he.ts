@@ -107,7 +107,7 @@ export const he: Dictionary = {
   },
   subjects: {
     math: {
-      title: "חִשּׁוּב",
+      title: "חשבון",
       description: "טבלאות כפל, חשבון בשוק וחידות מספרים",
       games: {
         multiplication: { title: "בוס הכפל", description: "הבס את טבלאות הכפל!" },

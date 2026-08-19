@@ -4,12 +4,11 @@ import { useState, useCallback, useEffect, useMemo } from "react";
 import { useGameResume } from "@/hooks/useGameResume";
 import { useGameSession } from "@/hooks/useGameSession";
 import { useQuestionCounter } from "@/hooks/useQuestionCounter";
-import { BackButton } from "@/components/BackButton";
-import { GameShell } from "@/components/GameShell";
+import { GameShell, GamePage, GameOptionsGrid } from "@/components/GameShell";
 import { GameStatus } from "@/components/GameStatus";
 import { Feedback } from "@/components/Feedback";
-import { DifficultySelector } from "@/components/DifficultySelector";
 import { GameContentGate } from "@/components/GameContentGate";
+import { MathLtr } from "@/components/MathLtr";
 import { useLocale } from "@/i18n/LocaleProvider";
 import { generateMultiplication, buildOptions } from "@/lib/content/generators";
 import type { MultiplicationConfig } from "@/lib/content/types";
@@ -175,36 +174,35 @@ function MultiplicationPlay({
   };
 
   return (
-    <main className="flex-1 px-4 py-3 max-w-2xl mx-auto w-full">
-      <BackButton href="/math" />
-
-      <GameShell title={gameTitle("math", "multiplication")} emoji="⚔️">
-        <DifficultySelector
-          value={difficulty}
-          onChange={changeDifficulty}
-          disabled={answered}
-        />
-
-        <div className="flex gap-2 overflow-x-auto pb-1 mb-2 scrollbar-none">
-          <button
-            type="button"
-            onClick={() => switchTable(undefined)}
-            className={`px-4 py-2 rounded-xl font-semibold text-sm transition-all ${!table ? "bg-indigo-500 text-white" : "bg-white border-2 border-indigo-200"}`}
-          >
-            {t("games.mixed")}
-          </button>
-          {tables.map((tbl) => (
+    <GamePage>
+      <GameShell
+        title={gameTitle("math", "multiplication")}
+        emoji="⚔️"
+        difficulty={difficulty}
+        onDifficultyChange={changeDifficulty}
+        difficultyDisabled={answered}
+        toolbar={
+          <div className="flex gap-2 overflow-x-auto pb-0.5 scrollbar-none">
             <button
-              key={tbl}
               type="button"
-              onClick={() => switchTable(tbl)}
-              className={`px-4 py-2 rounded-xl font-semibold text-sm transition-all ${table === tbl ? "bg-indigo-500 text-white" : "bg-white border-2 border-indigo-200"}`}
+              onClick={() => switchTable(undefined)}
+              className={`px-4 py-2 rounded-xl font-semibold text-sm transition-all shrink-0 ${!table ? "bg-indigo-500 text-white" : "bg-white border-2 border-indigo-200"}`}
             >
-              ×{tbl}
+              {t("games.mixed")}
             </button>
-          ))}
-        </div>
-
+            {tables.map((tbl) => (
+              <button
+                key={tbl}
+                type="button"
+                onClick={() => switchTable(tbl)}
+                className={`px-4 py-2 rounded-xl font-semibold text-sm transition-all shrink-0 ${table === tbl ? "bg-indigo-500 text-white" : "bg-white border-2 border-indigo-200"}`}
+              >
+                <MathLtr>×{tbl}</MathLtr>
+              </button>
+            ))}
+          </div>
+        }
+      >
         <GameStatus
           current={questionNum}
           total={sessionSize}
@@ -213,24 +211,26 @@ function MultiplicationPlay({
           score={progress.score}
         />
 
-        <div className="bg-white/90 rounded-2xl p-4 shadow border-2 border-indigo-100 text-center mb-3">
-          <p className="text-4xl font-extrabold text-indigo-700">
-            {question.a} × {question.b} = ?
-          </p>
-        </div>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4 items-start">
+          <div className="bg-white/90 rounded-2xl p-6 sm:p-8 shadow border-2 border-indigo-100 flex items-center justify-center min-h-[8rem]">
+            <MathLtr className="text-4xl sm:text-5xl font-extrabold text-indigo-700">
+              {question.a} × {question.b} = ?
+            </MathLtr>
+          </div>
 
-        <div className="grid grid-cols-2 gap-2 mb-3">
-          {options.map((opt) => (
-            <button
-              key={opt}
-              type="button"
-              onClick={() => handleAnswer(opt)}
-              disabled={answered}
-              className={`game-btn-option text-xl py-4 ${answered && opt === correct ? "correct" : ""} ${answered && opt !== correct ? "opacity-50" : ""}`}
-            >
-              {opt}
-            </button>
-          ))}
+          <GameOptionsGrid>
+            {options.map((opt) => (
+              <button
+                key={opt}
+                type="button"
+                onClick={() => handleAnswer(opt)}
+                disabled={answered}
+                className={`game-btn-option text-xl py-4 ${answered && opt === correct ? "correct" : ""} ${answered && opt !== correct ? "opacity-50" : ""}`}
+              >
+                <MathLtr>{opt}</MathLtr>
+              </button>
+            ))}
+          </GameOptionsGrid>
         </div>
 
         {feedback && (
@@ -240,12 +240,12 @@ function MultiplicationPlay({
         )}
 
         {answered && (
-          <button type="button" onClick={goToNextQuestion} className="game-btn game-btn-primary w-full">
+          <button type="button" onClick={goToNextQuestion} className="game-btn game-btn-primary w-full sm:max-w-md sm:mx-auto sm:block">
             {t("common.nextQuestion")}
           </button>
         )}
       </GameShell>
-    </main>
+    </GamePage>
   );
 }
 

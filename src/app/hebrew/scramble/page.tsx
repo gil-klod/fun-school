@@ -3,11 +3,9 @@
 import { useState, useCallback, useEffect, useMemo } from "react";
 import { useGameResume } from "@/hooks/useGameResume";
 import { useGameSession } from "@/hooks/useGameSession";
-import { BackButton } from "@/components/BackButton";
-import { GameShell } from "@/components/GameShell";
+import { GameShell, GamePage } from "@/components/GameShell";
 import { GameStatus } from "@/components/GameStatus";
 import { Feedback } from "@/components/Feedback";
-import { DifficultySelector } from "@/components/DifficultySelector";
 import { GameContentGate } from "@/components/GameContentGate";
 import { useQuestionCounter } from "@/hooks/useQuestionCounter";
 import { useLocale } from "@/i18n/LocaleProvider";
@@ -153,16 +151,15 @@ function ScramblePlay({
   };
 
   return (
-    <main className="flex-1 px-4 py-3 max-w-2xl mx-auto w-full">
-      <BackButton href="/hebrew" />
-
-      <GameShell title={gameTitle("hebrew", "scramble")} emoji="🔤" contentDir="rtl">
-        <DifficultySelector
-          value={difficulty}
-          onChange={changeDifficulty}
-          disabled={answered}
-        />
-
+    <GamePage>
+      <GameShell
+        title={gameTitle("hebrew", "scramble")}
+        emoji="🔤"
+        contentDir="rtl"
+        difficulty={difficulty}
+        onDifficultyChange={changeDifficulty}
+        difficultyDisabled={answered}
+      >
         <GameStatus
           current={questionNum}
           total={sessionSize}
@@ -171,47 +168,49 @@ function ScramblePlay({
           score={progress.score}
         />
 
-        <div className="bg-white/90 rounded-2xl p-4 shadow border-2 border-blue-100 mb-3 text-center">
-          <p className="text-sm text-blue-500 font-medium mb-1">{t("games.unscramble")}</p>
-          <p className="text-4xl font-extrabold text-blue-700 tracking-widest mb-2">
-            {wordData.scrambled.split("").join(" ")}
-          </p>
-          <p className="text-sm text-gray-500">
-            {t("games.hint")}: {getWordHint(wordData, locale)} · {t("games.category")}:{" "}
-            {getWordCategory(wordData, locale)}
-          </p>
-        </div>
-
-        <input
-          type="text"
-          value={guess}
-          onChange={(e) => setGuess(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && checkAnswer()}
-          disabled={answered}
-          placeholder={t("games.writeWord")}
-          dir="rtl"
-          className="w-full text-xl text-center px-4 py-3 rounded-xl border-2 border-blue-200 focus:border-blue-400 focus:outline-none mb-3 disabled:opacity-50"
-        />
-
-        {!answered && (
-          <button onClick={checkAnswer} className="game-btn game-btn-primary w-full mb-3">
-            {t("common.check")}
-          </button>
-        )}
-
-        {feedback && (
-          <div className="mb-3">
-            <Feedback type={feedback.type} message={feedback.message} />
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
+          <div className="bg-white/90 rounded-2xl p-4 sm:p-6 shadow border-2 border-blue-100 text-center flex flex-col justify-center min-h-[10rem]">
+            <p className="text-sm text-blue-500 font-medium mb-1">{t("games.unscramble")}</p>
+            <p className="text-3xl sm:text-4xl font-extrabold text-blue-700 tracking-widest mb-2">
+              {wordData.scrambled.split("").join(" ")}
+            </p>
+            <p className="text-sm text-gray-500">
+              {t("games.hint")}: {getWordHint(wordData, locale)} · {t("games.category")}:{" "}
+              {getWordCategory(wordData, locale)}
+            </p>
           </div>
-        )}
 
-        {answered && (
-          <button onClick={nextWord} className="game-btn game-btn-primary w-full">
-            {t("games.nextWord")}
-          </button>
-        )}
+          <div className="flex flex-col justify-center">
+            <input
+              type="text"
+              value={guess}
+              onChange={(e) => setGuess(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && checkAnswer()}
+              disabled={answered}
+              placeholder={t("games.writeWord")}
+              dir="rtl"
+              className="w-full text-xl text-center px-4 py-3 rounded-xl border-2 border-blue-200 focus:border-blue-400 focus:outline-none mb-3 disabled:opacity-50"
+            />
+
+            {!answered && (
+              <button onClick={checkAnswer} className="game-btn game-btn-primary w-full mb-3">
+                {t("common.check")}
+              </button>
+            )}
+
+            {feedback && (
+              <Feedback type={feedback.type} message={feedback.message} />
+            )}
+
+            {answered && (
+              <button onClick={nextWord} className="game-btn game-btn-primary w-full mt-3">
+                {t("games.nextWord")}
+              </button>
+            )}
+          </div>
+        </div>
       </GameShell>
-    </main>
+    </GamePage>
   );
 }
 

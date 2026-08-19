@@ -3,11 +3,9 @@
 import { useState, useEffect, useMemo } from "react";
 import { useGameResume } from "@/hooks/useGameResume";
 import { useGameSession } from "@/hooks/useGameSession";
-import { BackButton } from "@/components/BackButton";
-import { GameShell } from "@/components/GameShell";
+import { GameShell, GamePage } from "@/components/GameShell";
 import { GameStatus } from "@/components/GameStatus";
 import { Feedback } from "@/components/Feedback";
-import { DifficultySelector } from "@/components/DifficultySelector";
 import { GameContentGate } from "@/components/GameContentGate";
 import { useLocale } from "@/i18n/LocaleProvider";
 import type { QuizQuestion } from "@/lib/types";
@@ -195,16 +193,15 @@ function EnglishComprehensionPlay({
   };
 
   return (
-    <main className="flex-1 px-4 py-3 max-w-2xl mx-auto w-full">
-      <BackButton href="/english-natives" />
-
-      <GameShell title={gameTitle("english-natives", "comprehension")} emoji="📚" contentDir="ltr">
-        <DifficultySelector
-          value={difficulty}
-          onChange={changeDifficulty}
-          disabled={answered && !finished}
-        />
-
+    <GamePage>
+      <GameShell
+        title={gameTitle("english-natives", "comprehension")}
+        emoji="📚"
+        contentDir="ltr"
+        difficulty={difficulty}
+        onDifficultyChange={changeDifficulty}
+        difficultyDisabled={answered && !finished}
+      >
         <GameStatus
           current={questionIndex + 1}
           total={story.questions.length}
@@ -213,61 +210,61 @@ function EnglishComprehensionPlay({
           score={progress.score}
         />
 
-        <div className="bg-white/90 rounded-3xl p-6 shadow-lg border-2 border-pink-100 mb-4">
-          <h2 className="text-xl font-bold text-pink-700 mb-3">{story.title}</h2>
-          <p className="text-lg leading-relaxed text-gray-800">{story.text}</p>
-        </div>
-
-        {!finished ? (
-          <>
-            <p className="text-xl font-bold text-center text-gray-700 mb-4">
-              {question.question}
-            </p>
-
-            <div className="grid grid-cols-1 gap-3 mb-4">
-              {question.options.map((opt, i) => (
-                <button
-                  key={i}
-                  onClick={() => handleAnswer(i)}
-                  disabled={answered}
-                  className={`game-btn-option text-lg py-4 text-left ${answered && i === question.correctIndex ? "correct" : ""} ${answered && i !== question.correctIndex ? "opacity-50" : ""}`}
-                >
-                  {opt}
-                </button>
-              ))}
-            </div>
-
-            {feedback && (
-              <div className="mb-4">
-                <Feedback
-                  type={feedback.type}
-                  message={feedback.message}
-                  explanation={feedback.explanation}
-                />
-              </div>
-            )}
-
-            {answered && (
-              <button onClick={nextQuestion} className="game-btn game-btn-primary w-full">
-                {questionIndex + 1 >= story.questions.length
-                  ? t("common.seeResults")
-                  : t("common.nextQuestion")}
-              </button>
-            )}
-          </>
-        ) : (
-          <div className="text-center">
-            <Feedback
-              type="correct"
-              message={t("games.storyComplete", { score: progress.score })}
-            />
-            <button onClick={readAnother} className="game-btn game-btn-primary w-full mt-4">
-              {t("games.readAnother")}
-            </button>
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 mb-4 items-start">
+          <div className="bg-white/90 rounded-2xl p-5 sm:p-6 shadow border-2 border-pink-100 xl:max-h-[28rem] xl:overflow-y-auto">
+            <h2 className="text-xl font-bold text-pink-700 mb-3">{story.title}</h2>
+            <p className="text-lg leading-relaxed text-gray-800">{story.text}</p>
           </div>
-        )}
+
+          {!finished ? (
+            <div>
+              <p className="text-xl font-bold text-gray-700 mb-4">{question.question}</p>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-4">
+                {question.options.map((opt, i) => (
+                  <button
+                    key={i}
+                    onClick={() => handleAnswer(i)}
+                    disabled={answered}
+                    className={`game-btn-option text-lg py-4 text-left ${answered && i === question.correctIndex ? "correct" : ""} ${answered && i !== question.correctIndex ? "opacity-50" : ""}`}
+                  >
+                    {opt}
+                  </button>
+                ))}
+              </div>
+
+              {feedback && (
+                <div className="mb-4">
+                  <Feedback
+                    type={feedback.type}
+                    message={feedback.message}
+                    explanation={feedback.explanation}
+                  />
+                </div>
+              )}
+
+              {answered && (
+                <button onClick={nextQuestion} className="game-btn game-btn-primary w-full">
+                  {questionIndex + 1 >= story.questions.length
+                    ? t("common.seeResults")
+                    : t("common.nextQuestion")}
+                </button>
+              )}
+            </div>
+          ) : (
+            <div className="text-center flex flex-col justify-center min-h-[12rem]">
+              <Feedback
+                type="correct"
+                message={t("games.storyComplete", { score: progress.score })}
+              />
+              <button onClick={readAnother} className="game-btn game-btn-primary w-full mt-4">
+                {t("games.readAnother")}
+              </button>
+            </div>
+          )}
+        </div>
       </GameShell>
-    </main>
+    </GamePage>
   );
 }
 

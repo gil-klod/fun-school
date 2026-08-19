@@ -3,12 +3,11 @@
 import { useState, useCallback, useEffect, useMemo } from "react";
 import { useGameResume } from "@/hooks/useGameResume";
 import { useGameSession } from "@/hooks/useGameSession";
-import { BackButton } from "@/components/BackButton";
-import { GameShell } from "@/components/GameShell";
+import { GameShell, GamePage, GameOptionsGrid } from "@/components/GameShell";
 import { GameStatus } from "@/components/GameStatus";
 import { Feedback } from "@/components/Feedback";
-import { DifficultySelector } from "@/components/DifficultySelector";
 import { GameContentGate } from "@/components/GameContentGate";
+import { MathLtr } from "@/components/MathLtr";
 import { useQuestionCounter } from "@/hooks/useQuestionCounter";
 import { useLocale } from "@/i18n/LocaleProvider";
 import {
@@ -148,16 +147,14 @@ function MysteryPlay({
   };
 
   return (
-    <main className="flex-1 px-4 py-3 max-w-2xl mx-auto w-full">
-      <BackButton href="/math" />
-
-      <GameShell title={gameTitle("math", "mystery")} emoji="🔍">
-        <DifficultySelector
-          value={difficulty}
-          onChange={changeDifficulty}
-          disabled={answered}
-        />
-
+    <GamePage>
+      <GameShell
+        title={gameTitle("math", "mystery")}
+        emoji="🔍"
+        difficulty={difficulty}
+        onDifficultyChange={changeDifficulty}
+        difficultyDisabled={answered}
+      >
         <GameStatus
           current={questionNum}
           total={sessionSize}
@@ -166,38 +163,40 @@ function MysteryPlay({
           score={progress.score}
         />
 
-        <div className="bg-white/90 rounded-2xl p-4 shadow border-2 border-purple-100 mb-3">
-          <p className="text-lg font-medium text-gray-800">{getMysteryText(question, locale)}</p>
-        </div>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4 items-start">
+          <div>
+            <div className="bg-white/90 rounded-2xl p-4 shadow border-2 border-purple-100 mb-3">
+              <p className="text-lg font-medium text-gray-800">{getMysteryText(question, locale)}</p>
+            </div>
 
-        {!showHint && !answered && (
-          <button
-            onClick={() => {
-              setShowHint(true);
-              progress.save({ state: { round, answered, feedback, showHint: true, questionNum } });
-            }}
-            className="text-indigo-500 font-semibold mb-4 hover:text-indigo-700 transition-colors"
-          >
-            {t("games.needHint")}
-          </button>
-        )}
-        {showHint && !answered && (
-          <div className="mb-4">
-            <Feedback type="info" message={getMysteryHint(question, locale)} />
+            {!showHint && !answered && (
+              <button
+                onClick={() => {
+                  setShowHint(true);
+                  progress.save({ state: { round, answered, feedback, showHint: true, questionNum } });
+                }}
+                className="text-indigo-500 font-semibold mb-2 hover:text-indigo-700 transition-colors"
+              >
+                {t("games.needHint")}
+              </button>
+            )}
+            {showHint && !answered && (
+              <Feedback type="info" message={getMysteryHint(question, locale)} />
+            )}
           </div>
-        )}
 
-        <div className="grid grid-cols-2 gap-3 mb-4">
-          {options.map((opt) => (
-            <button
-              key={opt}
-              onClick={() => handleAnswer(opt)}
-              disabled={answered}
-              className={`game-btn-option text-2xl py-5 ${answered && opt === correct ? "correct" : ""} ${answered && opt !== correct ? "opacity-50" : ""}`}
-            >
-              {opt}
-            </button>
-          ))}
+          <GameOptionsGrid>
+            {options.map((opt) => (
+              <button
+                key={opt}
+                onClick={() => handleAnswer(opt)}
+                disabled={answered}
+                className={`game-btn-option text-2xl py-5 ${answered && opt === correct ? "correct" : ""} ${answered && opt !== correct ? "opacity-50" : ""}`}
+              >
+                <MathLtr>{opt}</MathLtr>
+              </button>
+            ))}
+          </GameOptionsGrid>
         </div>
 
         {feedback && (
@@ -211,12 +210,12 @@ function MysteryPlay({
         )}
 
         {answered && (
-          <button onClick={nextQuestion} className="game-btn game-btn-primary w-full">
+          <button onClick={nextQuestion} className="game-btn game-btn-primary w-full sm:max-w-md sm:mx-auto sm:block">
             {t("games.nextMystery")}
           </button>
         )}
       </GameShell>
-    </main>
+    </GamePage>
   );
 }
 
