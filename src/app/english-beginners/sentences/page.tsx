@@ -214,12 +214,6 @@ function SentencesPlay({
     progress.save({ state: { questionNum, selected: next, answered, feedback } });
   };
 
-  const clearSentence = () => {
-    if (answered) return;
-    setSelected([]);
-    progress.save({ state: { questionNum, selected: [], answered, feedback } });
-  };
-
   const checkAnswer = () => {
     if (answered || selected.length !== challenge.words.length) return;
     setAnswered(true);
@@ -275,41 +269,27 @@ function SentencesPlay({
         />
 
         {!sessionComplete && !slotDone ? (
-          <div className="mx-auto w-full max-w-2xl space-y-4">
-            <div className="rounded-2xl border-2 border-indigo-100 bg-white/95 p-5 shadow-sm">
-              <p className="text-center text-xl font-bold text-gray-800 leading-relaxed" dir="rtl">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
+            <div>
+              <p className="text-center text-gray-600 mb-4" dir="rtl">
                 {challenge.translation}
               </p>
-            </div>
-
-            <div className="rounded-2xl border-2 border-green-200 bg-white/95 p-4 shadow-sm">
-              <div className="mb-2 flex items-center justify-between gap-3">
-                <p className="text-sm font-semibold text-gray-600" dir="ltr">
-                  {t("games.sentenceBuildHint")}
-                </p>
-                <span className="text-xs font-medium text-gray-500" dir="ltr">
-                  {t("games.sentenceWordCount", {
-                    current: String(selected.length),
-                    total: String(challenge.words.length),
-                  })}
-                </span>
-              </div>
 
               <div
                 dir="ltr"
-                className="min-h-[4.5rem] rounded-xl border-2 border-dashed border-green-300 bg-green-50/60 p-3 flex flex-wrap gap-2 items-center justify-start text-left"
+                className="bg-white/90 rounded-2xl p-4 min-h-[60px] shadow-inner border-2 border-green-200 flex flex-wrap gap-2 items-center justify-start text-left"
                 onClick={() => {
                   if (selected.length > 0 && !answered) removeWord(selected.length - 1);
                 }}
               >
                 {selected.length === 0 ? (
-                  <span className="text-sm text-gray-400">{t("games.tapWords")}</span>
+                  <span className="text-gray-400">{t("games.tapWords")}</span>
                 ) : (
                   selected.map((token, i) => (
                     <span
                       key={token.id}
                       dir="ltr"
-                      className="bg-white text-green-800 border border-green-300 px-3 py-2 rounded-lg font-semibold cursor-pointer hover:bg-green-100 shadow-sm"
+                      className="bg-green-100 text-green-800 px-4 py-2 rounded-xl font-semibold cursor-pointer hover:bg-green-200"
                       onClick={(e) => {
                         e.stopPropagation();
                         removeWord(i);
@@ -320,52 +300,40 @@ function SentencesPlay({
                   ))
                 )}
               </div>
-
-              {!answered && selected.length > 0 && (
-                <button
-                  type="button"
-                  onClick={clearSentence}
-                  className="mt-2 text-sm font-medium text-gray-500 hover:text-gray-700"
-                  dir="ltr"
-                >
-                  {t("games.sentenceClear")}
-                </button>
-              )}
             </div>
 
-            <div className="rounded-2xl border-2 border-indigo-100 bg-white/95 p-4 shadow-sm" dir="ltr">
-              <p className="mb-3 text-sm font-semibold text-gray-600">{t("games.sentenceWordBank")}</p>
-              <div className="flex flex-wrap gap-2 justify-start">
+            <div dir="ltr">
+              <div className="flex flex-wrap gap-2 justify-start mb-4">
                 {availableWords.map((token) => (
                   <button
                     key={token.id}
-                    type="button"
                     onClick={() => addWord(token)}
                     disabled={answered}
-                    className="game-btn-option py-2.5 px-4 text-base disabled:opacity-40"
+                    className="game-btn-option py-3 px-5"
                   >
                     {token.word}
                   </button>
                 ))}
               </div>
-            </div>
 
-            <div className="space-y-3" dir="ltr">
               {!answered && (
                 <button
-                  type="button"
                   onClick={checkAnswer}
                   disabled={selected.length !== challenge.words.length}
-                  className="game-btn game-btn-primary w-full disabled:opacity-40"
+                  className="game-btn game-btn-primary w-full mb-4 disabled:opacity-40"
                 >
                   {t("games.checkSentence")}
                 </button>
               )}
 
-              {feedback && <Feedback type={feedback.type} message={feedback.message} />}
+              {feedback && (
+                <div dir="ltr">
+                  <Feedback type={feedback.type} message={feedback.message} />
+                </div>
+              )}
 
               {answered && (
-                <button type="button" onClick={nextChallenge} className="game-btn game-btn-primary w-full">
+                <button onClick={nextChallenge} className="game-btn game-btn-primary w-full mt-4">
                   {questionNum >= sessionSize ? t("common.seeResults") : t("games.nextSentence")}
                 </button>
               )}

@@ -226,10 +226,6 @@ export interface Dictionary {
     hint: string;
     category: string;
     tapWords: string;
-    sentenceBuildHint: string;
-    sentenceWordBank: string;
-    sentenceClear: string;
-    sentenceWordCount: string;
     checkSentence: string;
     whichIsWrong: string;
     nextShopping: string;
