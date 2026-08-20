@@ -37,7 +37,9 @@ export interface MysteryTemplate {
   textHe: string;
   hint: string;
   hintHe: string;
-  op: "multiply" | "add" | "subtract";
+  op: "multiply" | "add" | "subtract" | "divide" | "double" | "half" | "multiply_add";
+  /** Available from this difficulty level upward (1=easy, 2=medium, 3=hard) */
+  minDifficulty?: 1 | 2 | 3;
 }
 
 export function getShukItemName(item: ShukItem, locale: "he" | "en"): string {
@@ -85,24 +87,52 @@ export function generateMystery(
   templates: MysteryTemplate[],
   config: MysteryConfig
 ): MysteryQuestion {
-  const template = templates[Math.floor(Math.random() * templates.length)];
+  const pool = templates.length > 0 ? templates : [];
+  const template = pool[Math.floor(Math.random() * pool.length)];
   const n = Math.floor(Math.random() * config.maxN) + 2;
+  const m = Math.floor(Math.random() * 4) + 1;
   let answer: number;
   let result: number;
 
-  if (template.op === "multiply") {
-    answer = Math.floor(Math.random() * config.maxAnswer) + 1;
-    result = answer * n;
-  } else if (template.op === "add") {
-    answer = Math.floor(Math.random() * config.maxResult) + 5;
-    result = answer + n;
-  } else {
-    answer = Math.floor(Math.random() * config.maxResult) + 10;
-    result = answer - n;
+  switch (template.op) {
+    case "multiply":
+      answer = Math.floor(Math.random() * config.maxAnswer) + 1;
+      result = answer * n;
+      break;
+    case "add":
+      answer = Math.floor(Math.random() * (config.maxResult - n - 4)) + 5;
+      result = answer + n;
+      break;
+    case "subtract":
+      answer = Math.floor(Math.random() * (config.maxResult - n - 10)) + n + 10;
+      result = answer - n;
+      break;
+    case "divide":
+      result = Math.floor(Math.random() * config.maxAnswer) + 1;
+      answer = result * n;
+      break;
+    case "double":
+      answer = Math.floor(Math.random() * config.maxAnswer) + 1;
+      result = answer * 2;
+      break;
+    case "half":
+      result = Math.floor(Math.random() * config.maxAnswer) + 1;
+      answer = result * 2;
+      break;
+    case "multiply_add":
+      answer = Math.floor(Math.random() * config.maxAnswer) + 1;
+      result = answer * n + m;
+      break;
+    default:
+      answer = 1;
+      result = 1;
   }
 
   const fill = (s: string) =>
-    s.replace(/\{n\}/g, String(n)).replace(/\{result\}/g, String(result));
+    s
+      .replace(/\{n\}/g, String(n))
+      .replace(/\{m\}/g, String(m))
+      .replace(/\{result\}/g, String(result));
 
   return {
     text: fill(template.text),

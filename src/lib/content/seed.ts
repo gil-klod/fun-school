@@ -11,15 +11,6 @@ import { HEBREW_WORDS, FIX_SENTENCES } from "@/lib/data/hebrew";
 import { HEBREW_STORIES_BY_LEVEL } from "@/lib/data/hebrew-stories";
 import { SHUK_ITEMS, MYSTERY_TEMPLATES } from "@/lib/data/math";
 
-const MYSTERY_WITH_OP = MYSTERY_TEMPLATES.map((t) => ({
-  ...t,
-  op: t.text.includes("multiplied")
-    ? ("multiply" as const)
-    : t.text.includes("added")
-      ? ("add" as const)
-      : ("subtract" as const),
-}));
-
 const EXTRA_GRAMMAR_HARD = [
   {
     question: "We ___ to the beach every summer.",
@@ -225,7 +216,8 @@ function buildSeedDocs(): SeedDoc[] {
       });
     });
 
-    MYSTERY_WITH_OP.forEach((item, i) => {
+    MYSTERY_TEMPLATES.filter((t) => (t.minDifficulty ?? 1) <= difficulty).forEach(
+      (item, i) => {
       docs.push({
         subjectId: "math",
         gameId: "mystery",
@@ -234,7 +226,8 @@ function buildSeedDocs(): SeedDoc[] {
         data: { ...item },
         sortOrder: i + 1,
       });
-    });
+    }
+    );
 
     if (difficulty === 3) {
       EXTRA_GRAMMAR_HARD.forEach((q, i) => {
