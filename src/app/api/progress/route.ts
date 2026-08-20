@@ -29,16 +29,6 @@ export async function GET(request: Request) {
   const subjectId = searchParams.get("subjectId");
   const gameId = searchParams.get("gameId");
   const difficultyParam = searchParams.get("difficulty");
-  const recent = searchParams.get("recent");
-
-  if (recent === "true") {
-    const last = await GameProgress.findOne({
-      studentId,
-      status: "in_progress",
-    }).sort({ lastPlayedAt: -1 });
-
-    return NextResponse.json({ progress: last });
-  }
 
   if (subjectId && gameId) {
     const query: Record<string, unknown> = {

@@ -1,7 +1,6 @@
 "use client";
 
 import { SubjectCard } from "@/components/SubjectCard";
-import { ContinueBanner } from "@/components/ContinueBanner";
 import { HomeDailyProject } from "@/components/projects/HomeDailyProject";
 import { MascotWelcome } from "@/components/mascot";
 import { subjects } from "@/lib/subjects";
@@ -21,7 +20,6 @@ export default function HomePage() {
         <p className="text-base sm:text-lg text-gray-500 mt-2">{t("home.subtitle")}</p>
       </header>
 
-      <ContinueBanner />
       <HomeDailyProject />
       <MascotWelcome />
 

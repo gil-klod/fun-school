@@ -50,8 +50,6 @@ export const he: Dictionary = {
     tagline: "בית ספר כיפי — משחקים לכיתה ג'",
     subtitle: "בחר נושא והתחיל לשחק!",
     footer: "נבנה באהבה לכיתה ג'",
-    continueTitle: "להמשיך מאיפה שהפסקת? 🎮",
-    continueRound: "{label} — סיבוב {round}, ניקוד {score}",
     tapToPlay: "לחץ לשחק",
   },
   auth: {

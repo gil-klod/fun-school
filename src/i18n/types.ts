@@ -64,8 +64,6 @@ export interface Dictionary {
     tagline: string;
     subtitle: string;
     footer: string;
-    continueTitle: string;
-    continueRound: string;
     tapToPlay: string;
   };
   auth: {

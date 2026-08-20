@@ -50,8 +50,6 @@ export const en: Dictionary = {
     tagline: "Fun games for 3rd grade",
     subtitle: "Pick a subject and start playing!",
     footer: "Made with ❤️ for 3rd grade",
-    continueTitle: "Continue where you left off? 🎮",
-    continueRound: "{label} — Round {round}, Score {score}",
     tapToPlay: "Tap to play",
   },
   auth: {

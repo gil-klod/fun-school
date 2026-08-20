@@ -109,12 +109,12 @@ const RAW: FixSentenceDef[] = [
     explanationEn: "ישנת = you (f.) slept. The subject is הילדה, so we need ישנה.",
   },
   {
-    wrong: "הילד שרה שיר.",
+    wrong: "הילד קרא שיר.",
     correct: "הילד שר שיר.",
-    mistake: "שרה",
-    options: ["שרה", "שר", "שרו", "שיר"],
-    explanationHe: "שרה = היא שרה. הנושא הוא הילד, לכן צריך שר.",
-    explanationEn: "שרה = she sang. The subject is הילד (boy), so we need שר.",
+    mistake: "קרא",
+    options: ["קרא", "שר", "שמע", "אמר"],
+    explanationHe: "קרא = קרא ספר. כאן הילד שר שיר, לא קרא אותו.",
+    explanationEn: "קרא = read. Here the boy sang (שר) a song, not read it.",
   },
   {
     wrong: "אחותי קפץ גבוה.",
@@ -133,12 +133,12 @@ const RAW: FixSentenceDef[] = [
     explanationEn: "רקדה = she danced. אחי is masculine, so we need רקד.",
   },
   {
-    wrong: "המורה הסבירה את השיעור.",
-    correct: "המורה הסביר את השיעור.",
-    mistake: "הסבירה",
-    options: ["הסבירה", "הסביר", "מסביר", "יסביר"],
-    explanationHe: "הסבירה = היא הסבירה. כאן המורה הוא זכר, לכן צריך הסביר.",
-    explanationEn: "הסבירה = she explained. Here the teacher is masculine: הסביר.",
+    wrong: "המורה רינה הסביר את השיעור.",
+    correct: "המורה רינה הסבירה את השיעור.",
+    mistake: "הסביר",
+    options: ["הסביר", "הסבירה", "מסביר", "יסביר"],
+    explanationHe: "רינה היא נקבה, לכן הפועל צריך להיות הסבירה.",
+    explanationEn: "Rina is feminine, so the verb needs to be הסבירה.",
   },
   {
     wrong: "התלמיד ענתה על השאלה.",
@@ -361,12 +361,12 @@ const RAW: FixSentenceDef[] = [
     explanationEn: "After הרבה (many), the noun needs to be plural: פרחים.",
   },
   {
-    wrong: "יש עשר כיסא בכיתה.",
+    wrong: "יש עשרה כיסא בכיתה.",
     correct: "יש עשרה כיסאות בכיתה.",
     mistake: "כיסא",
     options: ["כיסא", "כיסאות", "כיסאון", "כיסאי"],
-    explanationHe: "אחרי עשר, שם העצם צריך להיות ברבים: כיסאות.",
-    explanationEn: "After עשר (ten), the noun needs to be plural: כיסאות.",
+    explanationHe: "אחרי עשרה, שם העצם צריך להיות ברבים: כיסאות.",
+    explanationEn: "After עשרה (ten), the noun needs to be plural: כיסאות.",
   },
   {
     wrong: "קנינו שש עוגה.",
@@ -475,12 +475,12 @@ const RAW: FixSentenceDef[] = [
     explanationEn: "אתמול = yesterday, so we need past tense: הלכה.",
   },
   {
-    wrong: "בבוקר הוא ישנה עמוק.",
-    correct: "בבוקר הוא ישנת עמוק.",
+    wrong: "אתמול בבוקר הוא ישנה עמוק.",
+    correct: "אתמול בבוקר הוא ישנת עמוק.",
     mistake: "ישנה",
     options: ["ישנה", "ישנת", "ישן", "יישן"],
-    explanationHe: "בבוקר (שעבר) = בעבר, לכן צריך עבר: ישנת.",
-    explanationEn: "This morning = past, so we need past tense: ישנת.",
+    explanationHe: "אתמול בבוקר = בעבר, והנושא הוא הוא (זכר), לכן צריך ישנת.",
+    explanationEn: "Yesterday morning = past, and the subject is הוא, so we need ישנת.",
   },
   {
     wrong: "מחר אנחנו הלכנו לפארק.",
@@ -516,7 +516,7 @@ const RAW: FixSentenceDef[] = [
   },
   {
     wrong: "אתמול אני לומד למבחן.",
-    correct: "אתמול למדתי למבחן.",
+    correct: "אתמול אני למדתי למבחן.",
     mistake: "לומד",
     options: ["לומד", "למדתי", "ילמד", "לומדת"],
     explanationHe: "אתמול = בעבר, לכן צריך עבר: למדתי.",
@@ -532,19 +532,19 @@ const RAW: FixSentenceDef[] = [
   },
   {
     wrong: "לפני שנה אני גר בתל אביב.",
-    correct: "לפני שנה גרתי בתל אביב.",
+    correct: "לפני שנה אני גרתי בתל אביב.",
     mistake: "גר",
     options: ["גר", "גרתי", "גרה", "יגור"],
     explanationHe: "לפני שנה = בעבר, לכן צריך עבר: גרתי.",
     explanationEn: "לפני שנה = a year ago, so we need past tense: גרתי.",
   },
   {
-    wrong: "בערב הוא משחק עם חברים.",
-    correct: "בערב הוא שיחק עם חברים.",
+    wrong: "אתמול בערב הוא משחק עם חברים.",
+    correct: "אתמול בערב הוא שיחק עם חברים.",
     mistake: "משחק",
     options: ["משחק", "שיחק", "ישחק", "משחקים"],
-    explanationHe: "בערב (אתמול) = בעבר, לכן צריך עבר: שיחק.",
-    explanationEn: "Last evening = past, so we need past tense: שיחק.",
+    explanationHe: "אתמול בערב = בעבר, לכן צריך עבר: שיחק.",
+    explanationEn: "Yesterday evening = past, so we need past tense: שיחק.",
   },
 
   // Adjective agreement (15)
@@ -581,12 +581,12 @@ const RAW: FixSentenceDef[] = [
     explanationEn: "כלב is masculine, so the adjective needs to be הגדול.",
   },
   {
-    wrong: "הפרח הצהובים יפים.",
+    wrong: "הפרח הצהוב יפים.",
     correct: "הפרח הצהוב יפה.",
-    mistake: "הצהובים",
-    options: ["הצהובים", "הצהוב", "צהובה", "צהובות"],
-    explanationHe: "פרח הוא יחיד וזכר, לכן התואר צריך להיות הצהוב.",
-    explanationEn: "פרח is singular masculine, so the adjective needs to be הצהוב.",
+    mistake: "יפים",
+    options: ["יפים", "יפה", "יפות", "יופי"],
+    explanationHe: "פרח הוא יחיד, לכן צריך יפה ולא יפים.",
+    explanationEn: "פרח is singular, so we need יפה, not יפים.",
   },
   {
     wrong: "השמלה הכחול יפה.",
@@ -687,12 +687,12 @@ const RAW: FixSentenceDef[] = [
     explanationEn: "Dogs bark (נובח), they don't meow! Only cats meow.",
   },
   {
-    wrong: "הדג עף בשמיים.",
+    wrong: "הדג עף במים.",
     correct: "הדג שוחה במים.",
     mistake: "עף",
     options: ["עף", "שוחה", "רץ", "קופץ"],
-    explanationHe: "דג שוחה במים, לא עף בשמיים.",
-    explanationEn: "Fish swim in water, they don't fly in the sky.",
+    explanationHe: "דג שוחה במים, לא עף.",
+    explanationEn: "Fish swim in water, they don't fly.",
   },
   {
     wrong: "העץ רץ בגינה.",
@@ -743,12 +743,12 @@ const RAW: FixSentenceDef[] = [
     explanationEn: "You drink juice, you don't eat it.",
   },
   {
-    wrong: "הציפור שוחה בים.",
+    wrong: "הציפור שוחה בשמיים.",
     correct: "הציפור עפה בשמיים.",
     mistake: "שוחה",
     options: ["שוחה", "עפה", "רצה", "יושבת"],
-    explanationHe: "ציפור עפה, לא שוחה בים.",
-    explanationEn: "Birds fly, they don't swim in the sea.",
+    explanationHe: "ציפור עפה בשמיים, לא שוחה.",
+    explanationEn: "Birds fly in the sky, they don't swim there.",
   },
 
   // Pronouns (10)
@@ -762,11 +762,11 @@ const RAW: FixSentenceDef[] = [
   },
   {
     wrong: "היא אמר שאני הולך.",
-    correct: "היא אמרה שאני הולכת.",
+    correct: "היא אמרה שאני הולך.",
     mistake: "אמר",
     options: ["אמר", "אמרה", "אומר", "תאמר"],
-    explanationHe: "היא = נקבה, לכן צריך אמרה.",
-    explanationEn: "היא is feminine, so we need אמרה.",
+    explanationHe: "היא = נקבה, לכן הפועל צריך להיות אמרה.",
+    explanationEn: "היא is feminine, so the verb needs to be אמרה.",
   },
   {
     wrong: "אנחנו הולך לבית הספר.",
@@ -785,39 +785,23 @@ const RAW: FixSentenceDef[] = [
     explanationEn: "אתם is plural, so we need יושבים.",
   },
   {
-    wrong: "הם היא ילד טוב.",
+    wrong: "היא ילד טוב.",
     correct: "הוא ילד טוב.",
     mistake: "היא",
     options: ["היא", "הוא", "הם", "אתה"],
-    explanationHe: "ילד = זכר יחיד, לכן צריך הוא.",
-    explanationEn: "ילד is singular masculine, so we need הוא.",
+    explanationHe: "ילד = זכר, לכן צריך הוא ולא היא.",
+    explanationEn: "ילד is masculine, so we need הוא, not היא.",
   },
   {
-    wrong: "אתה אני שמח.",
-    correct: "אני שמח.",
+    wrong: "אתה שמח היום.",
+    correct: "אני שמח היום.",
     mistake: "אתה",
     options: ["אתה", "אני", "הוא", "אנחנו"],
-    explanationHe: "המשפט מתחיל באני, לא אתה.",
-    explanationEn: "The sentence starts with אני (I), not אתה (you).",
+    explanationHe: "כשמדברים על עצמנו אומרים אני, לא אתה.",
+    explanationEn: "When talking about yourself, use אני (I), not אתה (you).",
   },
   {
-    wrong: "היא אנחנו הולכים.",
-    correct: "אנחנו הולכים.",
-    mistake: "היא",
-    options: ["היא", "אנחנו", "הם", "אתם"],
-    explanationHe: "אנחנו = אנחנו, לא צריך היא לפני.",
-    explanationEn: "We say אנחנו הולכים, not היא אנחנו.",
-  },
-  {
-    wrong: "אני אתם משחקים.",
-    correct: "אתם משחקים.",
-    mistake: "אני",
-    options: ["אני", "אתם", "הם", "אנחנו"],
-    explanationHe: "אתם = אתם, לא צריך אני לפני.",
-    explanationEn: "We say אתם משחקים, not אני אתם.",
-  },
-  {
-    wrong: "הוא היא ילדה חכמה.",
+    wrong: "הוא ילדה חכמה.",
     correct: "היא ילדה חכמה.",
     mistake: "הוא",
     options: ["הוא", "היא", "הם", "את"],
@@ -825,12 +809,28 @@ const RAW: FixSentenceDef[] = [
     explanationEn: "ילדה is feminine, so we need היא.",
   },
   {
-    wrong: "אתה אנחנו לומדים.",
-    correct: "אנחנו לומדים.",
+    wrong: "אתם לומד בשיעור.",
+    correct: "אתם לומדים בשיעור.",
+    mistake: "לומד",
+    options: ["לומד", "לומדים", "לומדת", "ילמדו"],
+    explanationHe: "אתם = רבים, לכן צריך לומדים.",
+    explanationEn: "אתם is plural, so we need לומדים.",
+  },
+  {
+    wrong: "הם הולכת לבית הספר.",
+    correct: "הם הולכים לבית הספר.",
+    mistake: "הולכת",
+    options: ["הולכת", "הולכים", "הולך", "ילכו"],
+    explanationHe: "הם = רבים, לכן צריך הולכים.",
+    explanationEn: "הם is plural, so we need הולכים.",
+  },
+  {
+    wrong: "אתה אוהב את הכלב.",
+    correct: "אני אוהב את הכלב.",
     mistake: "אתה",
-    options: ["אתה", "אנחנו", "אני", "הם"],
-    explanationHe: "אנחנו = אנחנו, לא צריך אתה לפני.",
-    explanationEn: "We say אנחנו לומדים, not אתה אנחנו.",
+    options: ["אתה", "אני", "הוא", "אנחנו"],
+    explanationHe: "כשאני מדבר על עצמי אומרים אני, לא אתה.",
+    explanationEn: "When I talk about myself, I use אני, not אתה.",
   },
 ];
 
@@ -878,6 +878,32 @@ function validate(items: FixSentenceDef[]): void {
 
     if (!options.includes(mistake)) {
       throw new Error(`${label}: mistake "${mistake}" must be in options`);
+    }
+
+    const strip = (s: string) => s.replace(/\.$/, "").trim();
+    const wrongWords = strip(wrong).split(/\s+/);
+    const correctWords = strip(correct).split(/\s+/);
+    if (wrongWords.length !== correctWords.length) {
+      throw new Error(
+        `${label}: word count mismatch (${wrongWords.length} vs ${correctWords.length}): "${wrong}" -> "${correct}"`
+      );
+    }
+
+    let diffs = 0;
+    let mistakeIdx = -1;
+    for (let j = 0; j < wrongWords.length; j++) {
+      if (wrongWords[j] !== correctWords[j]) {
+        diffs++;
+        mistakeIdx = j;
+      }
+    }
+    if (diffs !== 1) {
+      throw new Error(`${label}: expected exactly 1 word difference, got ${diffs}: "${wrong}" -> "${correct}"`);
+    }
+    if (wrongWords[mistakeIdx] !== mistake) {
+      throw new Error(
+        `${label}: mistake "${mistake}" is not the differing word ("${wrongWords[mistakeIdx]}"): "${wrong}"`
+      );
     }
   }
 
