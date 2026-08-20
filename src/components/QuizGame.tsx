@@ -10,6 +10,7 @@ import { GameContentGate } from "@/components/GameContentGate";
 import { useLocale } from "@/i18n/LocaleProvider";
 import { useProjectGame } from "@/hooks/useProjectGame";
 import { ProjectSlotDone } from "@/components/projects/ProjectSlotDone";
+import { SessionComplete } from "@/components/SessionComplete";
 import type { QuizQuestion } from "@/lib/types";
 
 interface QuizGameProps {
@@ -201,34 +202,29 @@ function QuizGamePlay({
         ) : project.isProjectGame ? (
           <ProjectSlotDone />
         ) : (
-          <div className="text-center">
-            <Feedback type="correct" message={t("games.allDone", { score: progress.score })} />
-            <button
-              onClick={() => {
-                setIndex(0);
-                progress.setScore(0);
-                progress.setStreak(0);
-                progress.setRound(1);
-                progress.setCorrect(0);
-                progress.setWrong(0);
-                setFinished(false);
-                setFeedback(null);
-                setAnswered(false);
-                progress.save({
-                  score: 0,
-                  streak: 0,
-                  round: 1,
-                  correct: 0,
-                  wrong: 0,
-                  status: "in_progress",
-                  state: { index: 0, answered: false, feedback: null, finished: false },
-                });
-              }}
-              className="game-btn game-btn-primary w-full mt-4 sm:max-w-md sm:mx-auto sm:block"
-            >
-              {t("common.playAgain")}
-            </button>
-          </div>
+          <SessionComplete
+            score={progress.score}
+            onPlayAgain={() => {
+              setIndex(0);
+              progress.setScore(0);
+              progress.setStreak(0);
+              progress.setRound(1);
+              progress.setCorrect(0);
+              progress.setWrong(0);
+              setFinished(false);
+              setFeedback(null);
+              setAnswered(false);
+              progress.save({
+                score: 0,
+                streak: 0,
+                round: 1,
+                correct: 0,
+                wrong: 0,
+                status: "in_progress",
+                state: { index: 0, answered: false, feedback: null, finished: false },
+              });
+            }}
+          />
         )}
       </GameShell>
     </GamePage>

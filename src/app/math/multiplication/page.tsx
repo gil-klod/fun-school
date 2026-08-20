@@ -12,6 +12,7 @@ import { MathLtr } from "@/components/MathLtr";
 import { useLocale } from "@/i18n/LocaleProvider";
 import { useProjectGame } from "@/hooks/useProjectGame";
 import { ProjectSlotDone } from "@/components/projects/ProjectSlotDone";
+import { SessionComplete } from "@/components/SessionComplete";
 import { generateMultiplication, buildOptions } from "@/lib/content/generators";
 import type { MultiplicationConfig } from "@/lib/content/types";
 
@@ -38,6 +39,7 @@ function MultiplicationPlay({
   const { t, gameTitle } = useLocale();
   const project = useProjectGame();
   const [slotDone, setSlotDone] = useState(false);
+  const [sessionComplete, setSessionComplete] = useState(false);
   const tables = config.tables.length > 0 ? config.tables : [2, 3, 4, 5];
   const [table, setTable] = useState<number | undefined>(undefined);
   const [round, setRound] = useState(() => newRound(config));
@@ -90,6 +92,12 @@ function MultiplicationPlay({
     () => {
       const savedTable = progress.gameState.table as number | undefined;
       const savedNum = (progress.gameState.questionNum as number) ?? questionNum;
+      if (savedNum >= sessionSize) {
+        progress.markCompleted();
+        if (project.isProjectGame) setSlotDone(true);
+        else setSessionComplete(true);
+        return;
+      }
       setTable(savedTable);
       advanceQuestionNum();
       const newR = newRound(config, savedTable);
@@ -104,7 +112,7 @@ function MultiplicationPlay({
           round: newR,
           answered: false,
           feedback: null,
-          questionNum: savedNum >= sessionSize ? 1 : savedNum + 1,
+          questionNum: savedNum + 1,
         },
       });
     }
@@ -127,12 +135,12 @@ function MultiplicationPlay({
 
   /** After answering — advance to next question in the session. */
   const goToNextQuestion = useCallback(() => {
-    const done = project.handleSessionNext(
+    const result = project.handleSessionNext(
       questionNum,
       sessionSize,
       progress.markCompleted,
       () => {
-        const nextNum = questionNum >= sessionSize ? 1 : questionNum + 1;
+        const nextNum = questionNum + 1;
         advanceQuestionNum();
         const newR = newRound(config, table);
         setRound(newR);
@@ -151,8 +159,33 @@ function MultiplicationPlay({
         });
       }
     );
-    if (done) setSlotDone(true);
+    if (result === "project") setSlotDone(true);
+    if (result === "complete") setSessionComplete(true);
   }, [project, questionNum, sessionSize, advanceQuestionNum, config, table, progress]);
+
+  const playAgain = useCallback(() => {
+    setSessionComplete(false);
+    resetQuestionNum();
+    setTable(undefined);
+    const newR = newRound(config);
+    setRound(newR);
+    setFeedback(null);
+    setAnswered(false);
+    progress.setScore(0);
+    progress.setStreak(0);
+    progress.setRound(1);
+    progress.setCorrect(0);
+    progress.setWrong(0);
+    progress.save({
+      score: 0,
+      streak: 0,
+      round: 1,
+      correct: 0,
+      wrong: 0,
+      status: "in_progress",
+      state: { table: undefined, round: newR, answered: false, feedback: null, questionNum: 1 },
+    });
+  }, [progress, config, resetQuestionNum]);
 
   const handleAnswer = (answer: number) => {
     if (answered) return;
@@ -225,41 +258,47 @@ function MultiplicationPlay({
           score={progress.score}
         />
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4 items-start">
-          <div className="bg-white/90 rounded-2xl p-6 sm:p-8 shadow border-2 border-indigo-100 flex items-center justify-center min-h-[8rem]">
-            <MathLtr className="text-4xl sm:text-5xl font-extrabold text-indigo-700">
-              {question.a} × {question.b} = ?
-            </MathLtr>
-          </div>
+        {!sessionComplete && !slotDone ? (
+          <>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4 items-start">
+              <div className="bg-white/90 rounded-2xl p-6 sm:p-8 shadow border-2 border-indigo-100 flex items-center justify-center min-h-[8rem]">
+                <MathLtr className="text-4xl sm:text-5xl font-extrabold text-indigo-700">
+                  {question.a} × {question.b} = ?
+                </MathLtr>
+              </div>
 
-          <GameOptionsGrid>
-            {options.map((opt) => (
-              <button
-                key={opt}
-                type="button"
-                onClick={() => handleAnswer(opt)}
-                disabled={answered}
-                className={`game-btn-option text-xl py-4 ${answered && opt === correct ? "correct" : ""} ${answered && opt !== correct ? "opacity-50" : ""}`}
-              >
-                <MathLtr>{opt}</MathLtr>
+              <GameOptionsGrid>
+                {options.map((opt) => (
+                  <button
+                    key={opt}
+                    type="button"
+                    onClick={() => handleAnswer(opt)}
+                    disabled={answered}
+                    className={`game-btn-option text-xl py-4 ${answered && opt === correct ? "correct" : ""} ${answered && opt !== correct ? "opacity-50" : ""}`}
+                  >
+                    <MathLtr>{opt}</MathLtr>
+                  </button>
+                ))}
+              </GameOptionsGrid>
+            </div>
+
+            {feedback && (
+              <div className="mb-4">
+                <Feedback type={feedback.type} message={feedback.message} />
+              </div>
+            )}
+
+            {answered && (
+              <button type="button" onClick={goToNextQuestion} className="game-btn game-btn-primary w-full sm:max-w-md sm:mx-auto sm:block">
+                {questionNum >= sessionSize ? t("common.seeResults") : t("common.nextQuestion")}
               </button>
-            ))}
-          </GameOptionsGrid>
-        </div>
-
-        {feedback && (
-          <div className="mb-4">
-            <Feedback type={feedback.type} message={feedback.message} />
-          </div>
+            )}
+          </>
+        ) : slotDone ? (
+          <ProjectSlotDone />
+        ) : (
+          <SessionComplete score={progress.score} onPlayAgain={playAgain} />
         )}
-
-        {answered && !slotDone && (
-          <button type="button" onClick={goToNextQuestion} className="game-btn game-btn-primary w-full sm:max-w-md sm:mx-auto sm:block">
-            {t("common.nextQuestion")}
-          </button>
-        )}
-
-        {slotDone && <ProjectSlotDone />}
       </GameShell>
     </GamePage>
   );

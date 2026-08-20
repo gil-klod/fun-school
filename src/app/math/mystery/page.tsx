@@ -12,6 +12,7 @@ import { useQuestionCounter } from "@/hooks/useQuestionCounter";
 import { useLocale } from "@/i18n/LocaleProvider";
 import { useProjectGame } from "@/hooks/useProjectGame";
 import { ProjectSlotDone } from "@/components/projects/ProjectSlotDone";
+import { SessionComplete } from "@/components/SessionComplete";
 import {
   generateMystery,
   buildOptions,
@@ -46,6 +47,7 @@ function MysteryPlay({
   const { t, gameTitle, locale } = useLocale();
   const project = useProjectGame();
   const [slotDone, setSlotDone] = useState(false);
+  const [sessionComplete, setSessionComplete] = useState(false);
   const [round, setRound] = useState(() => newRound(templates, config));
   const { question, options } = round;
   const [feedback, setFeedback] = useState<{
@@ -81,6 +83,12 @@ function MysteryPlay({
     },
     () => {
       const savedNum = (progress.gameState.questionNum as number) ?? questionNum;
+      if (savedNum >= sessionSize) {
+        progress.markCompleted();
+        if (project.isProjectGame) setSlotDone(true);
+        else setSessionComplete(true);
+        return;
+      }
       progress.setRound((r) => r + 1);
       const newR = newRound(templates, config);
       setRound(newR);
@@ -95,7 +103,7 @@ function MysteryPlay({
           answered: false,
           feedback: null,
           showHint: false,
-          questionNum: savedNum >= sessionSize ? 1 : savedNum + 1,
+          questionNum: savedNum + 1,
         },
       });
     }
@@ -104,12 +112,12 @@ function MysteryPlay({
   const correct = question.answer;
 
   const nextQuestion = useCallback(() => {
-    const done = project.handleSessionNext(
+    const result = project.handleSessionNext(
       questionNum,
       sessionSize,
       progress.markCompleted,
       () => {
-        const nextNum = questionNum >= sessionSize ? 1 : questionNum + 1;
+        const nextNum = questionNum + 1;
         const newR = newRound(templates, config);
         setRound(newR);
         setFeedback(null);
@@ -123,8 +131,33 @@ function MysteryPlay({
         });
       }
     );
-    if (done) setSlotDone(true);
+    if (result === "project") setSlotDone(true);
+    if (result === "complete") setSessionComplete(true);
   }, [project, progress, templates, config, questionNum, sessionSize, advanceQuestionNum]);
+
+  const playAgain = useCallback(() => {
+    setSessionComplete(false);
+    resetQuestionNum();
+    const newR = newRound(templates, config);
+    setRound(newR);
+    setFeedback(null);
+    setAnswered(false);
+    setShowHint(false);
+    progress.setScore(0);
+    progress.setStreak(0);
+    progress.setRound(1);
+    progress.setCorrect(0);
+    progress.setWrong(0);
+    progress.save({
+      score: 0,
+      streak: 0,
+      round: 1,
+      correct: 0,
+      wrong: 0,
+      status: "in_progress",
+      state: { round: newR, answered: false, feedback: null, showHint: false, questionNum: 1 },
+    });
+  }, [progress, templates, config, resetQuestionNum]);
 
   const handleAnswer = (answer: number) => {
     if (answered) return;
@@ -177,59 +210,65 @@ function MysteryPlay({
           score={progress.score}
         />
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4 items-start">
-          <div>
-            <div className="bg-white/90 rounded-2xl p-4 shadow border-2 border-purple-100 mb-3">
-              <p className="text-lg font-medium text-gray-800">{getMysteryText(question, locale)}</p>
+        {!sessionComplete && !slotDone ? (
+          <>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4 items-start">
+              <div>
+                <div className="bg-white/90 rounded-2xl p-4 shadow border-2 border-purple-100 mb-3">
+                  <p className="text-lg font-medium text-gray-800">{getMysteryText(question, locale)}</p>
+                </div>
+
+                {!showHint && !answered && (
+                  <button
+                    onClick={() => {
+                      setShowHint(true);
+                      progress.save({ state: { round, answered, feedback, showHint: true, questionNum } });
+                    }}
+                    className="text-indigo-500 font-semibold mb-2 hover:text-indigo-700 transition-colors"
+                  >
+                    {t("games.needHint")}
+                  </button>
+                )}
+                {showHint && !answered && (
+                  <Feedback type="info" message={getMysteryHint(question, locale)} />
+                )}
+              </div>
+
+              <GameOptionsGrid>
+                {options.map((opt) => (
+                  <button
+                    key={opt}
+                    onClick={() => handleAnswer(opt)}
+                    disabled={answered}
+                    className={`game-btn-option text-2xl py-5 ${answered && opt === correct ? "correct" : ""} ${answered && opt !== correct ? "opacity-50" : ""}`}
+                  >
+                    <MathLtr>{opt}</MathLtr>
+                  </button>
+                ))}
+              </GameOptionsGrid>
             </div>
 
-            {!showHint && !answered && (
-              <button
-                onClick={() => {
-                  setShowHint(true);
-                  progress.save({ state: { round, answered, feedback, showHint: true, questionNum } });
-                }}
-                className="text-indigo-500 font-semibold mb-2 hover:text-indigo-700 transition-colors"
-              >
-                {t("games.needHint")}
+            {feedback && (
+              <div className="mb-4">
+                <Feedback
+                  type={feedback.type}
+                  message={feedback.message}
+                  explanation={feedback.explanation}
+                />
+              </div>
+            )}
+
+            {answered && (
+              <button onClick={nextQuestion} className="game-btn game-btn-primary w-full sm:max-w-md sm:mx-auto sm:block">
+                {questionNum >= sessionSize ? t("common.seeResults") : t("games.nextMystery")}
               </button>
             )}
-            {showHint && !answered && (
-              <Feedback type="info" message={getMysteryHint(question, locale)} />
-            )}
-          </div>
-
-          <GameOptionsGrid>
-            {options.map((opt) => (
-              <button
-                key={opt}
-                onClick={() => handleAnswer(opt)}
-                disabled={answered}
-                className={`game-btn-option text-2xl py-5 ${answered && opt === correct ? "correct" : ""} ${answered && opt !== correct ? "opacity-50" : ""}`}
-              >
-                <MathLtr>{opt}</MathLtr>
-              </button>
-            ))}
-          </GameOptionsGrid>
-        </div>
-
-        {feedback && (
-          <div className="mb-4">
-            <Feedback
-              type={feedback.type}
-              message={feedback.message}
-              explanation={feedback.explanation}
-            />
-          </div>
+          </>
+        ) : slotDone ? (
+          <ProjectSlotDone />
+        ) : (
+          <SessionComplete score={progress.score} onPlayAgain={playAgain} />
         )}
-
-        {answered && !slotDone && (
-          <button onClick={nextQuestion} className="game-btn game-btn-primary w-full sm:max-w-md sm:mx-auto sm:block">
-            {t("games.nextMystery")}
-          </button>
-        )}
-
-        {slotDone && <ProjectSlotDone />}
       </GameShell>
     </GamePage>
   );

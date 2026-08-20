@@ -9,8 +9,10 @@ export function useQuestionCounter(total: number, startAt = 1) {
   const reset = useCallback(() => setCurrent(1), []);
 
   const advance = useCallback(() => {
-    setCurrent((n) => (n >= total ? 1 : n + 1));
+    setCurrent((n) => (n >= total ? total : n + 1));
   }, [total]);
 
-  return { current, setCurrent, reset, advance };
+  const isLast = current >= total;
+
+  return { current, setCurrent, reset, advance, isLast };
 }

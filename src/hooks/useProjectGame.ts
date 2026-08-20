@@ -4,6 +4,8 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useStudent } from "@/components/students";
 import type { ProjectSlot } from "@/lib/projects/types";
 
+export type SessionAdvanceResult = "continue" | "complete" | "project";
+
 function readProjectGameParams(): {
   projectId: string | null;
   day: number;
@@ -64,13 +66,17 @@ export function useProjectGame() {
       sessionSize: number,
       markCompleted: () => void,
       onContinue: () => void
-    ) => {
-      if (isProjectGame && questionNum >= sessionSize) {
-        void finishProjectGame(markCompleted);
-        return true;
+    ): SessionAdvanceResult => {
+      if (questionNum >= sessionSize) {
+        if (isProjectGame) {
+          void finishProjectGame(markCompleted);
+          return "project";
+        }
+        markCompleted();
+        return "complete";
       }
       onContinue();
-      return false;
+      return "continue";
     },
     [isProjectGame, finishProjectGame]
   );
@@ -81,13 +87,17 @@ export function useProjectGame() {
       sessionSize: number,
       markCompleted: () => void,
       onContinue: () => void
-    ) => {
-      if (isProjectGame && round >= sessionSize) {
-        void finishProjectGame(markCompleted);
-        return true;
+    ): SessionAdvanceResult => {
+      if (round >= sessionSize) {
+        if (isProjectGame) {
+          void finishProjectGame(markCompleted);
+          return "project";
+        }
+        markCompleted();
+        return "complete";
       }
       onContinue();
-      return false;
+      return "continue";
     },
     [isProjectGame, finishProjectGame]
   );
@@ -98,13 +108,17 @@ export function useProjectGame() {
       total: number,
       markCompleted: () => void,
       onContinue: () => void
-    ) => {
-      if (isProjectGame && nextIndex >= total) {
-        void finishProjectGame(markCompleted);
-        return true;
+    ): SessionAdvanceResult => {
+      if (nextIndex >= total) {
+        if (isProjectGame) {
+          void finishProjectGame(markCompleted);
+          return "project";
+        }
+        markCompleted();
+        return "complete";
       }
       onContinue();
-      return false;
+      return "continue";
     },
     [isProjectGame, finishProjectGame]
   );

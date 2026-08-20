@@ -11,6 +11,7 @@ import { useQuestionCounter } from "@/hooks/useQuestionCounter";
 import { useLocale } from "@/i18n/LocaleProvider";
 import { useProjectGame } from "@/hooks/useProjectGame";
 import { ProjectSlotDone } from "@/components/projects/ProjectSlotDone";
+import { SessionComplete } from "@/components/SessionComplete";
 import {
   getWordHint,
   getWordCategory,
@@ -38,6 +39,7 @@ function ScramblePlay({
   const { t, gameTitle, locale } = useLocale();
   const project = useProjectGame();
   const [slotDone, setSlotDone] = useState(false);
+  const [sessionComplete, setSessionComplete] = useState(false);
   const [usedWords, setUsedWords] = useState<string[]>([]);
   const [wordData, setWordData] = useState<WordData>(() => newScrambleWord(words));
   const [guess, setGuess] = useState("");
@@ -80,7 +82,7 @@ function ScramblePlay({
   );
 
   const nextWord = useCallback(() => {
-    const done = project.handleSessionNext(
+    const result = project.handleSessionNext(
       questionNum,
       sessionSize,
       progress.markCompleted,
@@ -88,7 +90,7 @@ function ScramblePlay({
         const used = usedWords.includes(wordData.word)
           ? usedWords
           : [...usedWords, wordData.word];
-        const nextNum = questionNum >= sessionSize ? 1 : questionNum + 1;
+        const nextNum = questionNum + 1;
         setUsedWords(used);
         advanceQuestionNum();
         progress.setRound((r) => r + 1);
@@ -96,7 +98,8 @@ function ScramblePlay({
         advanceToNext(used);
       }
     );
-    if (done) setSlotDone(true);
+    if (result === "project") setSlotDone(true);
+    if (result === "complete") setSessionComplete(true);
   }, [
     project,
     usedWords,
@@ -107,6 +110,38 @@ function ScramblePlay({
     sessionSize,
     advanceQuestionNum,
   ]);
+
+  const playAgain = useCallback(() => {
+    setSessionComplete(false);
+    resetQuestionNum();
+    setUsedWords([]);
+    const w = newScrambleWord(words);
+    setWordData(w);
+    setGuess("");
+    setFeedback(null);
+    setAnswered(false);
+    progress.setScore(0);
+    progress.setStreak(0);
+    progress.setRound(1);
+    progress.setCorrect(0);
+    progress.setWrong(0);
+    progress.save({
+      score: 0,
+      streak: 0,
+      round: 1,
+      correct: 0,
+      wrong: 0,
+      status: "in_progress",
+      state: {
+        wordData: w,
+        usedWords: [],
+        guess: "",
+        answered: false,
+        feedback: null,
+        questionNum: 1,
+      },
+    });
+  }, [progress, words, resetQuestionNum]);
 
   useGameResume(
     progress.loaded,
@@ -129,12 +164,18 @@ function ScramblePlay({
       const updatedUsed =
         lastWord && !used.includes(lastWord) ? [...used, lastWord] : used;
       const savedNum = (progress.gameState.questionNum as number) ?? questionNum;
+      if (savedNum >= sessionSize) {
+        progress.markCompleted();
+        if (project.isProjectGame) setSlotDone(true);
+        else setSessionComplete(true);
+        return;
+      }
       setUsedWords(updatedUsed);
       progress.setRound((r) => r + 1);
       advanceQuestionNum();
       progress.save({
         round: progress.round + 1,
-        state: { questionNum: savedNum >= sessionSize ? 1 : savedNum + 1 },
+        state: { questionNum: savedNum + 1 },
       });
       advanceToNext(updatedUsed);
     }
@@ -191,48 +232,53 @@ function ScramblePlay({
           score={progress.score}
         />
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
-          <div className="bg-white/90 rounded-2xl p-4 sm:p-6 shadow border-2 border-blue-100 text-center flex flex-col justify-center min-h-[10rem]">
-            <p className="text-sm text-blue-500 font-medium mb-1">{t("games.unscramble")}</p>
-            <p className="text-3xl sm:text-4xl font-extrabold text-blue-700 tracking-widest mb-2">
-              {wordData.scrambled.split("").join(" ")}
-            </p>
-            <p className="text-sm text-gray-500">
-              {t("games.hint")}: {getWordHint(wordData, locale)} · {t("games.category")}:{" "}
-              {getWordCategory(wordData, locale)}
-            </p>
+        {!sessionComplete && !slotDone ? (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
+            <div className="bg-white/90 rounded-2xl p-4 sm:p-6 shadow border-2 border-blue-100 text-center flex flex-col justify-center min-h-[10rem]">
+              <p className="text-sm text-blue-500 font-medium mb-1">{t("games.unscramble")}</p>
+              <p className="text-3xl sm:text-4xl font-extrabold text-blue-700 tracking-widest mb-2">
+                {wordData.scrambled.split("").join(" ")}
+              </p>
+              <p className="text-sm text-gray-500">
+                {t("games.hint")}: {getWordHint(wordData, locale)} · {t("games.category")}:{" "}
+                {getWordCategory(wordData, locale)}
+              </p>
+            </div>
+
+            <div className="flex flex-col justify-center">
+              <input
+                type="text"
+                value={guess}
+                onChange={(e) => setGuess(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && checkAnswer()}
+                disabled={answered}
+                placeholder={t("games.writeWord")}
+                dir="rtl"
+                className="w-full text-xl text-center px-4 py-3 rounded-xl border-2 border-blue-200 focus:border-blue-400 focus:outline-none mb-3 disabled:opacity-50"
+              />
+
+              {!answered && (
+                <button onClick={checkAnswer} className="game-btn game-btn-primary w-full mb-3">
+                  {t("common.check")}
+                </button>
+              )}
+
+              {feedback && (
+                <Feedback type={feedback.type} message={feedback.message} />
+              )}
+
+              {answered && (
+                <button onClick={nextWord} className="game-btn game-btn-primary w-full mt-3">
+                  {questionNum >= sessionSize ? t("common.seeResults") : t("games.nextWord")}
+                </button>
+              )}
+            </div>
           </div>
-
-          <div className="flex flex-col justify-center">
-            <input
-              type="text"
-              value={guess}
-              onChange={(e) => setGuess(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && checkAnswer()}
-              disabled={answered}
-              placeholder={t("games.writeWord")}
-              dir="rtl"
-              className="w-full text-xl text-center px-4 py-3 rounded-xl border-2 border-blue-200 focus:border-blue-400 focus:outline-none mb-3 disabled:opacity-50"
-            />
-
-            {!answered && (
-              <button onClick={checkAnswer} className="game-btn game-btn-primary w-full mb-3">
-                {t("common.check")}
-              </button>
-            )}
-
-            {feedback && (
-              <Feedback type={feedback.type} message={feedback.message} />
-            )}
-
-            {answered && !slotDone && (
-              <button onClick={nextWord} className="game-btn game-btn-primary w-full mt-3">
-                {t("games.nextWord")}
-              </button>
-            )}
-            {slotDone && <ProjectSlotDone />}
-          </div>
-        </div>
+        ) : slotDone ? (
+          <ProjectSlotDone />
+        ) : (
+          <SessionComplete score={progress.score} onPlayAgain={playAgain} />
+        )}
       </GameShell>
     </GamePage>
   );

@@ -7,6 +7,7 @@ import { GameShell, GamePage } from "@/components/GameShell";
 import { GameStatus } from "@/components/GameStatus";
 import { Feedback } from "@/components/Feedback";
 import { GameContentGate } from "@/components/GameContentGate";
+import { SessionComplete } from "@/components/SessionComplete";
 import { useLocale } from "@/i18n/LocaleProvider";
 import type { QuizQuestion } from "@/lib/types";
 
@@ -252,15 +253,12 @@ function EnglishComprehensionPlay({
               )}
             </div>
           ) : (
-            <div className="text-center flex flex-col justify-center min-h-[12rem]">
-              <Feedback
-                type="correct"
-                message={t("games.storyComplete", { score: progress.score })}
-              />
-              <button onClick={readAnother} className="game-btn game-btn-primary w-full mt-4">
-                {t("games.readAnother")}
-              </button>
-            </div>
+            <SessionComplete
+              score={progress.score}
+              message={t("games.storyComplete", { score: progress.score })}
+              playAgainLabel={t("games.readAnother")}
+              onPlayAgain={readAnother}
+            />
           )}
         </div>
       </GameShell>

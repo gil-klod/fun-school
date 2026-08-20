@@ -10,6 +10,7 @@ import { GameContentGate } from "@/components/GameContentGate";
 import { useLocale } from "@/i18n/LocaleProvider";
 import { useProjectGame } from "@/hooks/useProjectGame";
 import { ProjectSlotDone } from "@/components/projects/ProjectSlotDone";
+import { SessionComplete } from "@/components/SessionComplete";
 
 interface FixSentenceQuestion {
   wrong: string;
@@ -40,6 +41,7 @@ function FixSentencePlay({
   const { t, gameTitle, locale } = useLocale();
   const project = useProjectGame();
   const [slotDone, setSlotDone] = useState(false);
+  const [sessionComplete, setSessionComplete] = useState(false);
   const [index, setIndex] = useState(0);
   const [feedback, setFeedback] = useState<{
     type: "correct" | "wrong";
@@ -66,7 +68,14 @@ function FixSentencePlay({
       }
     },
     () => {
-      const nextIndex = (progress.gameState.index as number) + 1;
+      const savedIndex = progress.gameState.index as number;
+      const nextIndex = savedIndex + 1;
+      if (nextIndex >= sentences.length) {
+        progress.markCompleted();
+        if (project.isProjectGame) setSlotDone(true);
+        else setSessionComplete(true);
+        return;
+      }
       setIndex(nextIndex);
       setFeedback(null);
       setAnswered(false);
@@ -82,7 +91,7 @@ function FixSentencePlay({
 
   const nextQuestion = useCallback(() => {
     const nextIndex = index + 1;
-    const done = project.handleIndexNext(
+    const result = project.handleIndexNext(
       nextIndex,
       sentences.length,
       progress.markCompleted,
@@ -97,8 +106,30 @@ function FixSentencePlay({
         });
       }
     );
-    if (done) setSlotDone(true);
+    if (result === "project") setSlotDone(true);
+    if (result === "complete") setSessionComplete(true);
   }, [index, progress, project, sentences.length]);
+
+  const playAgain = useCallback(() => {
+    setSessionComplete(false);
+    setIndex(0);
+    setFeedback(null);
+    setAnswered(false);
+    progress.setScore(0);
+    progress.setStreak(0);
+    progress.setRound(1);
+    progress.setCorrect(0);
+    progress.setWrong(0);
+    progress.save({
+      score: 0,
+      streak: 0,
+      round: 1,
+      correct: 0,
+      wrong: 0,
+      status: "in_progress",
+      state: { index: 0, answered: false, feedback: null },
+    });
+  }, [progress]);
 
   const handleAnswer = (option: string) => {
     if (answered) return;
@@ -154,55 +185,61 @@ function FixSentencePlay({
           score={progress.score}
         />
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4 items-start">
-          <div>
-            <div className="bg-white/90 rounded-2xl p-5 shadow border-2 border-blue-100 text-center">
-              <p className="text-sm text-blue-500 font-medium mb-3">{t("games.findMistake")}</p>
-              <p className="text-2xl font-bold text-gray-800 leading-relaxed">{question.wrong}</p>
+        {!sessionComplete && !slotDone ? (
+          <>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4 items-start">
+              <div>
+                <div className="bg-white/90 rounded-2xl p-5 shadow border-2 border-blue-100 text-center">
+                  <p className="text-sm text-blue-500 font-medium mb-3">{t("games.findMistake")}</p>
+                  <p className="text-2xl font-bold text-gray-800 leading-relaxed">{question.wrong}</p>
+                </div>
+                <p className="text-center text-lg font-semibold text-gray-600 mt-4">
+                  {t("games.whichWordWrong")}
+                </p>
+              </div>
+
+              <GameOptionsGrid>
+                {question.options.map((opt) => (
+                  <button
+                    key={opt}
+                    onClick={() => handleAnswer(opt)}
+                    disabled={answered}
+                    className={`game-btn-option text-xl py-4 ${answered && opt === question.mistake ? "correct" : ""} ${answered && opt !== question.mistake ? "opacity-50" : ""}`}
+                  >
+                    {opt}
+                  </button>
+                ))}
+              </GameOptionsGrid>
             </div>
-            <p className="text-center text-lg font-semibold text-gray-600 mt-4">
-              {t("games.whichWordWrong")}
-            </p>
-          </div>
 
-          <GameOptionsGrid>
-            {question.options.map((opt) => (
-              <button
-                key={opt}
-                onClick={() => handleAnswer(opt)}
-                disabled={answered}
-                className={`game-btn-option text-xl py-4 ${answered && opt === question.mistake ? "correct" : ""} ${answered && opt !== question.mistake ? "opacity-50" : ""}`}
-              >
-                {opt}
+            {answered && (
+              <div className="bg-green-50 rounded-2xl p-4 mb-4 border-2 border-green-200" dir="rtl">
+                <p className="text-sm text-green-600 font-medium">{t("games.correctSentence")}</p>
+                <p className="text-xl font-bold text-green-800">{question.correct}</p>
+              </div>
+            )}
+
+            {feedback && (
+              <div className="mb-4">
+                <Feedback
+                  type={feedback.type}
+                  message={feedback.message}
+                  explanation={getFixSentenceExplanation(question, locale)}
+                />
+              </div>
+            )}
+
+            {answered && (
+              <button onClick={nextQuestion} className="game-btn game-btn-primary w-full sm:max-w-md sm:mx-auto sm:block">
+                {index + 1 >= sentences.length ? t("common.seeResults") : t("games.nextSentence")}
               </button>
-            ))}
-          </GameOptionsGrid>
-        </div>
-
-        {answered && (
-          <div className="bg-green-50 rounded-2xl p-4 mb-4 border-2 border-green-200" dir="rtl">
-            <p className="text-sm text-green-600 font-medium">{t("games.correctSentence")}</p>
-            <p className="text-xl font-bold text-green-800">{question.correct}</p>
-          </div>
+            )}
+          </>
+        ) : slotDone ? (
+          <ProjectSlotDone />
+        ) : (
+          <SessionComplete score={progress.score} onPlayAgain={playAgain} />
         )}
-
-        {feedback && (
-          <div className="mb-4">
-            <Feedback
-              type={feedback.type}
-              message={feedback.message}
-              explanation={getFixSentenceExplanation(question, locale)}
-            />
-          </div>
-        )}
-
-        {answered && !slotDone && (
-          <button onClick={nextQuestion} className="game-btn game-btn-primary w-full sm:max-w-md sm:mx-auto sm:block">
-            {t("games.nextSentence")}
-          </button>
-        )}
-
-        {slotDone && <ProjectSlotDone />}
       </GameShell>
     </GamePage>
   );

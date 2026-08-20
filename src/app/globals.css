@@ -26,6 +26,59 @@ body {
   color: var(--foreground);
   font-family: var(--font-rubik), Arial, Helvetica, sans-serif;
   min-height: 100vh;
+  position: relative;
+}
+
+.page-background {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background-attachment: fixed;
+  pointer-events: none;
+}
+
+.bg-school-sky {
+  background:
+    radial-gradient(circle at 12% 18%, rgba(255, 255, 255, 0.85) 0%, transparent 42%),
+    radial-gradient(circle at 88% 12%, rgba(255, 255, 255, 0.7) 0%, transparent 38%),
+    linear-gradient(160deg, #dbeafe 0%, #bfdbfe 45%, #fef9c3 100%);
+}
+
+.bg-school-sunset {
+  background:
+    radial-gradient(circle at 20% 80%, rgba(251, 191, 36, 0.35) 0%, transparent 45%),
+    radial-gradient(circle at 75% 25%, rgba(244, 114, 182, 0.25) 0%, transparent 40%),
+    linear-gradient(135deg, #fff7ed 0%, #fecdd3 50%, #ddd6fe 100%);
+}
+
+.bg-school-mint {
+  background:
+    radial-gradient(circle at 15% 70%, rgba(52, 211, 153, 0.2) 0%, transparent 42%),
+    radial-gradient(circle at 85% 30%, rgba(56, 189, 248, 0.2) 0%, transparent 40%),
+    linear-gradient(145deg, #ecfdf5 0%, #d1fae5 40%, #e0f2fe 100%);
+}
+
+.bg-school-lavender {
+  background:
+    radial-gradient(circle at 10% 20%, rgba(167, 139, 250, 0.3) 0%, transparent 45%),
+    radial-gradient(circle at 90% 75%, rgba(129, 140, 248, 0.25) 0%, transparent 42%),
+    linear-gradient(120deg, #f5f3ff 0%, #ede9fe 50%, #fce7f3 100%);
+}
+
+.bg-school-peach {
+  background:
+    radial-gradient(circle at 25% 15%, rgba(253, 186, 116, 0.45) 0%, transparent 40%),
+    radial-gradient(circle at 70% 85%, rgba(252, 165, 165, 0.3) 0%, transparent 45%),
+    linear-gradient(155deg, #fffbeb 0%, #ffedd5 45%, #fef3c7 100%);
+}
+
+.bg-school-notebook {
+  background-color: #fefce8;
+  background-image:
+    linear-gradient(rgba(99, 102, 241, 0.08) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(239, 68, 68, 0.15) 1px, transparent 1px),
+    linear-gradient(135deg, #fefce8 0%, #eff6ff 100%);
+  background-size: 100% 2rem, 2.5rem 100%, auto;
 }
 
 [dir="rtl"] {
@@ -106,6 +159,10 @@ body {
 
 .game-btn-primary {
   @apply bg-indigo-500 text-white hover:bg-indigo-600;
+}
+
+.game-btn-secondary {
+  @apply bg-white border-2 border-indigo-200 text-indigo-800 hover:border-indigo-400 hover:bg-indigo-50;
 }
 
 .game-btn-success {
