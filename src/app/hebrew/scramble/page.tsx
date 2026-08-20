@@ -245,7 +245,7 @@ function ScramblePlay({
               </p>
             </div>
 
-            <div className="flex flex-col justify-center">
+            <div className="bg-white/95 rounded-2xl p-4 sm:p-6 shadow-md border-2 border-blue-200 flex flex-col justify-center min-h-[10rem]">
               <input
                 type="text"
                 value={guess}
@@ -254,7 +254,7 @@ function ScramblePlay({
                 disabled={answered}
                 placeholder={t("games.writeWord")}
                 dir="rtl"
-                className="w-full text-xl text-center px-4 py-3 rounded-xl border-2 border-blue-200 focus:border-blue-400 focus:outline-none mb-3 disabled:opacity-50"
+                className="w-full text-xl text-center px-4 py-3 rounded-xl border-2 border-indigo-400 bg-white shadow-sm focus:border-indigo-600 focus:ring-2 focus:ring-indigo-200 focus:outline-none mb-3 disabled:opacity-50 text-gray-900 placeholder:text-gray-400"
               />
 
               {!answered && (
