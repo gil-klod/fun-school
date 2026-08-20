@@ -305,7 +305,10 @@ export async function fetchGameContentBundle(
     gameId === "multiplication" ||
     gameId === "shuk" ||
     gameId === "mystery" ||
-    gameId === "scramble"
+    gameId === "scramble" ||
+    gameId === "vocabulary" ||
+    gameId === "colors-numbers" ||
+    gameId === "sentences"
       ? 10
       : items.length || 10;
 

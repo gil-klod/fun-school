@@ -7,7 +7,11 @@ import { GameShell, GamePage, GameOptionsGrid } from "@/components/GameShell";
 import { GameStatus } from "@/components/GameStatus";
 import { Feedback } from "@/components/Feedback";
 import { GameContentGate } from "@/components/GameContentGate";
+import { useQuestionCounter } from "@/hooks/useQuestionCounter";
 import { useLocale } from "@/i18n/LocaleProvider";
+import { useProjectGame } from "@/hooks/useProjectGame";
+import { ProjectSlotDone } from "@/components/projects/ProjectSlotDone";
+import { SessionComplete } from "@/components/SessionComplete";
 import { shuffleArray } from "@/lib/content/generators";
 import type { Locale } from "@/i18n/types";
 
@@ -54,16 +58,23 @@ function generateQuestion(
 
 function VocabularyPlay({
   vocab,
+  sessionSize,
   difficulty,
   changeDifficulty,
   progress,
+  lockDifficulty,
 }: {
   vocab: VocabPair[];
+  sessionSize: number;
   difficulty: ReturnType<typeof useGameSession>["difficulty"];
   changeDifficulty: ReturnType<typeof useGameSession>["changeDifficulty"];
   progress: ReturnType<typeof useGameSession>["progress"];
+  lockDifficulty?: boolean;
 }) {
   const { t, gameTitle, locale } = useLocale();
+  const project = useProjectGame();
+  const [slotDone, setSlotDone] = useState(false);
+  const [sessionComplete, setSessionComplete] = useState(false);
   const [usedWords, setUsedWords] = useState<string[]>([]);
   const [question, setQuestion] = useState<VocabQuestion>(() =>
     generateQuestion(vocab, [], locale, t)
@@ -73,13 +84,18 @@ function VocabularyPlay({
     message: string;
   } | null>(null);
   const [answered, setAnswered] = useState(false);
+  const { current: questionNum, setCurrent: setQuestionNum, reset: resetQuestionNum, advance: advanceQuestionNum } =
+    useQuestionCounter(sessionSize);
 
   useEffect(() => {
     setUsedWords([]);
     setQuestion(generateQuestion(vocab, [], locale, t));
     setFeedback(null);
     setAnswered(false);
-  }, [difficulty, vocab, locale, t]);
+    setSessionComplete(false);
+    setSlotDone(false);
+    resetQuestionNum();
+  }, [difficulty, vocab, locale, t, resetQuestionNum]);
 
   const advanceToNext = useCallback(
     (currentUsed: string[]) => {
@@ -88,21 +104,71 @@ function VocabularyPlay({
       setFeedback(null);
       setAnswered(false);
       progress.save({
-        state: { question: q, usedWords: currentUsed, answered: false, feedback: null },
+        state: { question: q, usedWords: currentUsed, answered: false, feedback: null, questionNum },
       });
     },
-    [progress, vocab, locale, t]
+    [progress, vocab, locale, t, questionNum]
   );
 
   const nextQuestion = useCallback(() => {
-    const used = usedWords.includes(question.englishWord)
-      ? usedWords
-      : [...usedWords, question.englishWord];
-    setUsedWords(used);
-    progress.setRound((r) => r + 1);
-    progress.save({ round: progress.round + 1 });
-    advanceToNext(used);
-  }, [usedWords, question.englishWord, progress, advanceToNext]);
+    const result = project.handleSessionNext(
+      questionNum,
+      sessionSize,
+      progress.markCompleted,
+      () => {
+        const used = usedWords.includes(question.englishWord)
+          ? usedWords
+          : [...usedWords, question.englishWord];
+        const nextNum = questionNum + 1;
+        setUsedWords(used);
+        advanceQuestionNum();
+        progress.setRound((r) => r + 1);
+        progress.save({ round: progress.round + 1, state: { questionNum: nextNum } });
+        advanceToNext(used);
+      }
+    );
+    if (result === "project") setSlotDone(true);
+    if (result === "complete") setSessionComplete(true);
+  }, [
+    project,
+    questionNum,
+    sessionSize,
+    progress,
+    usedWords,
+    question.englishWord,
+    advanceQuestionNum,
+    advanceToNext,
+  ]);
+
+  const playAgain = useCallback(() => {
+    setSessionComplete(false);
+    resetQuestionNum();
+    setUsedWords([]);
+    const q = generateQuestion(vocab, [], locale, t);
+    setQuestion(q);
+    setFeedback(null);
+    setAnswered(false);
+    progress.setScore(0);
+    progress.setStreak(0);
+    progress.setRound(1);
+    progress.setCorrect(0);
+    progress.setWrong(0);
+    progress.save({
+      score: 0,
+      streak: 0,
+      round: 1,
+      correct: 0,
+      wrong: 0,
+      status: "in_progress",
+      state: {
+        question: q,
+        usedWords: [],
+        answered: false,
+        feedback: null,
+        questionNum: 1,
+      },
+    });
+  }, [progress, vocab, locale, t, resetQuestionNum]);
 
   useGameResume(
     progress.loaded,
@@ -115,6 +181,7 @@ function VocabularyPlay({
         setQuestion(s.question as VocabQuestion);
         setAnswered(!!s.answered);
         if (s.feedback) setFeedback(s.feedback as typeof feedback);
+        if (typeof s.questionNum === "number") setQuestionNum(s.questionNum);
       }
     },
     () => {
@@ -122,8 +189,20 @@ function VocabularyPlay({
       const lastWord = (progress.gameState.question as VocabQuestion | undefined)?.englishWord;
       const updatedUsed =
         lastWord && !used.includes(lastWord) ? [...used, lastWord] : used;
+      const savedNum = (progress.gameState.questionNum as number) ?? questionNum;
+      if (savedNum >= sessionSize) {
+        progress.markCompleted();
+        if (project.isProjectGame) setSlotDone(true);
+        else setSessionComplete(true);
+        return;
+      }
       setUsedWords(updatedUsed);
       progress.setRound((r) => r + 1);
+      advanceQuestionNum();
+      progress.save({
+        round: progress.round + 1,
+        state: { questionNum: savedNum + 1 },
+      });
       advanceToNext(updatedUsed);
     }
   );
@@ -143,7 +222,7 @@ function VocabularyPlay({
         score: progress.score + pts,
         streak: progress.streak + 1,
         correct: progress.correct + 1,
-        state: { question, usedWords, answered: true, feedback: fb },
+        state: { question, usedWords, answered: true, feedback: fb, questionNum },
       });
     } else {
       progress.setStreak(0);
@@ -156,7 +235,7 @@ function VocabularyPlay({
       progress.save({
         streak: 0,
         wrong: progress.wrong + 1,
-        state: { question, usedWords, answered: true, feedback: fb },
+        state: { question, usedWords, answered: true, feedback: fb, questionNum },
       });
     }
   };
@@ -168,46 +247,54 @@ function VocabularyPlay({
         emoji="🎯"
         difficulty={difficulty}
         onDifficultyChange={changeDifficulty}
-        difficultyDisabled={answered}
+        difficultyDisabled={answered || lockDifficulty}
       >
         <GameStatus
-          current={((progress.round - 1) % vocab.length) + 1}
-          total={vocab.length}
+          current={questionNum}
+          total={sessionSize}
           correct={progress.correct}
           wrong={progress.wrong}
           score={progress.score}
         />
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4 items-center">
-          <div className="bg-white/90 rounded-2xl p-5 sm:p-8 shadow border-2 border-green-100 text-center">
-            <span className="text-5xl sm:text-6xl">{question.emoji}</span>
-            <p className="text-xl font-bold text-gray-800 mt-4">{question.prompt}</p>
-          </div>
+        {!sessionComplete && !slotDone ? (
+          <>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4 items-center">
+              <div className="bg-white/90 rounded-2xl p-5 sm:p-8 shadow border-2 border-green-100 text-center">
+                <span className="text-5xl sm:text-6xl">{question.emoji}</span>
+                <p className="text-xl font-bold text-gray-800 mt-4">{question.prompt}</p>
+              </div>
 
-          <GameOptionsGrid>
-            {question.options.map((opt) => (
-              <button
-                key={opt}
-                onClick={() => handleAnswer(opt)}
-                disabled={answered}
-                className={`game-btn-option text-lg py-4 ${answered && opt === question.correct ? "correct" : ""} ${answered && opt !== question.correct ? "opacity-50" : ""}`}
-              >
-                {opt}
+              <GameOptionsGrid>
+                {question.options.map((opt) => (
+                  <button
+                    key={opt}
+                    onClick={() => handleAnswer(opt)}
+                    disabled={answered}
+                    className={`game-btn-option text-lg py-4 ${answered && opt === question.correct ? "correct" : ""} ${answered && opt !== question.correct ? "opacity-50" : ""}`}
+                  >
+                    {opt}
+                  </button>
+                ))}
+              </GameOptionsGrid>
+            </div>
+
+            {feedback && (
+              <div className="mb-4">
+                <Feedback type={feedback.type} message={feedback.message} />
+              </div>
+            )}
+
+            {answered && (
+              <button onClick={nextQuestion} className="game-btn game-btn-primary w-full sm:max-w-md sm:mx-auto sm:block">
+                {questionNum >= sessionSize ? t("common.seeResults") : t("games.nextWord")}
               </button>
-            ))}
-          </GameOptionsGrid>
-        </div>
-
-        {feedback && (
-          <div className="mb-4">
-            <Feedback type={feedback.type} message={feedback.message} />
-          </div>
-        )}
-
-        {answered && (
-          <button onClick={nextQuestion} className="game-btn game-btn-primary w-full sm:max-w-md sm:mx-auto sm:block">
-            {t("games.nextWord")}
-          </button>
+            )}
+          </>
+        ) : slotDone ? (
+          <ProjectSlotDone />
+        ) : (
+          <SessionComplete score={progress.score} onPlayAgain={playAgain} />
         )}
       </GameShell>
     </GamePage>
@@ -216,7 +303,7 @@ function VocabularyPlay({
 
 export default function VocabularyPage() {
   const session = useGameSession("english-beginners", "vocabulary");
-  const { ready, content, contentError, difficulty, changeDifficulty, progress } =
+  const { ready, content, contentError, difficulty, changeDifficulty, progress, lockDifficulty } =
     session;
 
   const vocab = useMemo(
@@ -238,9 +325,11 @@ export default function VocabularyPage() {
   return (
     <VocabularyPlay
       vocab={vocab}
+      sessionSize={content!.sessionSize}
       difficulty={difficulty}
       changeDifficulty={changeDifficulty}
       progress={progress}
+      lockDifficulty={lockDifficulty}
     />
   );
 }

@@ -7,7 +7,11 @@ import { GameShell, GamePage } from "@/components/GameShell";
 import { GameStatus } from "@/components/GameStatus";
 import { Feedback } from "@/components/Feedback";
 import { GameContentGate } from "@/components/GameContentGate";
+import { useQuestionCounter } from "@/hooks/useQuestionCounter";
 import { useLocale } from "@/i18n/LocaleProvider";
+import { useProjectGame } from "@/hooks/useProjectGame";
+import { ProjectSlotDone } from "@/components/projects/ProjectSlotDone";
+import { SessionComplete } from "@/components/SessionComplete";
 
 interface SentenceChallenge {
   words: string[];
@@ -53,17 +57,25 @@ function tokensFromSavedWords(saved: string[], bank: WordToken[]): WordToken[] {
 
 function SentencesPlay({
   challenges,
+  sessionSize,
   difficulty,
   changeDifficulty,
   progress,
+  lockDifficulty,
 }: {
   challenges: SentenceChallenge[];
+  sessionSize: number;
   difficulty: ReturnType<typeof useGameSession>["difficulty"];
   changeDifficulty: ReturnType<typeof useGameSession>["changeDifficulty"];
   progress: ReturnType<typeof useGameSession>["progress"];
+  lockDifficulty?: boolean;
 }) {
   const { t, gameTitle } = useLocale();
-  const [index, setIndex] = useState(0);
+  const project = useProjectGame();
+  const [slotDone, setSlotDone] = useState(false);
+  const [sessionComplete, setSessionComplete] = useState(false);
+  const { current: questionNum, setCurrent: setQuestionNum, reset: resetQuestionNum, advance: advanceQuestionNum } =
+    useQuestionCounter(sessionSize);
   const [selected, setSelected] = useState<WordToken[]>([]);
   const [feedback, setFeedback] = useState<{
     type: "correct" | "wrong";
@@ -71,11 +83,12 @@ function SentencesPlay({
   } | null>(null);
   const [answered, setAnswered] = useState(false);
 
-  const challenge = challenges[index % challenges.length];
+  const challengeIndex = (questionNum - 1) % challenges.length;
+  const challenge = challenges[challengeIndex];
 
   const wordBank = useMemo(
-    () => buildWordBank(index, challenge.words),
-    [index, challenge.words]
+    () => buildWordBank(challengeIndex, challenge.words),
+    [challengeIndex, challenge.words]
   );
 
   const selectedIds = useMemo(() => new Set(selected.map((t) => t.id)), [selected]);
@@ -85,22 +98,30 @@ function SentencesPlay({
   );
 
   useEffect(() => {
-    setIndex(0);
     setSelected([]);
     setFeedback(null);
     setAnswered(false);
-  }, [difficulty, challenges.length]);
+    setSessionComplete(false);
+    setSlotDone(false);
+    resetQuestionNum();
+  }, [difficulty, challenges.length, resetQuestionNum]);
+
+  useEffect(() => {
+    setSelected([]);
+    setFeedback(null);
+    setAnswered(false);
+  }, [questionNum]);
 
   useGameResume(
     progress.loaded,
     progress.hasSavedProgress,
     progress.gameState,
     (s) => {
-      if (s.index !== undefined) {
-        const savedIndex = s.index as number;
-        setIndex(savedIndex);
-        const savedChallenge = challenges[savedIndex % challenges.length];
-        const bank = buildWordBank(savedIndex, savedChallenge.words);
+      if (typeof s.questionNum === "number") {
+        const savedNum = s.questionNum as number;
+        setQuestionNum(savedNum);
+        const savedChallenge = challenges[(savedNum - 1) % challenges.length];
+        const bank = buildWordBank((savedNum - 1) % challenges.length, savedChallenge.words);
         const savedSelected = s.selected;
         if (Array.isArray(savedSelected)) {
           if (savedSelected.length > 0 && typeof savedSelected[0] === "object") {
@@ -116,44 +137,81 @@ function SentencesPlay({
       }
     },
     () => {
-      const nextIndex = (progress.gameState.index as number) + 1;
-      setIndex(nextIndex);
+      const savedNum = (progress.gameState.questionNum as number) ?? questionNum;
+      if (savedNum >= sessionSize) {
+        progress.markCompleted();
+        if (project.isProjectGame) setSlotDone(true);
+        else setSessionComplete(true);
+        return;
+      }
+      advanceQuestionNum();
       setSelected([]);
       setFeedback(null);
       setAnswered(false);
       progress.setRound((r) => r + 1);
       progress.save({
         round: progress.round + 1,
-        state: { index: nextIndex, selected: [], answered: false, feedback: null },
+        state: { questionNum: savedNum + 1, selected: [], answered: false, feedback: null },
       });
     }
   );
 
   const nextChallenge = useCallback(() => {
-    const nextIndex = index + 1;
-    setIndex(nextIndex);
+    const result = project.handleSessionNext(
+      questionNum,
+      sessionSize,
+      progress.markCompleted,
+      () => {
+        const nextNum = questionNum + 1;
+        advanceQuestionNum();
+        setSelected([]);
+        setFeedback(null);
+        setAnswered(false);
+        progress.setRound((r) => r + 1);
+        progress.save({
+          round: progress.round + 1,
+          state: { questionNum: nextNum, selected: [], answered: false, feedback: null },
+        });
+      }
+    );
+    if (result === "project") setSlotDone(true);
+    if (result === "complete") setSessionComplete(true);
+  }, [project, questionNum, sessionSize, progress, advanceQuestionNum]);
+
+  const playAgain = useCallback(() => {
+    setSessionComplete(false);
+    resetQuestionNum();
     setSelected([]);
     setFeedback(null);
     setAnswered(false);
-    progress.setRound((r) => r + 1);
+    progress.setScore(0);
+    progress.setStreak(0);
+    progress.setRound(1);
+    progress.setCorrect(0);
+    progress.setWrong(0);
     progress.save({
-      round: progress.round + 1,
-      state: { index: nextIndex, selected: [], answered: false, feedback: null },
+      score: 0,
+      streak: 0,
+      round: 1,
+      correct: 0,
+      wrong: 0,
+      status: "in_progress",
+      state: { questionNum: 1, selected: [], answered: false, feedback: null },
     });
-  }, [index, progress]);
+  }, [progress, resetQuestionNum]);
 
   const addWord = (token: WordToken) => {
     if (answered) return;
     const next = [...selected, token];
     setSelected(next);
-    progress.save({ state: { index, selected: next, answered, feedback } });
+    progress.save({ state: { questionNum, selected: next, answered, feedback } });
   };
 
   const removeWord = (idx: number) => {
     if (answered) return;
     const next = selected.filter((_, i) => i !== idx);
     setSelected(next);
-    progress.save({ state: { index, selected: next, answered, feedback } });
+    progress.save({ state: { questionNum, selected: next, answered, feedback } });
   };
 
   const checkAnswer = () => {
@@ -172,7 +230,7 @@ function SentencesPlay({
         score: progress.score + pts,
         streak: progress.streak + 1,
         correct: progress.correct + 1,
-        state: { index, selected, answered: true, feedback: fb },
+        state: { questionNum, selected, answered: true, feedback: fb },
       });
     } else {
       progress.setStreak(0);
@@ -188,7 +246,7 @@ function SentencesPlay({
       progress.save({
         streak: 0,
         wrong: progress.wrong + 1,
-        state: { index, selected, answered: true, feedback: fb },
+        state: { questionNum, selected, answered: true, feedback: fb },
       });
     }
   };
@@ -200,80 +258,86 @@ function SentencesPlay({
         emoji="🧩"
         difficulty={difficulty}
         onDifficultyChange={changeDifficulty}
-        difficultyDisabled={answered}
+        difficultyDisabled={answered || lockDifficulty}
       >
         <GameStatus
-          current={index + 1}
-          total={challenges.length}
+          current={questionNum}
+          total={sessionSize}
           correct={progress.correct}
           wrong={progress.wrong}
           score={progress.score}
         />
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
-          <div>
-            <p className="text-center text-gray-600 mb-4" dir="rtl">
-              {challenge.translation}
-            </p>
+        {!sessionComplete && !slotDone ? (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
+            <div>
+              <p className="text-center text-gray-600 mb-4" dir="rtl">
+                {challenge.translation}
+              </p>
 
-            <div
-              className="bg-white/90 rounded-2xl p-4 min-h-[60px] shadow-inner border-2 border-green-200 flex flex-wrap gap-2 items-center justify-center"
-              onClick={() => {
-                if (selected.length > 0 && !answered) removeWord(selected.length - 1);
-              }}
-            >
-              {selected.length === 0 ? (
-                <span className="text-gray-400">{t("games.tapWords")}</span>
-              ) : (
-                selected.map((token, i) => (
-                  <span
+              <div
+                className="bg-white/90 rounded-2xl p-4 min-h-[60px] shadow-inner border-2 border-green-200 flex flex-wrap gap-2 items-center justify-center"
+                onClick={() => {
+                  if (selected.length > 0 && !answered) removeWord(selected.length - 1);
+                }}
+              >
+                {selected.length === 0 ? (
+                  <span className="text-gray-400">{t("games.tapWords")}</span>
+                ) : (
+                  selected.map((token, i) => (
+                    <span
+                      key={token.id}
+                      className="bg-green-100 text-green-800 px-4 py-2 rounded-xl font-semibold cursor-pointer hover:bg-green-200"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        removeWord(i);
+                      }}
+                    >
+                      {token.word}
+                    </span>
+                  ))
+                )}
+              </div>
+            </div>
+
+            <div>
+              <div className="flex flex-wrap gap-2 justify-center mb-4">
+                {availableWords.map((token) => (
+                  <button
                     key={token.id}
-                    className="bg-green-100 text-green-800 px-4 py-2 rounded-xl font-semibold cursor-pointer hover:bg-green-200"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      removeWord(i);
-                    }}
+                    onClick={() => addWord(token)}
+                    disabled={answered}
+                    className="game-btn-option py-3 px-5"
                   >
                     {token.word}
-                  </span>
-                ))
+                  </button>
+                ))}
+              </div>
+
+              {!answered && (
+                <button
+                  onClick={checkAnswer}
+                  disabled={selected.length !== challenge.words.length}
+                  className="game-btn game-btn-primary w-full mb-4 disabled:opacity-40"
+                >
+                  {t("games.checkSentence")}
+                </button>
+              )}
+
+              {feedback && <Feedback type={feedback.type} message={feedback.message} />}
+
+              {answered && (
+                <button onClick={nextChallenge} className="game-btn game-btn-primary w-full mt-4">
+                  {questionNum >= sessionSize ? t("common.seeResults") : t("games.nextSentence")}
+                </button>
               )}
             </div>
           </div>
-
-          <div>
-            <div className="flex flex-wrap gap-2 justify-center mb-4">
-              {availableWords.map((token) => (
-                <button
-                  key={token.id}
-                  onClick={() => addWord(token)}
-                  disabled={answered}
-                  className="game-btn-option py-3 px-5"
-                >
-                  {token.word}
-                </button>
-              ))}
-            </div>
-
-            {!answered && (
-              <button
-                onClick={checkAnswer}
-                disabled={selected.length !== challenge.words.length}
-                className="game-btn game-btn-primary w-full mb-4 disabled:opacity-40"
-              >
-                {t("games.checkSentence")}
-              </button>
-            )}
-
-            {feedback && <Feedback type={feedback.type} message={feedback.message} />}
-
-            {answered && (
-              <button onClick={nextChallenge} className="game-btn game-btn-primary w-full mt-4">
-                {t("games.nextSentence")}
-              </button>
-            )}
-          </div>
-        </div>
+        ) : slotDone ? (
+          <ProjectSlotDone />
+        ) : (
+          <SessionComplete score={progress.score} onPlayAgain={playAgain} />
+        )}
       </GameShell>
     </GamePage>
   );
@@ -281,7 +345,7 @@ function SentencesPlay({
 
 export default function SentencesPage() {
   const session = useGameSession("english-beginners", "sentences");
-  const { ready, content, contentError, difficulty, changeDifficulty, progress } =
+  const { ready, content, contentError, difficulty, changeDifficulty, progress, lockDifficulty } =
     session;
 
   const challenges = useMemo(
@@ -306,9 +370,11 @@ export default function SentencesPage() {
   return (
     <SentencesPlay
       challenges={challenges}
+      sessionSize={content!.sessionSize}
       difficulty={difficulty}
       changeDifficulty={changeDifficulty}
       progress={progress}
+      lockDifficulty={lockDifficulty}
     />
   );
 }

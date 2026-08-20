@@ -7,7 +7,11 @@ import { GameShell, GamePage, GameOptionsGrid } from "@/components/GameShell";
 import { GameStatus } from "@/components/GameStatus";
 import { Feedback } from "@/components/Feedback";
 import { GameContentGate } from "@/components/GameContentGate";
+import { useQuestionCounter } from "@/hooks/useQuestionCounter";
 import { useLocale } from "@/i18n/LocaleProvider";
+import { useProjectGame } from "@/hooks/useProjectGame";
+import { ProjectSlotDone } from "@/components/projects/ProjectSlotDone";
+import { SessionComplete } from "@/components/SessionComplete";
 import { shuffleArray } from "@/lib/content/generators";
 
 interface ColorNumberItem {
@@ -19,84 +23,125 @@ interface ColorNumberItem {
   emoji: string;
 }
 
-export default function ColorsNumbersPage() {
+function ColorsNumbersPlay({
+  items,
+  sessionSize,
+  difficulty,
+  changeDifficulty,
+  progress,
+  lockDifficulty,
+}: {
+  items: ColorNumberItem[];
+  sessionSize: number;
+  difficulty: ReturnType<typeof useGameSession>["difficulty"];
+  changeDifficulty: ReturnType<typeof useGameSession>["changeDifficulty"];
+  progress: ReturnType<typeof useGameSession>["progress"];
+  lockDifficulty?: boolean;
+}) {
   const { t, gameTitle, locale } = useLocale();
-  const { difficulty, changeDifficulty, progress, content, contentError, ready } =
-    useGameSession("english-beginners", "colors-numbers");
-
-  const items = useMemo(
-    () =>
-      (content?.items ?? [])
-        .filter((item) => item.itemType === "color-number")
-        .map((item) => item.data as unknown as ColorNumberItem),
-    [content]
+  const project = useProjectGame();
+  const [slotDone, setSlotDone] = useState(false);
+  const [sessionComplete, setSessionComplete] = useState(false);
+  const { current: questionNum, setCurrent: setQuestionNum, reset: resetQuestionNum, advance: advanceQuestionNum } =
+    useQuestionCounter(sessionSize);
+  const [options, setOptions] = useState<string[]>(() =>
+    shuffleArray([...items[0].options])
   );
-
-  const [index, setIndex] = useState(0);
-  const [options, setOptions] = useState<string[]>([]);
   const [feedback, setFeedback] = useState<{
     type: "correct" | "wrong";
     message: string;
   } | null>(null);
   const [answered, setAnswered] = useState(false);
 
+  const item = items[(questionNum - 1) % items.length];
+
   useEffect(() => {
-    if (items.length === 0) return;
-    setIndex(0);
+    setOptions(shuffleArray([...items[(questionNum - 1) % items.length].options]));
+    setFeedback(null);
+    setAnswered(false);
+  }, [questionNum, items]);
+
+  useEffect(() => {
+    resetQuestionNum();
     setOptions(shuffleArray([...items[0].options]));
     setFeedback(null);
     setAnswered(false);
-  }, [difficulty, items]);
+    setSessionComplete(false);
+    setSlotDone(false);
+  }, [difficulty, items, resetQuestionNum]);
+
+  const nextQuestion = useCallback(() => {
+    const result = project.handleSessionNext(
+      questionNum,
+      sessionSize,
+      progress.markCompleted,
+      () => {
+        const nextNum = questionNum + 1;
+        advanceQuestionNum();
+        progress.setRound((r) => r + 1);
+        progress.save({
+          round: progress.round + 1,
+          state: { questionNum: nextNum, answered: false, feedback: null },
+        });
+      }
+    );
+    if (result === "project") setSlotDone(true);
+    if (result === "complete") setSessionComplete(true);
+  }, [project, questionNum, sessionSize, progress, advanceQuestionNum]);
+
+  const playAgain = useCallback(() => {
+    setSessionComplete(false);
+    resetQuestionNum();
+    setOptions(shuffleArray([...items[0].options]));
+    setFeedback(null);
+    setAnswered(false);
+    progress.setScore(0);
+    progress.setStreak(0);
+    progress.setRound(1);
+    progress.setCorrect(0);
+    progress.setWrong(0);
+    progress.save({
+      score: 0,
+      streak: 0,
+      round: 1,
+      correct: 0,
+      wrong: 0,
+      status: "in_progress",
+      state: { questionNum: 1, answered: false, feedback: null },
+    });
+  }, [progress, items, resetQuestionNum]);
 
   useGameResume(
     progress.loaded,
     progress.hasSavedProgress,
     progress.gameState,
     (s) => {
-      if (s.index !== undefined) {
-        setIndex(s.index as number);
+      if (typeof s.questionNum === "number") {
+        setQuestionNum(s.questionNum);
         if (s.options) setOptions(s.options as string[]);
         setAnswered(!!s.answered);
         if (s.feedback) setFeedback(s.feedback as typeof feedback);
       }
     },
     () => {
-      if (items.length === 0) return;
-      const nextIndex = (progress.gameState.index as number) + 1;
-      const nextItem = items[nextIndex % items.length];
-      const nextOptions = shuffleArray([...nextItem.options]);
-      setIndex(nextIndex);
-      setOptions(nextOptions);
-      setFeedback(null);
-      setAnswered(false);
+      const savedNum = (progress.gameState.questionNum as number) ?? questionNum;
+      if (savedNum >= sessionSize) {
+        progress.markCompleted();
+        if (project.isProjectGame) setSlotDone(true);
+        else setSessionComplete(true);
+        return;
+      }
+      advanceQuestionNum();
       progress.setRound((r) => r + 1);
       progress.save({
         round: progress.round + 1,
-        state: { index: nextIndex, options: nextOptions, answered: false, feedback: null },
+        state: { questionNum: savedNum + 1, answered: false, feedback: null },
       });
     }
   );
 
-  const item = items.length > 0 ? items[index % items.length] : null;
-
-  const nextQuestion = useCallback(() => {
-    if (items.length === 0 || !item) return;
-    const nextIndex = index + 1;
-    const nextItem = items[nextIndex % items.length];
-    const nextOptions = shuffleArray([...nextItem.options]);
-    setIndex(nextIndex);
-    setOptions(nextOptions);
-    setFeedback(null);
-    setAnswered(false);
-    progress.setRound((r) => r + 1);
-    progress.save({
-      round: progress.round + 1,
-      state: { index: nextIndex, options: nextOptions, answered: false, feedback: null },
-    });
-  }, [index, items, item, progress]);
-
   const handleAnswer = (answer: string) => {
-    if (answered || !item) return;
+    if (answered) return;
     setAnswered(true);
 
     if (answer === item.answer) {
@@ -110,7 +155,7 @@ export default function ColorsNumbersPage() {
         score: progress.score + pts,
         streak: progress.streak + 1,
         correct: progress.correct + 1,
-        state: { index, options, answered: true, feedback: fb },
+        state: { questionNum, options, answered: true, feedback: fb },
       });
     } else {
       progress.setStreak(0);
@@ -123,21 +168,10 @@ export default function ColorsNumbersPage() {
       progress.save({
         streak: 0,
         wrong: progress.wrong + 1,
-        state: { index, options, answered: true, feedback: fb },
+        state: { questionNum, options, answered: true, feedback: fb },
       });
     }
   };
-
-  if (!ready || items.length === 0 || !item) {
-    return (
-      <GameContentGate
-        loading={!ready || items.length === 0}
-        error={contentError}
-      >
-        {null}
-      </GameContentGate>
-    );
-  }
 
   const prompt = locale === "he" ? item.promptHe : item.prompt;
 
@@ -148,48 +182,88 @@ export default function ColorsNumbersPage() {
         emoji="🌈"
         difficulty={difficulty}
         onDifficultyChange={changeDifficulty}
-        difficultyDisabled={answered}
+        difficultyDisabled={answered || lockDifficulty}
       >
         <GameStatus
-          current={index + 1}
-          total={items.length}
+          current={questionNum}
+          total={sessionSize}
           correct={progress.correct}
           wrong={progress.wrong}
           score={progress.score}
         />
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4 items-center">
-          <div className="bg-white/90 rounded-2xl p-5 sm:p-8 shadow border-2 border-green-100 text-center">
-            <span className="text-6xl">{item.emoji}</span>
-            <p className="text-xl font-bold text-gray-800 mt-4">{prompt}</p>
-          </div>
+        {!sessionComplete && !slotDone ? (
+          <>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4 items-center">
+              <div className="bg-white/90 rounded-2xl p-5 sm:p-8 shadow border-2 border-green-100 text-center">
+                <span className="text-6xl">{item.emoji}</span>
+                <p className="text-xl font-bold text-gray-800 mt-4">{prompt}</p>
+              </div>
 
-          <GameOptionsGrid>
-            {options.map((opt) => (
-              <button
-                key={opt}
-                onClick={() => handleAnswer(opt)}
-                disabled={answered}
-                className={`game-btn-option text-lg py-4 ${answered && opt === item.answer ? "correct" : ""} ${answered && opt !== item.answer ? "opacity-50" : ""}`}
-              >
-                {opt}
+              <GameOptionsGrid>
+                {options.map((opt) => (
+                  <button
+                    key={opt}
+                    onClick={() => handleAnswer(opt)}
+                    disabled={answered}
+                    className={`game-btn-option text-lg py-4 ${answered && opt === item.answer ? "correct" : ""} ${answered && opt !== item.answer ? "opacity-50" : ""}`}
+                  >
+                    {opt}
+                  </button>
+                ))}
+              </GameOptionsGrid>
+            </div>
+
+            {feedback && (
+              <div className="mb-4">
+                <Feedback type={feedback.type} message={feedback.message} />
+              </div>
+            )}
+
+            {answered && (
+              <button onClick={nextQuestion} className="game-btn game-btn-primary w-full sm:max-w-md sm:mx-auto sm:block">
+                {questionNum >= sessionSize ? t("common.seeResults") : t("common.continue")}
               </button>
-            ))}
-          </GameOptionsGrid>
-        </div>
-
-        {feedback && (
-          <div className="mb-4">
-            <Feedback type={feedback.type} message={feedback.message} />
-          </div>
-        )}
-
-        {answered && (
-          <button onClick={nextQuestion} className="game-btn game-btn-primary w-full sm:max-w-md sm:mx-auto sm:block">
-            {t("common.continue")}
-          </button>
+            )}
+          </>
+        ) : slotDone ? (
+          <ProjectSlotDone />
+        ) : (
+          <SessionComplete score={progress.score} onPlayAgain={playAgain} />
         )}
       </GameShell>
     </GamePage>
+  );
+}
+
+export default function ColorsNumbersPage() {
+  const { content, contentError, ready, difficulty, changeDifficulty, progress, lockDifficulty } =
+    useGameSession("english-beginners", "colors-numbers");
+
+  const items = useMemo(
+    () =>
+      (content?.items ?? [])
+        .filter((item) => item.itemType === "color-number")
+        .map((item) => item.data as unknown as ColorNumberItem),
+    [content]
+  );
+
+  if (!ready || items.length === 0) {
+    return (
+      <GameContentGate loading={!ready || items.length === 0} error={contentError}>
+        {null}
+      </GameContentGate>
+    );
+  }
+
+  return (
+    <ColorsNumbersPlay
+      items={items}
+      sessionSize={content!.sessionSize}
+      difficulty={difficulty}
+      changeDifficulty={changeDifficulty}
+      progress={progress}
+      lockDifficulty={lockDifficulty}
+    />
   );
 }
