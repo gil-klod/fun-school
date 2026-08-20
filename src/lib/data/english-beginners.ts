@@ -1,44 +1,8 @@
 export type { VocabPair } from "./english-beginner-vocab";
 export { ENGLISH_BEGINNER_VOCAB as BEGINNER_VOCAB } from "./english-beginner-vocab";
 
-export interface SentenceChallenge {
-  words: string[];
-  correct: string;
-  translation: string;
-}
-
-export const SENTENCE_CHALLENGES: SentenceChallenge[] = [
-  {
-    words: ["I", "a", "book", "read"],
-    correct: "I read a book",
-    translation: "אני קורא ספר",
-  },
-  {
-    words: ["is", "The", "big", "dog"],
-    correct: "The dog is big",
-    translation: "הכלב גדול",
-  },
-  {
-    words: ["like", "I", "apples"],
-    correct: "I like apples",
-    translation: "אני אוהב תפוחים",
-  },
-  {
-    words: ["go", "to", "I", "school"],
-    correct: "I go to school",
-    translation: "אני הולך לבית ספר",
-  },
-  {
-    words: ["is", "She", "happy"],
-    correct: "She is happy",
-    translation: "היא שמחה",
-  },
-  {
-    words: ["play", "We", "ball", "a"],
-    correct: "We play a ball",
-    translation: "אנחנו משחקים בכדור",
-  },
-];
+export type { SentenceChallenge } from "./english-beginner-sentences";
+export { ENGLISH_BEGINNER_SENTENCES as SENTENCE_CHALLENGES } from "./english-beginner-sentences";
 
 export interface ColorNumberQuestion {
   type: "color" | "number";

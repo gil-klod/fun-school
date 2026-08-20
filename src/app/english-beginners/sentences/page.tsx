@@ -276,7 +276,8 @@ function SentencesPlay({
               </p>
 
               <div
-                className="bg-white/90 rounded-2xl p-4 min-h-[60px] shadow-inner border-2 border-green-200 flex flex-wrap gap-2 items-center justify-center"
+                dir="ltr"
+                className="bg-white/90 rounded-2xl p-4 min-h-[60px] shadow-inner border-2 border-green-200 flex flex-wrap gap-2 items-center justify-start text-left"
                 onClick={() => {
                   if (selected.length > 0 && !answered) removeWord(selected.length - 1);
                 }}
@@ -287,6 +288,7 @@ function SentencesPlay({
                   selected.map((token, i) => (
                     <span
                       key={token.id}
+                      dir="ltr"
                       className="bg-green-100 text-green-800 px-4 py-2 rounded-xl font-semibold cursor-pointer hover:bg-green-200"
                       onClick={(e) => {
                         e.stopPropagation();
@@ -300,8 +302,8 @@ function SentencesPlay({
               </div>
             </div>
 
-            <div>
-              <div className="flex flex-wrap gap-2 justify-center mb-4">
+            <div dir="ltr">
+              <div className="flex flex-wrap gap-2 justify-start mb-4">
                 {availableWords.map((token) => (
                   <button
                     key={token.id}
@@ -324,7 +326,11 @@ function SentencesPlay({
                 </button>
               )}
 
-              {feedback && <Feedback type={feedback.type} message={feedback.message} />}
+              {feedback && (
+                <div dir="ltr">
+                  <Feedback type={feedback.type} message={feedback.message} />
+                </div>
+              )}
 
               {answered && (
                 <button onClick={nextChallenge} className="game-btn game-btn-primary w-full mt-4">
