@@ -215,6 +215,9 @@ export interface Dictionary {
     mixed: string;
     howMuchChange: string;
     shoppingList: string;
+    shukItem: string;
+    shukQuantity: string;
+    shukUnitPrice: string;
     total: string;
     youPay: string;
     whichWordWrong: string;

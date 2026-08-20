@@ -177,25 +177,34 @@ function ShukPlay({
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
           <div className="bg-white/90 rounded-2xl p-4 shadow border-2 border-amber-100">
             <p className="text-base font-semibold text-amber-700 mb-3">{t("games.shoppingList")}</p>
+            <div className="grid grid-cols-[auto_1fr_auto_auto] gap-x-3 gap-y-1 items-center text-sm text-amber-800/80 mb-1 px-1">
+              <span aria-hidden className="w-7" />
+              <span className="font-semibold">{t("games.shukItem")}</span>
+              <span className="font-semibold text-center min-w-[2.5rem]">{t("games.shukQuantity")}</span>
+              <span className="font-semibold text-end min-w-[4rem]">{t("games.shukUnitPrice")}</span>
+            </div>
             <div className="space-y-2">
               {challenge.lines.map((line, i) => (
                 <div
                   key={i}
-                  className="flex items-center justify-between bg-amber-50 rounded-xl px-3 py-2 gap-2"
+                  className="grid grid-cols-[auto_1fr_auto_auto] gap-x-3 gap-y-0 items-center bg-amber-50 rounded-xl px-3 py-2"
                 >
-                  <span className="text-xl shrink-0">{line.item.emoji}</span>
-                  <span className="font-medium flex-1 min-w-0 truncate">
-                    {line.quantity > 1
-                      ? `${line.quantity} × ${getShukItemName(line.item, locale)}`
-                      : getShukItemName(line.item, locale)}
+                  <span className="text-xl w-7 text-center shrink-0">{line.item.emoji}</span>
+                  <span className="font-medium min-w-0 truncate">
+                    {getShukItemName(line.item, locale)}
                   </span>
-                  <MathLtr className="font-bold text-amber-700 shrink-0">
-                    ₪{line.item.price * line.quantity}
+                  <MathLtr className="font-bold text-center min-w-[2.5rem]">{line.quantity}</MathLtr>
+                  <MathLtr className="font-bold text-amber-700 text-end min-w-[4rem]">
+                    ₪{line.item.price}
                   </MathLtr>
                 </div>
               ))}
             </div>
             <div className="border-t border-amber-200 mt-3 pt-3 flex justify-between text-base gap-2">
+              <span className="font-semibold">{t("games.total")}</span>
+              <MathLtr className="font-bold text-amber-800">₪{challenge.total}</MathLtr>
+            </div>
+            <div className="flex justify-between text-base gap-2 mt-1">
               <span className="font-semibold">{t("games.youPay")}</span>
               <MathLtr className="font-bold text-green-700">₪{challenge.paid}</MathLtr>
             </div>
