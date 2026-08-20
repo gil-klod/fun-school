@@ -1,4 +1,5 @@
 import { HEBREW_SCRAMBLE_WORDS } from "./hebrew-scramble-words";
+import { HEBREW_FIX_SENTENCES } from "./hebrew-fix-sentences";
 
 export interface HebrewWord {
   word: string;
@@ -55,56 +56,7 @@ export function getFixSentenceExplanation(
   return locale === "he" ? question.explanationHe : question.explanationEn;
 }
 
-export const FIX_SENTENCES: FixSentenceQuestion[] = [
-  {
-    wrong: "הילדה אכלת תפוח.",
-    correct: "הילדה אכלה תפוח.",
-    mistake: "אכלת",
-    options: ["אכלת", "אכל", "אוכל", "אוכלת"],
-    explanationHe: "אכלת = את אכלת (לשון נקבה). הנושא הוא הילדה, לכן צריך אכלה.",
-    explanationEn: "אכלת = you (f.) ate. The subject is הילדה (she), so we need אכלה.",
-  },
-  {
-    wrong: "הכלבים רץ בגינה.",
-    correct: "הכלבים רצים בגינה.",
-    mistake: "רץ",
-    options: ["רץ", "רצים", "רצה", "רצות"],
-    explanationHe: "כלבים הוא רבים, לכן הפועל צריך להיות ברבים: רצים.",
-    explanationEn: "כלבים is plural, so the verb needs plural form: רצים.",
-  },
-  {
-    wrong: "יש לי שלושה ספר.",
-    correct: "יש לי שלושה ספרים.",
-    mistake: "ספר",
-    options: ["ספר", "ספרים", "ספריה", "ספרון"],
-    explanationHe: "אחרי מספר גדול מ-1, שם העצם בדרך כלל ברבים: ספרים.",
-    explanationEn: "After a number greater than 1, nouns are usually plural: ספרים.",
-  },
-  {
-    wrong: "אני הולכת לבית הספר אתמול.",
-    correct: "אני הלכתי לבית הספר אתמול.",
-    mistake: "הולכת",
-    options: ["הולכת", "הלכתי", "הולך", "ילך"],
-    explanationHe: "אתמול = אתמול, לכן צריך זמן עבר: הלכתי.",
-    explanationEn: "אתמול = yesterday, so we need past tense: הלכתי.",
-  },
-  {
-    wrong: "השמש ירוקה.",
-    correct: "השמש צהובה.",
-    mistake: "ירוקה",
-    options: ["ירוקה", "צהובה", "כחולה", "אדומה"],
-    explanationHe: "השמש צהובה, לא ירוקה!",
-    explanationEn: "The sun is yellow (צהובה), not green!",
-  },
-  {
-    wrong: "הוא שתית מים.",
-    correct: "הוא שתה מים.",
-    mistake: "שתית",
-    options: ["שתית", "שתה", "שותה", "ישתה"],
-    explanationHe: "שתית = את שתית. עבור הוא (זכר) אומרים שתה.",
-    explanationEn: "שתית = you drank. For he (הוא) we say שתה.",
-  },
-];
+export const FIX_SENTENCES: FixSentenceQuestion[] = HEBREW_FIX_SENTENCES;
 
 export interface HebrewStory {
   title: string;

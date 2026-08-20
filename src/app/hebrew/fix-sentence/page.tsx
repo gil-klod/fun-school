@@ -7,32 +7,35 @@ import { GameShell, GamePage, GameOptionsGrid } from "@/components/GameShell";
 import { GameStatus } from "@/components/GameStatus";
 import { Feedback } from "@/components/Feedback";
 import { GameContentGate } from "@/components/GameContentGate";
+import { useQuestionCounter } from "@/hooks/useQuestionCounter";
 import { useLocale } from "@/i18n/LocaleProvider";
 import { useProjectGame } from "@/hooks/useProjectGame";
 import { ProjectSlotDone } from "@/components/projects/ProjectSlotDone";
 import { SessionComplete } from "@/components/SessionComplete";
+import {
+  getFixSentenceExplanation,
+  type FixSentenceQuestion,
+} from "@/lib/data/hebrew";
 
-interface FixSentenceQuestion {
-  wrong: string;
-  correct: string;
-  mistake: string;
-  options: string[];
-  explanationHe: string;
-  explanationEn: string;
-}
-
-function getFixSentenceExplanation(question: FixSentenceQuestion, locale: "he" | "en") {
-  return locale === "he" ? question.explanationHe : question.explanationEn;
+function pickSentence(
+  sentences: FixSentenceQuestion[],
+  exclude: string[] = []
+): FixSentenceQuestion {
+  const pool = sentences.filter((s) => !exclude.includes(s.wrong));
+  const list = pool.length > 0 ? pool : sentences;
+  return list[Math.floor(Math.random() * list.length)];
 }
 
 function FixSentencePlay({
   sentences,
+  sessionSize,
   difficulty,
   changeDifficulty,
   progress,
   lockDifficulty,
 }: {
   sentences: FixSentenceQuestion[];
+  sessionSize: number;
   difficulty: ReturnType<typeof useGameSession>["difficulty"];
   changeDifficulty: ReturnType<typeof useGameSession>["changeDifficulty"];
   progress: ReturnType<typeof useGameSession>["progress"];
@@ -42,77 +45,121 @@ function FixSentencePlay({
   const project = useProjectGame();
   const [slotDone, setSlotDone] = useState(false);
   const [sessionComplete, setSessionComplete] = useState(false);
-  const [index, setIndex] = useState(0);
+  const [usedSentences, setUsedSentences] = useState<string[]>([]);
+  const [question, setQuestion] = useState<FixSentenceQuestion>(() =>
+    pickSentence(sentences)
+  );
   const [feedback, setFeedback] = useState<{
     type: "correct" | "wrong";
     message: string;
     explanation?: string;
   } | null>(null);
   const [answered, setAnswered] = useState(false);
+  const { current: questionNum, setCurrent: setQuestionNum, reset: resetQuestionNum, advance: advanceQuestionNum } =
+    useQuestionCounter(sessionSize);
 
   useEffect(() => {
-    setIndex(0);
+    setUsedSentences([]);
+    setQuestion(pickSentence(sentences));
     setFeedback(null);
     setAnswered(false);
-  }, [difficulty, sentences.length]);
+    setSessionComplete(false);
+    setSlotDone(false);
+    resetQuestionNum();
+  }, [difficulty, sentences, resetQuestionNum]);
+
+  const advanceToNext = useCallback(
+    (currentUsed: string[]) => {
+      const q = pickSentence(sentences, currentUsed);
+      setQuestion(q);
+      setFeedback(null);
+      setAnswered(false);
+      progress.save({
+        state: {
+          question: q,
+          usedSentences: currentUsed,
+          answered: false,
+          feedback: null,
+          questionNum,
+        },
+      });
+    },
+    [progress, sentences, questionNum]
+  );
 
   useGameResume(
     progress.loaded,
     progress.hasSavedProgress,
     progress.gameState,
     (s) => {
-      if (s.index !== undefined) {
-        setIndex(s.index as number);
+      const used = (s.usedSentences as string[]) ?? [];
+      setUsedSentences(used);
+      if (s.question) {
+        setQuestion(s.question as FixSentenceQuestion);
         setAnswered(!!s.answered);
         if (s.feedback) setFeedback(s.feedback as typeof feedback);
+        if (typeof s.questionNum === "number") setQuestionNum(s.questionNum);
       }
     },
     () => {
-      const savedIndex = progress.gameState.index as number;
-      const nextIndex = savedIndex + 1;
-      if (nextIndex >= sentences.length) {
+      const used = (progress.gameState.usedSentences as string[]) ?? [];
+      const lastWrong = (progress.gameState.question as FixSentenceQuestion | undefined)?.wrong;
+      const updatedUsed =
+        lastWrong && !used.includes(lastWrong) ? [...used, lastWrong] : used;
+      const savedNum = (progress.gameState.questionNum as number) ?? questionNum;
+      if (savedNum >= sessionSize) {
         progress.markCompleted();
         if (project.isProjectGame) setSlotDone(true);
         else setSessionComplete(true);
         return;
       }
-      setIndex(nextIndex);
-      setFeedback(null);
-      setAnswered(false);
+      setUsedSentences(updatedUsed);
       progress.setRound((r) => r + 1);
+      advanceQuestionNum();
       progress.save({
         round: progress.round + 1,
-        state: { index: nextIndex, answered: false, feedback: null },
+        state: { questionNum: savedNum + 1 },
       });
+      advanceToNext(updatedUsed);
     }
   );
 
-  const question = sentences[index % sentences.length];
-
   const nextQuestion = useCallback(() => {
-    const nextIndex = index + 1;
-    const result = project.handleIndexNext(
-      nextIndex,
-      sentences.length,
+    const result = project.handleSessionNext(
+      questionNum,
+      sessionSize,
       progress.markCompleted,
       () => {
-        setIndex(nextIndex);
-        setFeedback(null);
-        setAnswered(false);
+        const used = usedSentences.includes(question.wrong)
+          ? usedSentences
+          : [...usedSentences, question.wrong];
+        const nextNum = questionNum + 1;
+        setUsedSentences(used);
+        advanceQuestionNum();
         progress.setRound((r) => r + 1);
-        progress.save({
-          round: progress.round + 1,
-          state: { index: nextIndex, answered: false, feedback: null },
-        });
+        progress.save({ round: progress.round + 1, state: { questionNum: nextNum } });
+        advanceToNext(used);
       }
     );
     if (result === "project") setSlotDone(true);
     if (result === "complete") setSessionComplete(true);
-  }, [index, progress, project, sentences.length]);
+  }, [
+    project,
+    questionNum,
+    sessionSize,
+    progress,
+    usedSentences,
+    question.wrong,
+    advanceQuestionNum,
+    advanceToNext,
+  ]);
 
   const playAgain = useCallback(() => {
     setSessionComplete(false);
-    setIndex(0);
+    resetQuestionNum();
+    setUsedSentences([]);
+    const q = pickSentence(sentences);
+    setQuestion(q);
     setFeedback(null);
     setAnswered(false);
     progress.setScore(0);
@@ -127,9 +174,15 @@ function FixSentencePlay({
       correct: 0,
       wrong: 0,
       status: "in_progress",
-      state: { index: 0, answered: false, feedback: null },
+      state: {
+        question: q,
+        usedSentences: [],
+        answered: false,
+        feedback: null,
+        questionNum: 1,
+      },
     });
-  }, [progress]);
+  }, [progress, sentences, resetQuestionNum]);
 
   const handleAnswer = (option: string) => {
     if (answered) return;
@@ -149,7 +202,13 @@ function FixSentencePlay({
         score: progress.score + pts,
         streak: progress.streak + 1,
         correct: progress.correct + 1,
-        state: { index, answered: true, feedback: fb },
+        state: {
+          question,
+          usedSentences,
+          answered: true,
+          feedback: fb,
+          questionNum,
+        },
       });
     } else {
       progress.setStreak(0);
@@ -162,7 +221,13 @@ function FixSentencePlay({
       progress.save({
         streak: 0,
         wrong: progress.wrong + 1,
-        state: { index, answered: true, feedback: fb },
+        state: {
+          question,
+          usedSentences,
+          answered: true,
+          feedback: fb,
+          questionNum,
+        },
       });
     }
   };
@@ -178,8 +243,8 @@ function FixSentencePlay({
         difficultyDisabled={answered || lockDifficulty}
       >
         <GameStatus
-          current={index + 1}
-          total={sentences.length}
+          current={questionNum}
+          total={sessionSize}
           correct={progress.correct}
           wrong={progress.wrong}
           score={progress.score}
@@ -231,7 +296,7 @@ function FixSentencePlay({
 
             {answered && (
               <button onClick={nextQuestion} className="game-btn game-btn-primary w-full sm:max-w-md sm:mx-auto sm:block">
-                {index + 1 >= sentences.length ? t("common.seeResults") : t("games.nextSentence")}
+                {questionNum >= sessionSize ? t("common.seeResults") : t("games.nextSentence")}
               </button>
             )}
           </>
@@ -272,6 +337,7 @@ export default function FixSentencePage() {
   return (
     <FixSentencePlay
       sentences={sentences}
+      sessionSize={content!.sessionSize}
       difficulty={difficulty}
       changeDifficulty={changeDifficulty}
       progress={progress}

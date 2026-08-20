@@ -306,6 +306,7 @@ export async function fetchGameContentBundle(
     gameId === "shuk" ||
     gameId === "mystery" ||
     gameId === "scramble" ||
+    gameId === "fix-sentence" ||
     gameId === "vocabulary" ||
     gameId === "colors-numbers" ||
     gameId === "sentences"
