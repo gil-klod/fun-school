@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { DirectionalArrow } from "@/components/DirectionalArrow";
 import { useLocale } from "@/i18n/LocaleProvider";
 import { getGameTitle, translate } from "@/i18n";
 import { projectGameHref } from "@/lib/projects/links";
@@ -49,7 +50,7 @@ export function DailyProjectBanner({
     <section className="mb-6 bg-gradient-to-br from-violet-50 to-indigo-50 border-2 border-indigo-200 rounded-3xl p-4 sm:p-5 shadow-sm">
       <div className="flex flex-wrap items-start justify-between gap-2 mb-3">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-wide text-indigo-500">
+          <p className="text-xs font-semibold tracking-wide text-indigo-500">
             {t("projects.dailyTask")}
           </p>
           <h2 className="text-lg sm:text-xl font-bold text-gray-800">{project.name}</h2>
@@ -99,18 +100,27 @@ export function DailyProjectBanner({
 
           const inner = (
             <>
-              <span className="text-2xl">{game?.emoji ?? SLOT_EMOJI[slot]}</span>
-              <div className="min-w-0">
-                <p className="text-xs font-semibold text-gray-500 uppercase">{slotLabel}</p>
+              <span className="shrink-0 w-10 text-center text-2xl leading-none">
+                {game?.emoji ?? SLOT_EMOJI[slot]}
+              </span>
+              <div
+                className="flex-1 min-w-0 text-start"
+                dir={slotLocale === "en" ? "ltr" : slotLocale === "he" ? "rtl" : undefined}
+              >
+                <p className="text-xs font-semibold text-gray-500">{slotLabel}</p>
                 <p className="font-semibold text-gray-800 truncate">{gameName}</p>
               </div>
-              <span className="text-sm font-bold shrink-0">
-                {complete ? "✅" : "▶"}
-              </span>
+              {complete ? (
+                <span className="text-sm shrink-0 leading-none" aria-hidden>
+                  ✅
+                </span>
+              ) : (
+                <DirectionalArrow className="shrink-0 text-base font-bold text-indigo-500" />
+              )}
             </>
           );
 
-          const className = `flex items-center gap-3 p-3 rounded-2xl border-2 transition-colors ${
+          const className = `flex items-center gap-3 p-3 rounded-2xl border-2 transition-colors text-start ${
             complete
               ? "bg-emerald-50 border-emerald-200 opacity-80"
               : "bg-white border-indigo-100 hover:border-indigo-300 hover:bg-indigo-50/50"

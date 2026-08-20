@@ -1,3 +1,5 @@
+import { HEBREW_SCRAMBLE_WORDS } from "./hebrew-scramble-words";
+
 export interface HebrewWord {
   word: string;
   hintHe: string;
@@ -6,20 +8,7 @@ export interface HebrewWord {
   categoryEn: string;
 }
 
-export const HEBREW_WORDS: HebrewWord[] = [
-  { word: "ספר", hintHe: "משהו שקוראים", hintEn: "Something you read", categoryHe: "בית ספר", categoryEn: "school" },
-  { word: "בית", hintHe: "המקום שגרים בו", hintEn: "Where you live", categoryHe: "בית", categoryEn: "home" },
-  { word: "כלב", hintHe: "חיה שמנבחת", hintEn: "A pet that barks", categoryHe: "בעלי חיים", categoryEn: "animals" },
-  { word: "שמש", hintHe: "זורחת בשמיים", hintEn: "Shines in the sky", categoryHe: "טבע", categoryEn: "nature" },
-  { word: "ילד", hintHe: "אדם צעיר", hintEn: "A young person", categoryHe: "אנשים", categoryEn: "people" },
-  { word: "מים", hintHe: "שותים את זה", hintEn: "You drink this", categoryHe: "טבע", categoryEn: "nature" },
-  { word: "פרח", hintHe: "גדל בגינה", hintEn: "Grows in a garden", categoryHe: "טבע", categoryEn: "nature" },
-  { word: "עוגה", hintHe: "מאכל מתוק ליום הולדת", hintEn: "Sweet birthday food", categoryHe: "אוכל", categoryEn: "food" },
-  { word: "חלום", hintHe: "מה שרואים בשנת לילה", hintEn: "What you see when sleeping", categoryHe: "מחשבה", categoryEn: "abstract" },
-  { word: "ידיד", hintHe: "מישהו שמשחקים איתו", hintEn: "Someone you play with", categoryHe: "אנשים", categoryEn: "people" },
-  { word: "כדור", hintHe: "דבר עגול שבועטים", hintEn: "Round thing you kick", categoryHe: "ספורט", categoryEn: "sports" },
-  { word: "מורה", hintHe: "מלמד/ת בבית ספר", hintEn: "Teaches at school", categoryHe: "בית ספר", categoryEn: "school" },
-];
+export const HEBREW_WORDS: HebrewWord[] = HEBREW_SCRAMBLE_WORDS;
 
 export function getWordHint(word: HebrewWord, locale: "he" | "en") {
   return locale === "he" ? word.hintHe : word.hintEn;
