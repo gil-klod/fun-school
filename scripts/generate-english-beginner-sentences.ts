@@ -19,7 +19,7 @@ const RAW: SentenceDef[] = [
   ["I go to school", "אני הולך לבית ספר"],
   ["I eat an apple", "אני אוכל תפוח"],
   ["I drink water", "אני שותה מים"],
-  ["I play ball", "אני משחק בכדור"],
+  ["I play with a ball", "אני משחק עם כדור"],
   ["I see a cat", "אני רואה חתול"],
   ["I have a dog", "יש לי כלב"],
   ["I love my mom", "אני אוהב את אמא"],
@@ -32,7 +32,7 @@ const RAW: SentenceDef[] = [
   ["I open the door", "אני פותח את הדלת"],
   ["I close the window", "אני סוגר את החלון"],
   ["I sit on a chair", "אני יושב על כיסא"],
-  ["I sleep in bed", "אני ישן במיטה"],
+  ["I sleep in my bed", "אני ישן במיטה שלי"],
   ["I watch TV", "אני רואה טלוויזיה"],
 
   // She / He (15)
@@ -63,8 +63,8 @@ const RAW: SentenceDef[] = [
   ["The baby is cute", "התינוק חמוד"],
   ["The tree is tall", "העץ גבוה"],
   ["The house is big", "הבית גדול"],
-  ["The fish is wet", "הדג רטוב"],
-  ["The bird is free", "הציפור חופשיה"],
+  ["The fish can swim", "הדג יודע לשחות"],
+  ["The bird can fly", "הציפור יודעת לעוף"],
   ["The cake is sweet", "העוגה מתוקה"],
   ["The milk is cold", "החלב קר"],
   ["The park is fun", "הפארק כיפי"],
@@ -72,20 +72,20 @@ const RAW: SentenceDef[] = [
   ["The apple is green", "התפוח ירוק"],
   ["The sea is deep", "הים עמוק"],
   ["The moon is bright", "הירח בהיר"],
-  ["The school is near", "בית הספר קרוב"],
+  ["The school is near here", "בית הספר קרוב מכאן"],
 
   // We / They (15)
   ["We play together", "אנחנו משחקים ביחד"],
-  ["We go to park", "אנחנו הולכים לפארק"],
+  ["We go to the park", "אנחנו הולכים לפארק"],
   ["We like pizza", "אנחנו אוהבים פיצה"],
   ["We read stories", "אנחנו קוראים סיפורים"],
   ["We eat lunch", "אנחנו אוכלים צהריים"],
   ["We sing songs", "אנחנו שרים שירים"],
-  ["We help friends", "אנחנו עוזרים לחברים"],
+  ["We help our friends", "אנחנו עוזרים לחברים שלנו"],
   ["We run fast", "אנחנו רצים מהר"],
   ["We swim today", "אנחנו שוחים היום"],
   ["They are friends", "הם חברים"],
-  ["They play ball", "הם משחקים בכדור"],
+  ["They play with a ball", "הם משחקים עם כדור"],
   ["They go to school", "הם הולכים לבית ספר"],
   ["They like cats", "הם אוהבים חתולים"],
   ["They eat fruit", "הם אוכלים פירות"],
@@ -139,7 +139,7 @@ const RAW: SentenceDef[] = [
   ["There are three books", "יש שלושה ספרים"],
   ["There is one apple", "יש תפוח אחד"],
   ["There are many flowers", "יש הרבה פרחים"],
-  ["There is a park", "יש פארק"],
+  ["There is a park here", "יש פארק כאן"],
   ["There are five cats", "יש חמישה חתולים"],
   ["There are two dogs", "יש שני כלבים"],
   ["There is a ball", "יש כדור"],
@@ -149,7 +149,7 @@ const RAW: SentenceDef[] = [
   ["I can read", "אני יכול לקרוא"],
   ["She can sing", "היא יכולה לשיר"],
   ["He can run", "הוא יכול לרוץ"],
-  ["We can play", "אנחנו יכולים לשחק"],
+  ["We can play now", "אנחנו יכולים לשחק עכשיו"],
   ["I want water", "אני רוצה מים"],
   ["She wants cake", "היא רוצה עוגה"],
   ["He has a bike", "יש לו אופניים"],
@@ -164,14 +164,14 @@ const RAW: SentenceDef[] = [
   // Go to / at / in (10)
   ["I go to bed", "אני הולך לישון"],
   ["She goes to school", "היא הולכת לבית ספר"],
-  ["He goes to park", "הוא הולך לפארק"],
-  ["We go to beach", "אנחנו הולכים לחוף"],
+  ["He goes to the park", "הוא הולך לפארק"],
+  ["We go to the beach", "אנחנו הולכים לחוף"],
   ["They go home", "הם הולכים הביתה"],
   ["I am at school", "אני בבית הספר"],
   ["She is at home", "היא בבית"],
   ["He is in class", "הוא בכיתה"],
-  ["We are in park", "אנחנו בפארק"],
-  ["They are at beach", "הם בחוף"],
+  ["We are in the park", "אנחנו בפארק"],
+  ["They are at the beach", "הם בחוף הים"],
 
   // Daily phrases & misc (10)
   ["Good morning everyone", "בוקר טוב לכולם"],
@@ -183,7 +183,7 @@ const RAW: SentenceDef[] = [
   ["I like my teacher", "אני אוהב את המורה"],
   ["We love our school", "אנחנו אוהבים את בית הספר"],
   ["The bus is here", "האוטובוס כאן"],
-  ["My cat sleeps now", "החתול שלי ישן עכשיו"],
+  ["My cat is sleeping", "החתול שלי ישן"],
 ];
 
 interface SentenceChallenge {
@@ -213,8 +213,8 @@ function validate(entries: SentenceDef[]): void {
     seen.add(key);
 
     const words = wordsFromCorrect(correct);
-    if (words.length < 3 || words.length > 6) {
-      throw new Error(`Sentence must be 3–6 words: "${correct}" (${words.length})`);
+    if (words.length < 3 || words.length > 7) {
+      throw new Error(`Sentence must be 3–7 words: "${correct}" (${words.length})`);
     }
     if (words.join(" ") !== correct.trim()) {
       throw new Error(`Words mismatch for: ${correct}`);

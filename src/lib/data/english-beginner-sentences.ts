@@ -33,9 +33,9 @@ export const ENGLISH_BEGINNER_SENTENCES: SentenceChallenge[] = [
     translation: "אני שותה מים",
   },
   {
-    words: ["I","play","ball"],
-    correct: "I play ball",
-    translation: "אני משחק בכדור",
+    words: ["I","play","with","a","ball"],
+    correct: "I play with a ball",
+    translation: "אני משחק עם כדור",
   },
   {
     words: ["I","see","a","cat"],
@@ -98,9 +98,9 @@ export const ENGLISH_BEGINNER_SENTENCES: SentenceChallenge[] = [
     translation: "אני יושב על כיסא",
   },
   {
-    words: ["I","sleep","in","bed"],
-    correct: "I sleep in bed",
-    translation: "אני ישן במיטה",
+    words: ["I","sleep","in","my","bed"],
+    correct: "I sleep in my bed",
+    translation: "אני ישן במיטה שלי",
   },
   {
     words: ["I","watch","TV"],
@@ -233,14 +233,14 @@ export const ENGLISH_BEGINNER_SENTENCES: SentenceChallenge[] = [
     translation: "הבית גדול",
   },
   {
-    words: ["The","fish","is","wet"],
-    correct: "The fish is wet",
-    translation: "הדג רטוב",
+    words: ["The","fish","can","swim"],
+    correct: "The fish can swim",
+    translation: "הדג יודע לשחות",
   },
   {
-    words: ["The","bird","is","free"],
-    correct: "The bird is free",
-    translation: "הציפור חופשיה",
+    words: ["The","bird","can","fly"],
+    correct: "The bird can fly",
+    translation: "הציפור יודעת לעוף",
   },
   {
     words: ["The","cake","is","sweet"],
@@ -278,9 +278,9 @@ export const ENGLISH_BEGINNER_SENTENCES: SentenceChallenge[] = [
     translation: "הירח בהיר",
   },
   {
-    words: ["The","school","is","near"],
-    correct: "The school is near",
-    translation: "בית הספר קרוב",
+    words: ["The","school","is","near","here"],
+    correct: "The school is near here",
+    translation: "בית הספר קרוב מכאן",
   },
   {
     words: ["We","play","together"],
@@ -288,8 +288,8 @@ export const ENGLISH_BEGINNER_SENTENCES: SentenceChallenge[] = [
     translation: "אנחנו משחקים ביחד",
   },
   {
-    words: ["We","go","to","park"],
-    correct: "We go to park",
+    words: ["We","go","to","the","park"],
+    correct: "We go to the park",
     translation: "אנחנו הולכים לפארק",
   },
   {
@@ -313,9 +313,9 @@ export const ENGLISH_BEGINNER_SENTENCES: SentenceChallenge[] = [
     translation: "אנחנו שרים שירים",
   },
   {
-    words: ["We","help","friends"],
-    correct: "We help friends",
-    translation: "אנחנו עוזרים לחברים",
+    words: ["We","help","our","friends"],
+    correct: "We help our friends",
+    translation: "אנחנו עוזרים לחברים שלנו",
   },
   {
     words: ["We","run","fast"],
@@ -333,9 +333,9 @@ export const ENGLISH_BEGINNER_SENTENCES: SentenceChallenge[] = [
     translation: "הם חברים",
   },
   {
-    words: ["They","play","ball"],
-    correct: "They play ball",
-    translation: "הם משחקים בכדור",
+    words: ["They","play","with","a","ball"],
+    correct: "They play with a ball",
+    translation: "הם משחקים עם כדור",
   },
   {
     words: ["They","go","to","school"],
@@ -563,9 +563,9 @@ export const ENGLISH_BEGINNER_SENTENCES: SentenceChallenge[] = [
     translation: "יש הרבה פרחים",
   },
   {
-    words: ["There","is","a","park"],
-    correct: "There is a park",
-    translation: "יש פארק",
+    words: ["There","is","a","park","here"],
+    correct: "There is a park here",
+    translation: "יש פארק כאן",
   },
   {
     words: ["There","are","five","cats"],
@@ -603,9 +603,9 @@ export const ENGLISH_BEGINNER_SENTENCES: SentenceChallenge[] = [
     translation: "הוא יכול לרוץ",
   },
   {
-    words: ["We","can","play"],
-    correct: "We can play",
-    translation: "אנחנו יכולים לשחק",
+    words: ["We","can","play","now"],
+    correct: "We can play now",
+    translation: "אנחנו יכולים לשחק עכשיו",
   },
   {
     words: ["I","want","water"],
@@ -668,13 +668,13 @@ export const ENGLISH_BEGINNER_SENTENCES: SentenceChallenge[] = [
     translation: "היא הולכת לבית ספר",
   },
   {
-    words: ["He","goes","to","park"],
-    correct: "He goes to park",
+    words: ["He","goes","to","the","park"],
+    correct: "He goes to the park",
     translation: "הוא הולך לפארק",
   },
   {
-    words: ["We","go","to","beach"],
-    correct: "We go to beach",
+    words: ["We","go","to","the","beach"],
+    correct: "We go to the beach",
     translation: "אנחנו הולכים לחוף",
   },
   {
@@ -698,14 +698,14 @@ export const ENGLISH_BEGINNER_SENTENCES: SentenceChallenge[] = [
     translation: "הוא בכיתה",
   },
   {
-    words: ["We","are","in","park"],
-    correct: "We are in park",
+    words: ["We","are","in","the","park"],
+    correct: "We are in the park",
     translation: "אנחנו בפארק",
   },
   {
-    words: ["They","are","at","beach"],
-    correct: "They are at beach",
-    translation: "הם בחוף",
+    words: ["They","are","at","the","beach"],
+    correct: "They are at the beach",
+    translation: "הם בחוף הים",
   },
   {
     words: ["Good","morning","everyone"],
@@ -753,8 +753,8 @@ export const ENGLISH_BEGINNER_SENTENCES: SentenceChallenge[] = [
     translation: "האוטובוס כאן",
   },
   {
-    words: ["My","cat","sleeps","now"],
-    correct: "My cat sleeps now",
-    translation: "החתול שלי ישן עכשיו",
+    words: ["My","cat","is","sleeping"],
+    correct: "My cat is sleeping",
+    translation: "החתול שלי ישן",
   },
 ];
