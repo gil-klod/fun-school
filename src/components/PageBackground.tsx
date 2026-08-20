@@ -1,45 +1,40 @@
 "use client";
 
 import { useEffect, useState } from "react";
-
-const BACKGROUNDS = [
-  "bg-school-sky",
-  "bg-school-sunset",
-  "bg-school-mint",
-  "bg-school-lavender",
-  "bg-school-peach",
-  "bg-school-notebook",
-] as const;
-
-type BackgroundId = (typeof BACKGROUNDS)[number];
+import {
+  getBackgroundById,
+  pickRandomBackgroundId,
+  PAGE_BACKGROUND_IDS,
+  type PageBackgroundId,
+} from "@/lib/backgrounds";
 
 const STORAGE_KEY = "fun-school-bg";
 
-function pickBackground(): BackgroundId {
-  const index = Math.floor(Math.random() * BACKGROUNDS.length);
-  return BACKGROUNDS[index];
-}
-
 export function PageBackground() {
-  const [background, setBackground] = useState<BackgroundId | null>(null);
+  const [backgroundId, setBackgroundId] = useState<PageBackgroundId | null>(null);
 
   useEffect(() => {
-    const stored = sessionStorage.getItem(STORAGE_KEY) as BackgroundId | null;
-    if (stored && BACKGROUNDS.includes(stored)) {
-      setBackground(stored);
+    const stored = sessionStorage.getItem(STORAGE_KEY) as PageBackgroundId | null;
+    if (stored && PAGE_BACKGROUND_IDS.includes(stored)) {
+      setBackgroundId(stored);
       return;
     }
-    const chosen = pickBackground();
+    const chosen = pickRandomBackgroundId();
     sessionStorage.setItem(STORAGE_KEY, chosen);
-    setBackground(chosen);
+    setBackgroundId(chosen);
   }, []);
 
-  if (!background) return null;
+  if (!backgroundId) return null;
+
+  const background = getBackgroundById(backgroundId);
 
   return (
-    <div
-      className={`page-background ${background}`}
-      aria-hidden
-    />
+    <div className="page-background" aria-hidden>
+      <div
+        className="page-background-image"
+        style={{ backgroundImage: `url(${background.src})` }}
+      />
+      <div className="page-background-overlay" />
+    </div>
   );
 }

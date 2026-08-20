@@ -21,8 +21,7 @@
 }
 
 body {
-  background: linear-gradient(135deg, #fef9f0 0%, #e0e7ff 50%, #fef3c7 100%);
-  background-attachment: fixed;
+  background: #fef9f0;
   color: var(--foreground);
   font-family: var(--font-rubik), Arial, Helvetica, sans-serif;
   min-height: 100vh;
@@ -33,8 +32,27 @@ body {
   position: fixed;
   inset: 0;
   z-index: -1;
-  background-attachment: fixed;
   pointer-events: none;
+  overflow: hidden;
+}
+
+.page-background-image {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+}
+
+.page-background-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.08) 0%,
+    rgba(255, 255, 255, 0.18) 100%
+  );
 }
 
 .bg-school-sky {

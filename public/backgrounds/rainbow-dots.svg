@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 900" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <linearGradient id="pastel" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fce7f3"/>
+      <stop offset="35%" stop-color="#e0e7ff"/>
+      <stop offset="70%" stop-color="#dcfce7"/>
+      <stop offset="100%" stop-color="#fef9c3"/>
+    </linearGradient>
+  </defs>
+  <rect width="1440" height="900" fill="url(#pastel)"/>
+  <g opacity="0.45">
+    <circle cx="180" cy="160" r="34" fill="#f472b6"/>
+    <circle cx="380" cy="280" r="26" fill="#60a5fa"/>
+    <circle cx="620" cy="120" r="30" fill="#facc15"/>
+    <circle cx="860" cy="240" r="28" fill="#4ade80"/>
+    <circle cx="1080" cy="150" r="32" fill="#a78bfa"/>
+    <circle cx="1280" cy="300" r="24" fill="#fb923c"/>
+    <circle cx="240" cy="520" r="28" fill="#38bdf8"/>
+    <circle cx="520" cy="640" r="36" fill="#f472b6"/>
+    <circle cx="780" cy="560" r="22" fill="#facc15"/>
+    <circle cx="1020" cy="680" r="30" fill="#4ade80"/>
+    <circle cx="1260" cy="540" r="26" fill="#60a5fa"/>
+    <circle cx="140" cy="760" r="20" fill="#a78bfa"/>
+    <circle cx="460" cy="820" r="24" fill="#fb923c"/>
+    <circle cx="920" cy="820" r="28" fill="#38bdf8"/>
+  </g>
+</svg>
