@@ -1,23 +1,5 @@
-export interface VocabPair {
-  english: string;
-  hebrew: string;
-  emoji: string;
-}
-
-export const BEGINNER_VOCAB: VocabPair[] = [
-  { english: "Book", hebrew: "ספר", emoji: "📚" },
-  { english: "House", hebrew: "בית", emoji: "🏠" },
-  { english: "Dog", hebrew: "כלב", emoji: "🐕" },
-  { english: "Cat", hebrew: "חתול", emoji: "🐱" },
-  { english: "Water", hebrew: "מים", emoji: "💧" },
-  { english: "Sun", hebrew: "שמש", emoji: "☀️" },
-  { english: "Tree", hebrew: "עץ", emoji: "🌳" },
-  { english: "Friend", hebrew: "חבר", emoji: "👫" },
-  { english: "School", hebrew: "בית ספר", emoji: "🏫" },
-  { english: "Apple", hebrew: "תפוח", emoji: "🍎" },
-  { english: "Ball", hebrew: "כדור", emoji: "⚽" },
-  { english: "Happy", hebrew: "שמח", emoji: "😊" },
-];
+export type { VocabPair } from "./english-beginner-vocab";
+export { ENGLISH_BEGINNER_VOCAB as BEGINNER_VOCAB } from "./english-beginner-vocab";
 
 export interface SentenceChallenge {
   words: string[];
