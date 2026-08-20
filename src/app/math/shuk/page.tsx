@@ -201,10 +201,6 @@ function ShukPlay({
               ))}
             </div>
             <div className="border-t border-amber-200 mt-3 pt-3 flex justify-between text-base gap-2">
-              <span className="font-semibold">{t("games.total")}</span>
-              <MathLtr className="font-bold text-amber-800">₪{challenge.total}</MathLtr>
-            </div>
-            <div className="flex justify-between text-base gap-2 mt-1">
               <span className="font-semibold">{t("games.youPay")}</span>
               <MathLtr className="font-bold text-green-700">₪{challenge.paid}</MathLtr>
             </div>
