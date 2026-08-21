@@ -12,7 +12,7 @@ import { useLocale } from "@/i18n/LocaleProvider";
 import { useProjectGame } from "@/hooks/useProjectGame";
 import { ProjectSlotDone } from "@/components/projects/ProjectSlotDone";
 import { SessionComplete } from "@/components/SessionComplete";
-import { EnglishSpeakButton } from "@/components/EnglishSpeakButton";
+import { EnglishSpeakButton, SpeakButton } from "@/components/EnglishSpeakButton";
 
 interface SentenceChallenge {
   words: string[];
@@ -274,7 +274,7 @@ function SentencesPlay({
             <div>
               <div className="flex items-center justify-center gap-2 mb-4" dir="rtl">
                 <p className="text-center text-gray-600">{challenge.translation}</p>
-                <EnglishSpeakButton text={challenge.correct} />
+                <SpeakButton text={challenge.translation} locale="he" />
               </div>
 
               <div
@@ -307,14 +307,16 @@ function SentencesPlay({
             <div dir="ltr">
               <div className="flex flex-wrap gap-2 justify-start mb-4">
                 {availableWords.map((token) => (
-                  <button
-                    key={token.id}
-                    onClick={() => addWord(token)}
-                    disabled={answered}
-                    className="game-btn-option py-3 px-5"
-                  >
-                    {token.word}
-                  </button>
+                  <div key={token.id} className="inline-flex items-center gap-1">
+                    <button
+                      onClick={() => addWord(token)}
+                      disabled={answered}
+                      className="game-btn-option py-3 px-5"
+                    >
+                      {token.word}
+                    </button>
+                    <EnglishSpeakButton text={token.word} size="sm" />
+                  </div>
                 ))}
               </div>
 

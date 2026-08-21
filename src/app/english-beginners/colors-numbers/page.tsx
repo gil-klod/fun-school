@@ -12,7 +12,7 @@ import { useLocale } from "@/i18n/LocaleProvider";
 import { useProjectGame } from "@/hooks/useProjectGame";
 import { ProjectSlotDone } from "@/components/projects/ProjectSlotDone";
 import { SessionComplete } from "@/components/SessionComplete";
-import { EnglishSpeakButton } from "@/components/EnglishSpeakButton";
+import { EnglishSpeakButton, SpeakButton } from "@/components/EnglishSpeakButton";
 import { shuffleArray } from "@/lib/content/generators";
 
 interface ColorNumberItem {
@@ -200,20 +200,22 @@ function ColorsNumbersPlay({
                 <span className="text-6xl">{item.emoji}</span>
                 <div className="mt-4 flex items-center justify-center gap-2">
                   <p className="text-xl font-bold text-gray-800">{prompt}</p>
-                  <EnglishSpeakButton text={item.answer} />
+                  <SpeakButton text={prompt} locale={locale} />
                 </div>
               </div>
 
               <GameOptionsGrid>
                 {options.map((opt) => (
-                  <button
-                    key={opt}
-                    onClick={() => handleAnswer(opt)}
-                    disabled={answered}
-                    className={`game-btn-option text-lg py-4 ${answered && opt === item.answer ? "correct" : ""} ${answered && opt !== item.answer ? "opacity-50" : ""}`}
-                  >
-                    {opt}
-                  </button>
+                  <div key={opt} className="flex items-stretch gap-1.5">
+                    <button
+                      onClick={() => handleAnswer(opt)}
+                      disabled={answered}
+                      className={`game-btn-option flex-1 text-lg py-4 ${answered && opt === item.answer ? "correct" : ""} ${answered && opt !== item.answer ? "opacity-50" : ""}`}
+                    >
+                      {opt}
+                    </button>
+                    <EnglishSpeakButton text={opt} size="sm" className="self-center" />
+                  </div>
                 ))}
               </GameOptionsGrid>
             </div>

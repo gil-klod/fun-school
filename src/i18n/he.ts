@@ -291,6 +291,6 @@ export const he: Dictionary = {
     storyWrong: "התשובה: {answer}",
     vocabPromptHeToEn: "מה זה \"{word}\" באנגלית?",
     vocabPromptEnToHe: "מה זה \"{word}\" בעברית?",
-    hearEnglish: "שמע הגייה באנגלית",
+    hearEnglish: "הקרא בקול",
   },
 };

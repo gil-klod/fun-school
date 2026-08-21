@@ -291,6 +291,6 @@ export const en: Dictionary = {
     storyWrong: "The answer was: {answer}",
     vocabPromptHeToEn: "What is \"{word}\" in English?",
     vocabPromptEnToHe: "What is \"{word}\" in Hebrew?",
-    hearEnglish: "Hear English pronunciation",
+    hearEnglish: "Listen to pronunciation",
   },
 };

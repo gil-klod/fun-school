@@ -12,7 +12,7 @@ import { useLocale } from "@/i18n/LocaleProvider";
 import { useProjectGame } from "@/hooks/useProjectGame";
 import { ProjectSlotDone } from "@/components/projects/ProjectSlotDone";
 import { SessionComplete } from "@/components/SessionComplete";
-import { EnglishSpeakButton } from "@/components/EnglishSpeakButton";
+import { EnglishSpeakButton, SpeakButton } from "@/components/EnglishSpeakButton";
 import { shuffleArray } from "@/lib/content/generators";
 import type { Locale } from "@/i18n/types";
 
@@ -24,6 +24,8 @@ interface VocabPair {
 
 type VocabQuestion = {
   prompt: string;
+  promptLocale: Locale;
+  optionsAreEnglish: boolean;
   correct: string;
   options: string[];
   emoji: string;
@@ -48,6 +50,8 @@ function generateQuestion(
     prompt: askHebrew
       ? t("games.vocabPromptHeToEn", { word })
       : t("games.vocabPromptEnToHe", { word }),
+    promptLocale: askHebrew ? "he" : "en",
+    optionsAreEnglish: askHebrew,
     correct: askHebrew ? correct.english : correct.hebrew,
     options: askHebrew
       ? options.map((o) => o.english)
@@ -265,20 +269,26 @@ function VocabularyPlay({
                 <span className="text-5xl sm:text-6xl">{question.emoji}</span>
                 <div className="mt-4 flex items-center justify-center gap-2">
                   <p className="text-xl font-bold text-gray-800">{question.prompt}</p>
-                  <EnglishSpeakButton text={question.englishWord} />
+                  <SpeakButton text={question.prompt} locale={question.promptLocale} />
                 </div>
               </div>
 
               <GameOptionsGrid>
                 {question.options.map((opt) => (
-                  <button
-                    key={opt}
-                    onClick={() => handleAnswer(opt)}
-                    disabled={answered}
-                    className={`game-btn-option text-lg py-4 ${answered && opt === question.correct ? "correct" : ""} ${answered && opt !== question.correct ? "opacity-50" : ""}`}
-                  >
-                    {opt}
-                  </button>
+                  <div key={opt} className="flex items-stretch gap-1.5">
+                    <button
+                      onClick={() => handleAnswer(opt)}
+                      disabled={answered}
+                      className={`game-btn-option flex-1 text-lg py-4 ${answered && opt === question.correct ? "correct" : ""} ${answered && opt !== question.correct ? "opacity-50" : ""}`}
+                    >
+                      {opt}
+                    </button>
+                    {question.optionsAreEnglish ? (
+                      <EnglishSpeakButton text={opt} size="sm" className="self-center" />
+                    ) : (
+                      <SpeakButton text={opt} locale="he" size="sm" className="self-center" />
+                    )}
+                  </div>
                 ))}
               </GameOptionsGrid>
             </div>
