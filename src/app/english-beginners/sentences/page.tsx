@@ -12,7 +12,7 @@ import { useLocale } from "@/i18n/LocaleProvider";
 import { useProjectGame } from "@/hooks/useProjectGame";
 import { ProjectSlotDone } from "@/components/projects/ProjectSlotDone";
 import { SessionComplete } from "@/components/SessionComplete";
-import { EnglishSpeakButton, SpeakButton } from "@/components/EnglishSpeakButton";
+import { SpeakButton, WordWithSpeaker } from "@/components/EnglishSpeakButton";
 
 interface SentenceChallenge {
   words: string[];
@@ -272,7 +272,7 @@ function SentencesPlay({
         {!sessionComplete && !slotDone ? (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
             <div>
-              <div className="flex items-center justify-center gap-2 mb-4" dir="rtl">
+              <div className="flex flex-col items-center gap-2 mb-4" dir="rtl">
                 <p className="text-center text-gray-600">{challenge.translation}</p>
                 <SpeakButton text={challenge.translation} locale="he" />
               </div>
@@ -305,18 +305,16 @@ function SentencesPlay({
             </div>
 
             <div dir="ltr">
-              <div className="flex flex-wrap gap-2 justify-start mb-4">
+              <div className="flex flex-wrap gap-3 justify-start mb-4">
                 {availableWords.map((token) => (
-                  <div key={token.id} className="inline-flex items-center gap-1">
-                    <button
-                      onClick={() => addWord(token)}
-                      disabled={answered}
-                      className="game-btn-option py-3 px-5"
-                    >
-                      {token.word}
-                    </button>
-                    <EnglishSpeakButton text={token.word} size="sm" />
-                  </div>
+                  <WordWithSpeaker
+                    key={token.id}
+                    word={token.word}
+                    speakLocale="en"
+                    disabled={answered}
+                    onWordClick={() => addWord(token)}
+                    wordClassName="game-btn-option py-3 px-5"
+                  />
                 ))}
               </div>
 

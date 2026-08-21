@@ -12,7 +12,7 @@ import { useLocale } from "@/i18n/LocaleProvider";
 import { useProjectGame } from "@/hooks/useProjectGame";
 import { ProjectSlotDone } from "@/components/projects/ProjectSlotDone";
 import { SessionComplete } from "@/components/SessionComplete";
-import { EnglishSpeakButton, SpeakButton } from "@/components/EnglishSpeakButton";
+import { SpeakButton, WordWithSpeaker } from "@/components/EnglishSpeakButton";
 import { shuffleArray } from "@/lib/content/generators";
 import type { Locale } from "@/i18n/types";
 
@@ -267,7 +267,7 @@ function VocabularyPlay({
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4 items-center">
               <div className="bg-white/90 rounded-2xl p-5 sm:p-8 shadow border-2 border-green-100 text-center">
                 <span className="text-5xl sm:text-6xl">{question.emoji}</span>
-                <div className="mt-4 flex items-center justify-center gap-2">
+                <div className="mt-4 flex flex-col items-center gap-2">
                   <p className="text-xl font-bold text-gray-800">{question.prompt}</p>
                   <SpeakButton text={question.prompt} locale={question.promptLocale} />
                 </div>
@@ -275,20 +275,14 @@ function VocabularyPlay({
 
               <GameOptionsGrid>
                 {question.options.map((opt) => (
-                  <div key={opt} className="flex items-stretch gap-1.5">
-                    <button
-                      onClick={() => handleAnswer(opt)}
-                      disabled={answered}
-                      className={`game-btn-option flex-1 text-lg py-4 ${answered && opt === question.correct ? "correct" : ""} ${answered && opt !== question.correct ? "opacity-50" : ""}`}
-                    >
-                      {opt}
-                    </button>
-                    {question.optionsAreEnglish ? (
-                      <EnglishSpeakButton text={opt} size="sm" className="self-center" />
-                    ) : (
-                      <SpeakButton text={opt} locale="he" size="sm" className="self-center" />
-                    )}
-                  </div>
+                  <WordWithSpeaker
+                    key={opt}
+                    word={opt}
+                    speakLocale={question.optionsAreEnglish ? "en" : "he"}
+                    disabled={answered}
+                    onWordClick={() => handleAnswer(opt)}
+                    wordClassName={`game-btn-option w-full text-lg py-4 ${answered && opt === question.correct ? "correct" : ""} ${answered && opt !== question.correct ? "opacity-50" : ""}`}
+                  />
                 ))}
               </GameOptionsGrid>
             </div>

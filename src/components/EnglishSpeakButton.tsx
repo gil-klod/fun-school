@@ -60,3 +60,40 @@ export function SpeakButton({ text, locale = "en", className = "", size = "md" }
 export function EnglishSpeakButton(props: Omit<SpeakButtonProps, "locale">) {
   return <SpeakButton {...props} locale="en" />;
 }
+
+interface WordWithSpeakerProps {
+  word: string;
+  speakLocale?: Locale;
+  onWordClick?: () => void;
+  disabled?: boolean;
+  wordClassName?: string;
+  className?: string;
+}
+
+/** Answer chip with the listen button stacked underneath the word. */
+export function WordWithSpeaker({
+  word,
+  speakLocale = "en",
+  onWordClick,
+  disabled,
+  wordClassName = "",
+  className = "",
+}: WordWithSpeakerProps) {
+  return (
+    <div className={`flex flex-col items-center gap-1.5 ${className}`}>
+      <button
+        type="button"
+        onClick={onWordClick}
+        disabled={disabled}
+        className={wordClassName}
+      >
+        {word}
+      </button>
+      {speakLocale === "en" ? (
+        <EnglishSpeakButton text={word} size="sm" />
+      ) : (
+        <SpeakButton text={word} locale={speakLocale} size="sm" />
+      )}
+    </div>
+  );
+}

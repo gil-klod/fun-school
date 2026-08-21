@@ -12,7 +12,7 @@ import { useLocale } from "@/i18n/LocaleProvider";
 import { useProjectGame } from "@/hooks/useProjectGame";
 import { ProjectSlotDone } from "@/components/projects/ProjectSlotDone";
 import { SessionComplete } from "@/components/SessionComplete";
-import { EnglishSpeakButton, SpeakButton } from "@/components/EnglishSpeakButton";
+import { SpeakButton, WordWithSpeaker } from "@/components/EnglishSpeakButton";
 import { shuffleArray } from "@/lib/content/generators";
 
 interface ColorNumberItem {
@@ -198,7 +198,7 @@ function ColorsNumbersPlay({
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4 items-center">
               <div className="bg-white/90 rounded-2xl p-5 sm:p-8 shadow border-2 border-green-100 text-center">
                 <span className="text-6xl">{item.emoji}</span>
-                <div className="mt-4 flex items-center justify-center gap-2">
+                <div className="mt-4 flex flex-col items-center gap-2">
                   <p className="text-xl font-bold text-gray-800">{prompt}</p>
                   <SpeakButton text={prompt} locale={locale} />
                 </div>
@@ -206,16 +206,14 @@ function ColorsNumbersPlay({
 
               <GameOptionsGrid>
                 {options.map((opt) => (
-                  <div key={opt} className="flex items-stretch gap-1.5">
-                    <button
-                      onClick={() => handleAnswer(opt)}
-                      disabled={answered}
-                      className={`game-btn-option flex-1 text-lg py-4 ${answered && opt === item.answer ? "correct" : ""} ${answered && opt !== item.answer ? "opacity-50" : ""}`}
-                    >
-                      {opt}
-                    </button>
-                    <EnglishSpeakButton text={opt} size="sm" className="self-center" />
-                  </div>
+                  <WordWithSpeaker
+                    key={opt}
+                    word={opt}
+                    speakLocale="en"
+                    disabled={answered}
+                    onWordClick={() => handleAnswer(opt)}
+                    wordClassName={`game-btn-option w-full text-lg py-4 ${answered && opt === item.answer ? "correct" : ""} ${answered && opt !== item.answer ? "opacity-50" : ""}`}
+                  />
                 ))}
               </GameOptionsGrid>
             </div>
