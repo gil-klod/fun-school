@@ -1,61 +1,25 @@
-import { GameProgress } from "@/models/GameProgress";
 import { UserAnalytics, type GameStat, type SubjectStat } from "@/models/UserAnalytics";
 import {
   gameStrengthKey,
   subjectStrengthKey,
 } from "@/lib/analyticsKeys";
 import { toStudentObjectId } from "@/lib/students/objectId";
+import { buildStatsFromProgressRecords } from "@/lib/progressStats";
+import { listGameProgressForStudent } from "@/lib/progressServer";
 import OpenAI from "openai";
 
-function accuracy(correct: number, wrong: number) {
-  const total = correct + wrong;
-  return total === 0 ? 0 : Math.round((correct / total) * 100);
-}
-
-export async function computeAnalytics(studentId: string) {
+export async function computeAnalytics(studentId: string, userId?: string) {
   const studentObjectId = toStudentObjectId(studentId);
   if (!studentObjectId) {
     throw new Error("Invalid studentId");
   }
 
-  const progresses = await GameProgress.find({ studentId: studentObjectId });
+  const progresses = userId
+    ? await listGameProgressForStudent(studentId, userId)
+    : await listGameProgressForStudent(studentId, "");
 
-  const subjectMap = new Map<string, SubjectStat>();
-  const gameMap = new Map<string, GameStat>();
-
-  for (const p of progresses) {
-    const sub = subjectMap.get(p.subjectId) ?? {
-      subjectId: p.subjectId,
-      correct: 0,
-      wrong: 0,
-      accuracy: 0,
-      gamesPlayed: 0,
-    };
-    sub.correct += p.correct;
-    sub.wrong += p.wrong;
-    sub.gamesPlayed += 1;
-    sub.accuracy = accuracy(sub.correct, sub.wrong);
-    subjectMap.set(p.subjectId, sub);
-
-    const gameKey = `${p.subjectId}:${p.gameId}`;
-    const game = gameMap.get(gameKey) ?? {
-      subjectId: p.subjectId,
-      gameId: p.gameId,
-      correct: 0,
-      wrong: 0,
-      accuracy: 0,
-      score: 0,
-    };
-    game.correct += p.correct;
-    game.wrong += p.wrong;
-    game.score = Math.max(game.score, p.score);
-    game.accuracy = accuracy(game.correct, game.wrong);
-    gameMap.set(gameKey, game);
-  }
-
-  const subjectStats = Array.from(subjectMap.values());
-  const gameStats = Array.from(gameMap.values());
-  const playedGames = gameStats.filter((g) => g.correct + g.wrong > 0);
+  const { subjectStats, gameStats } = buildStatsFromProgressRecords(progresses);
+  const playedGames = gameStats.filter((g) => (g.correct ?? 0) + (g.wrong ?? 0) > 0);
 
   const strengths = playedGames
     .filter((g) => g.accuracy >= 70 && g.correct + g.wrong >= 3)
@@ -111,7 +75,7 @@ export async function computeAnalytics(studentId: string) {
       updatedAt: new Date(),
     },
     { upsert: true, new: true }
-  );
+  ).lean();
 }
 
 async function generateAIFeedback(data: {

@@ -123,7 +123,10 @@ export const en: Dictionary = {
       "{days}/{total} days done · {slots}/{slotsTotal} tasks · today {today}/3",
     dailyProjectComplete: "You finished every day of the daily task! 🏆",
     dailyProjectContinue: "Go to daily task",
-    gamesEmptyHint: "Play free games too to unlock detailed stats below.",
+    gamesEmptyHint: "No game stats yet.",
+    gamesEmptySteps:
+      "Select the student above, play a game (daily task counts too), answer every question, and finish through the end screen.",
+    trackingStudent: "Showing progress for: {name}",
   },
   students: {
     title: "Students",

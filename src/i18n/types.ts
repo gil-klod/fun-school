@@ -137,6 +137,8 @@ export interface Dictionary {
     dailyProjectComplete: string;
     dailyProjectContinue: string;
     gamesEmptyHint: string;
+    gamesEmptySteps: string;
+    trackingStudent: string;
   };
   subjects: Record<string, SubjectStrings>;
   students: {

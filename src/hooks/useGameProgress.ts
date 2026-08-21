@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, type SetStateAction } from "react";
 import type { DifficultyLevel } from "@/lib/content/types";
 import { useStudent } from "@/components/students";
 import type { ProjectSlot } from "@/lib/projects/types";
@@ -64,6 +64,10 @@ function hasStatUpdate(overrides?: Partial<ProgressData>) {
   );
 }
 
+function resolveStateAction<T>(value: SetStateAction<T>, prev: T): T {
+  return typeof value === "function" ? (value as (current: T) => T)(prev) : value;
+}
+
 export function useGameProgress({
   subjectId,
   gameId,
@@ -81,11 +85,11 @@ export function useGameProgress({
   }, [isProjectGame]);
   const [loaded, setLoaded] = useState(false);
   const [hasSavedProgress, setHasSavedProgress] = useState(false);
-  const [score, setScore] = useState(0);
-  const [streak, setStreak] = useState(0);
-  const [round, setRound] = useState(1);
-  const [correct, setCorrect] = useState(0);
-  const [wrong, setWrong] = useState(0);
+  const [score, setScoreState] = useState(0);
+  const [streak, setStreakState] = useState(0);
+  const [round, setRoundState] = useState(1);
+  const [correct, setCorrectState] = useState(0);
+  const [wrong, setWrongState] = useState(0);
   const [gameState, setGameState] = useState<Record<string, unknown>>(defaultState);
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const latest = useRef<ProgressData>(emptyProgress(defaultState));
@@ -94,13 +98,53 @@ export function useGameProgress({
     latest.current = { score, streak, round, correct, wrong, state: gameState, difficulty };
   }, [score, streak, round, correct, wrong, gameState, difficulty]);
 
+  const setScore = useCallback((value: SetStateAction<number>) => {
+    setScoreState((prev) => {
+      const next = resolveStateAction(value, prev);
+      latest.current = { ...latest.current, score: next };
+      return next;
+    });
+  }, []);
+
+  const setStreak = useCallback((value: SetStateAction<number>) => {
+    setStreakState((prev) => {
+      const next = resolveStateAction(value, prev);
+      latest.current = { ...latest.current, streak: next };
+      return next;
+    });
+  }, []);
+
+  const setRound = useCallback((value: SetStateAction<number>) => {
+    setRoundState((prev) => {
+      const next = resolveStateAction(value, prev);
+      latest.current = { ...latest.current, round: next };
+      return next;
+    });
+  }, []);
+
+  const setCorrect = useCallback((value: SetStateAction<number>) => {
+    setCorrectState((prev) => {
+      const next = resolveStateAction(value, prev);
+      latest.current = { ...latest.current, correct: next };
+      return next;
+    });
+  }, []);
+
+  const setWrong = useCallback((value: SetStateAction<number>) => {
+    setWrongState((prev) => {
+      const next = resolveStateAction(value, prev);
+      latest.current = { ...latest.current, wrong: next };
+      return next;
+    });
+  }, []);
+
   const resetProgress = useCallback(() => {
     const fresh = emptyProgress(defaultState);
-    setScore(fresh.score);
-    setStreak(fresh.streak);
-    setRound(fresh.round);
-    setCorrect(fresh.correct);
-    setWrong(fresh.wrong);
+    setScoreState(fresh.score);
+    setStreakState(fresh.streak);
+    setRoundState(fresh.round);
+    setCorrectState(fresh.correct);
+    setWrongState(fresh.wrong);
     setGameState(fresh.state);
     setHasSavedProgress(false);
     latest.current = fresh;
@@ -126,11 +170,11 @@ export function useGameProgress({
           const { progress } = await res.json();
           if (!cancelled && progress && progress.status === "in_progress") {
             const state = (progress.state ?? {}) as Record<string, unknown>;
-            setScore(progress.score ?? 0);
-            setStreak(progress.streak ?? 0);
-            setRound(progress.round ?? 1);
-            setCorrect(progress.correct ?? 0);
-            setWrong(progress.wrong ?? 0);
+            setScoreState(progress.score ?? 0);
+            setStreakState(progress.streak ?? 0);
+            setRoundState(progress.round ?? 1);
+            setCorrectState(progress.correct ?? 0);
+            setWrongState(progress.wrong ?? 0);
             setGameState(state);
             setHasSavedProgress(true);
             latest.current = {
@@ -160,30 +204,14 @@ export function useGameProgress({
     };
   }, [subjectId, gameId, difficulty, studentId, studentReady, resetProgress]);
 
-  const applyOverrides = useCallback(
-    (overrides?: Partial<ProgressData>) => {
-      if (!overrides) return;
-      latest.current = {
-        ...latest.current,
-        ...overrides,
-        difficulty,
-        state: overrides.state ?? latest.current.state,
-        status: overrides.status ?? latest.current.status ?? "in_progress",
-      };
-    },
-    [difficulty]
-  );
-
   const persistProgress = useCallback(
-    async (overrides?: Partial<ProgressData>, options?: { keepalive?: boolean }) => {
+    async (options?: { keepalive?: boolean }) => {
       if (!studentId) return false;
 
       if (saveTimer.current) {
         clearTimeout(saveTimer.current);
         saveTimer.current = null;
       }
-
-      applyOverrides(overrides);
 
       const data: ProgressData = {
         ...latest.current,
@@ -208,7 +236,7 @@ export function useGameProgress({
         return false;
       }
     },
-    [studentId, subjectId, gameId, difficulty, applyOverrides]
+    [studentId, subjectId, gameId, difficulty]
   );
 
   const save = useCallback(
@@ -220,9 +248,19 @@ export function useGameProgress({
         return;
       }
 
-      applyOverrides(overrides);
+      if (overrides?.state) {
+        latest.current = { ...latest.current, state: overrides.state };
+      }
+      if (overrides?.status) {
+        latest.current = { ...latest.current, status: overrides.status };
+      }
 
       if (hasStatUpdate(overrides)) {
+        if (overrides?.score !== undefined) latest.current.score = overrides.score;
+        if (overrides?.streak !== undefined) latest.current.streak = overrides.streak;
+        if (overrides?.round !== undefined) latest.current.round = overrides.round;
+        if (overrides?.correct !== undefined) latest.current.correct = overrides.correct;
+        if (overrides?.wrong !== undefined) latest.current.wrong = overrides.wrong;
         void persistProgress();
         return;
       }
@@ -232,7 +270,7 @@ export function useGameProgress({
         void persistProgress();
       }, 300);
     },
-    [studentId, loaded, applyOverrides, persistProgress]
+    [studentId, loaded, persistProgress]
   );
 
   useEffect(() => {
@@ -240,7 +278,7 @@ export function useGameProgress({
       if (!studentId || !saveTimer.current) return;
       clearTimeout(saveTimer.current);
       saveTimer.current = null;
-      void persistProgress(undefined, { keepalive: true });
+      void persistProgress({ keepalive: true });
     };
 
     const onHide = () => {
@@ -286,7 +324,7 @@ export function useGameProgress({
       difficulty,
       status: "completed",
     };
-    void persistProgress({ status: "completed" });
+    void persistProgress();
     if (projectId) void notifyProjectComplete();
   }, [
     score,

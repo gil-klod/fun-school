@@ -23,8 +23,13 @@ export async function GET(request: Request) {
 
   await connectDB();
 
-  const analytics = await computeAnalytics(studentId);
-  return NextResponse.json({ analytics });
+  try {
+    const analytics = await computeAnalytics(studentId, session.user.id);
+    return NextResponse.json({ analytics });
+  } catch (err) {
+    console.error("Analytics GET error:", err);
+    return NextResponse.json({ error: "Failed to load analytics" }, { status: 500 });
+  }
 }
 
 export async function POST(request: Request) {
@@ -45,6 +50,11 @@ export async function POST(request: Request) {
   }
 
   await connectDB();
-  const analytics = await computeAnalytics(studentId);
-  return NextResponse.json({ analytics });
+  try {
+    const analytics = await computeAnalytics(studentId, session.user.id);
+    return NextResponse.json({ analytics });
+  } catch (err) {
+    console.error("Analytics POST error:", err);
+    return NextResponse.json({ error: "Failed to refresh analytics" }, { status: 500 });
+  }
 }

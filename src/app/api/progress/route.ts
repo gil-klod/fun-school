@@ -4,6 +4,7 @@ import { connectDB } from "@/lib/db";
 import { requireOwnedStudent } from "@/lib/students/server";
 import { toStudentObjectId } from "@/lib/students/objectId";
 import { GameProgress } from "@/models/GameProgress";
+import { listGameProgressForStudent } from "@/lib/progressServer";
 import { computeAnalytics } from "@/lib/analytics";
 
 async function resolveStudentId(request: Request, userId: string): Promise<string | null> {
@@ -53,7 +54,7 @@ export async function GET(request: Request) {
     return NextResponse.json({ progress });
   }
 
-  const all = await GameProgress.find({ studentId: studentObjectId }).sort({ lastPlayedAt: -1 });
+  const all = await listGameProgressForStudent(studentId, session.user.id);
   return NextResponse.json({ progresses: all });
 }
 
@@ -106,7 +107,7 @@ export async function POST(request: Request) {
     );
 
     try {
-      await computeAnalytics(String(studentId));
+      await computeAnalytics(String(studentId), session.user.id);
     } catch (analyticsErr) {
       console.error("Analytics compute failed after progress save:", analyticsErr);
     }

@@ -123,7 +123,10 @@ export const he: Dictionary = {
       "{days}/{total} ימים הושלמו · {slots}/{slotsTotal} משימות · היום {today}/3",
     dailyProjectComplete: "סיימת את כל ימי המשימה היומית! 🏆",
     dailyProjectContinue: "למשימה היומית",
-    gamesEmptyHint: "שחקו גם במשחקים חופשיים כדי לראות ניתוח מפורט למטה.",
+    gamesEmptyHint: "עדיין אין סטטיסטיקות משחקים.",
+    gamesEmptySteps:
+      "בחרו תלמיד למעלה, שחקו משחק (גם מהמשימה היומית), ענו על כל השאלות ולחצו עד מסך הסיום.",
+    trackingStudent: "מציג התקדמות עבור: {name}",
   },
   students: {
     title: "תלמידים",

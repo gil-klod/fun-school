@@ -14,6 +14,7 @@ import { APP_CONTAINER } from "@/lib/layout";
 import { StudentSelector, useStudent } from "@/components/students";
 import { DashboardDailyProject } from "@/components/projects/DashboardDailyProject";
 import type { DailyProjectPayload } from "@/lib/projects/types";
+import { buildStatsFromProgressRecords, hasAnsweredGames, type GameStat, type SubjectStat } from "@/lib/progressStats";
 
 interface Analytics {
   strengths: string[];
@@ -50,6 +51,8 @@ export default function DashboardPage() {
   const { t, locale, subjectTitle, gameTitle } = useLocale();
   const { activeStudent, ready: studentReady } = useStudent();
   const [analytics, setAnalytics] = useState<Analytics | null>(null);
+  const [subjectStats, setSubjectStats] = useState<SubjectStat[]>([]);
+  const [gameStats, setGameStats] = useState<GameStat[]>([]);
   const [project, setProject] = useState<DailyProjectPayload | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -58,6 +61,8 @@ export default function DashboardPage() {
     if (!studentReady) return;
     if (!activeStudent?.id) {
       setAnalytics(null);
+      setSubjectStats([]);
+      setGameStats([]);
       setProject(null);
       setLoading(false);
       return;
@@ -69,41 +74,23 @@ export default function DashboardPage() {
     async function loadDashboard() {
       setLoading(true);
       try {
-        const [analyticsData, projectData] = await Promise.all([
+        const [analyticsData, projectData, progressData] = await Promise.all([
           fetch(`/api/analytics?studentId=${studentId}`).then(async (res) =>
             res.ok ? res.json() : null
           ),
           fetch(`/api/projects?studentId=${studentId}`).then(async (res) =>
             res.ok ? res.json() : null
           ),
+          fetch(`/api/progress?studentId=${studentId}`).then(async (res) =>
+            res.ok ? res.json() : { progresses: [] }
+          ),
         ]);
         if (!cancelled) {
+          const progressStats = buildStatsFromProgressRecords(progressData.progresses ?? []);
+          setSubjectStats(progressStats.subjectStats);
+          setGameStats(progressStats.gameStats);
           setAnalytics(analyticsData?.analytics ?? null);
           setProject(projectData?.project ?? null);
-
-          if (
-            analyticsData?.analytics &&
-            !analyticsData.analytics.gameStats.some(
-              (g: { correct: number; wrong: number }) => g.correct + g.wrong > 0
-            )
-          ) {
-            const progressRes = await fetch(`/api/progress?studentId=${studentId}`);
-            if (progressRes.ok) {
-              const progressData = await progressRes.json();
-              const hasAnswers = (progressData.progresses ?? []).some(
-                (p: { correct: number; wrong: number }) => p.correct + p.wrong > 0
-              );
-              if (hasAnswers) {
-                const refreshRes = await fetch(`/api/analytics?studentId=${studentId}`, {
-                  method: "POST",
-                });
-                if (refreshRes.ok && !cancelled) {
-                  const refreshed = await refreshRes.json();
-                  setAnalytics(refreshed.analytics ?? null);
-                }
-              }
-            }
-          }
         }
       } catch (err) {
         console.error(err);
@@ -139,6 +126,13 @@ export default function DashboardPage() {
         const data = await res.json();
         setAnalytics(data.analytics);
       }
+      const progressRes = await fetch(`/api/progress?studentId=${activeStudent.id}`);
+      if (progressRes.ok) {
+        const progressData = await progressRes.json();
+        const progressStats = buildStatsFromProgressRecords(progressData.progresses ?? []);
+        setSubjectStats(progressStats.subjectStats);
+        setGameStats(progressStats.gameStats);
+      }
     } catch (err) {
       console.error(err);
     } finally {
@@ -161,16 +155,17 @@ export default function DashboardPage() {
   }, [analytics, locale, subjectTitle, gameTitle]);
 
   const coachFeedback = useMemo(() => {
-    if (!analytics) return "";
-    const stored = parseStoredAiFeedback(analytics.aiFeedback, locale);
-    if (stored) return stored;
+    if (analytics) {
+      const stored = parseStoredAiFeedback(analytics.aiFeedback, locale);
+      if (stored) return stored;
+    }
     return buildDashboardFeedback(
       t,
       localizedStrengths,
       localizedWeaknesses,
-      analytics.subjectStats.length > 0
+      subjectStats.length > 0
     );
-  }, [analytics, locale, t, localizedStrengths, localizedWeaknesses]);
+  }, [analytics, locale, t, localizedStrengths, localizedWeaknesses, subjectStats.length]);
 
   const coachRecommendations = useMemo(() => {
     if (!analytics) return [];
@@ -187,8 +182,9 @@ export default function DashboardPage() {
     );
   }
 
-  const hasGameData = analytics && analytics.gameStats.some((g) => g.correct + g.wrong > 0);
+  const hasGameData = hasAnsweredGames(gameStats);
   const hasDailyProject = !!project;
+  const playedGames = gameStats.filter((g) => (g.correct ?? 0) + (g.wrong ?? 0) > 0);
 
   return (
     <main className={`flex-1 py-6 sm:py-8 ${APP_CONTAINER}`}>
@@ -196,6 +192,11 @@ export default function DashboardPage() {
         <span className="text-5xl">📊</span>
         <h1 className="text-3xl font-bold text-gray-800 mt-2">{t("dashboard.title")}</h1>
         <p className="text-gray-500">{t("dashboard.subtitle")}</p>
+        {activeStudent && (
+          <p className="text-sm text-indigo-600 mt-1 font-medium">
+            {t("dashboard.trackingStudent", { name: activeStudent.name })}
+          </p>
+        )}
         <div className="mt-4 flex justify-center">
           <StudentSelector />
         </div>
@@ -220,8 +221,9 @@ export default function DashboardPage() {
           {hasDailyProject && <DashboardDailyProject project={project!} />}
 
           {!hasGameData ? (
-            <div className="bg-white/90 rounded-2xl p-5 text-center border-2 border-indigo-100">
+            <div className="bg-white/90 rounded-2xl p-5 text-center border-2 border-indigo-100 space-y-2">
               <p className="text-gray-600">{t("dashboard.gamesEmptyHint")}</p>
+              <p className="text-sm text-gray-500">{t("dashboard.gamesEmptySteps")}</p>
             </div>
           ) : (
             <>
@@ -285,7 +287,7 @@ export default function DashboardPage() {
           <section className="bg-white/90 border-2 border-indigo-100 rounded-2xl p-5">
             <h3 className="font-bold text-gray-800 text-lg mb-4">{t("dashboard.subjectBreakdown")}</h3>
             <div className="space-y-3">
-              {analytics!.subjectStats.map((s) => (
+              {subjectStats.map((s) => (
                 <div key={s.subjectId} className="flex items-center gap-3">
                   <span className="w-28 font-medium text-sm text-gray-700">
                     {subjectTitle(s.subjectId)}
@@ -317,8 +319,7 @@ export default function DashboardPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {analytics!.gameStats
-                    .filter((g) => g.correct + g.wrong > 0)
+                  {playedGames
                     .sort((a, b) => b.accuracy - a.accuracy)
                     .map((g) => (
                       <tr key={`${g.subjectId}-${g.gameId}`} className="border-b border-gray-50">
