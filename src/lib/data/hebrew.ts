@@ -56,6 +56,19 @@ export function getFixSentenceExplanation(
   return locale === "he" ? question.explanationHe : question.explanationEn;
 }
 
+/** The word that should replace the mistake in the wrong sentence. */
+export function getFixSentenceReplacement(question: FixSentenceQuestion): string {
+  const strip = (s: string) => s.replace(/\.$/, "").trim();
+  const wrongWords = strip(question.wrong).split(/\s+/);
+  const correctWords = strip(question.correct).split(/\s+/);
+  for (let i = 0; i < wrongWords.length; i++) {
+    if (wrongWords[i] !== correctWords[i]) {
+      return correctWords[i];
+    }
+  }
+  return question.mistake;
+}
+
 export const FIX_SENTENCES: FixSentenceQuestion[] = HEBREW_FIX_SENTENCES;
 
 export interface HebrewStory {

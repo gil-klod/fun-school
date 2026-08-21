@@ -1295,6 +1295,20 @@ function validate(items: FixSentenceDef[]): void {
     const strip = (s: string) => s.replace(/\.$/, "").trim();
     const wrongWords = strip(wrong).split(/\s+/);
     const correctWords = strip(correct).split(/\s+/);
+    let fixWord = "";
+    for (let j = 0; j < wrongWords.length; j++) {
+      if (wrongWords[j] !== correctWords[j]) {
+        fixWord = correctWords[j];
+        break;
+      }
+    }
+    if (!fixWord) {
+      throw new Error(`${label}: could not determine fix word for "${wrong}"`);
+    }
+    if (!options.includes(fixWord)) {
+      throw new Error(`${label}: correct fix "${fixWord}" must be in options`);
+    }
+
     if (wrongWords.length !== correctWords.length) {
       throw new Error(
         `${label}: word count mismatch (${wrongWords.length} vs ${correctWords.length}): "${wrong}" -> "${correct}"`

@@ -277,6 +277,20 @@ export async function fetchGameContentBundle(
     }
   }
 
+  if (gameId === "fix-sentence") {
+    const fixItems = items.filter((item) => item.itemType === "fix-sentence");
+    if (fixItems.length < 50) {
+      const pool =
+        difficulty === 1
+          ? FIX_SENTENCES.slice(0, Math.max(1, Math.ceil(FIX_SENTENCES.length / 2)))
+          : FIX_SENTENCES;
+      items = pool.map((q) => ({
+        itemType: "fix-sentence",
+        data: q as unknown as Record<string, unknown>,
+      }));
+    }
+  }
+
   const sessionSize =
     gameId === "multiplication" ||
     gameId === "shuk" ||

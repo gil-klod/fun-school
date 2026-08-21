@@ -14,16 +14,51 @@ import { ProjectSlotDone } from "@/components/projects/ProjectSlotDone";
 import { SessionComplete } from "@/components/SessionComplete";
 import {
   getFixSentenceExplanation,
+  getFixSentenceReplacement,
   type FixSentenceQuestion,
 } from "@/lib/data/hebrew";
+
+function sentenceKey(question: FixSentenceQuestion): string {
+  return question.wrong;
+}
 
 function pickSentence(
   sentences: FixSentenceQuestion[],
   exclude: string[] = []
 ): FixSentenceQuestion {
-  const pool = sentences.filter((s) => !exclude.includes(s.wrong));
+  const pool = sentences.filter((s) => !exclude.includes(sentenceKey(s)));
   const list = pool.length > 0 ? pool : sentences;
   return list[Math.floor(Math.random() * list.length)];
+}
+
+function HighlightedWrongSentence({
+  text,
+  mistake,
+}: {
+  text: string;
+  mistake: string;
+}) {
+  const parts = text.split(/(\s+)/);
+  return (
+    <p className="text-2xl font-bold text-gray-800 leading-relaxed">
+      {parts.map((part, index) => {
+        const word = part.replace(/[.,!?;:]+$/g, "");
+        const suffix = part.slice(word.length);
+        if (word === mistake) {
+          return (
+            <span
+              key={`${index}-${part}`}
+              className="bg-amber-200 text-amber-900 px-1.5 py-0.5 rounded-lg underline decoration-red-500 decoration-2"
+            >
+              {word}
+              {suffix}
+            </span>
+          );
+        }
+        return <span key={`${index}-${part}`}>{part}</span>;
+      })}
+    </p>
+  );
 }
 
 function FixSentencePlay({
@@ -103,9 +138,9 @@ function FixSentencePlay({
     },
     () => {
       const used = (progress.gameState.usedSentences as string[]) ?? [];
-      const lastWrong = (progress.gameState.question as FixSentenceQuestion | undefined)?.wrong;
+      const lastKey = (progress.gameState.question as FixSentenceQuestion | undefined)?.wrong;
       const updatedUsed =
-        lastWrong && !used.includes(lastWrong) ? [...used, lastWrong] : used;
+        lastKey && !used.includes(lastKey) ? [...used, lastKey] : used;
       const savedNum = (progress.gameState.questionNum as number) ?? questionNum;
       if (savedNum >= sessionSize) {
         progress.markCompleted();
@@ -130,9 +165,9 @@ function FixSentencePlay({
       sessionSize,
       progress.markCompleted,
       () => {
-        const used = usedSentences.includes(question.wrong)
+        const used = usedSentences.includes(sentenceKey(question))
           ? usedSentences
-          : [...usedSentences, question.wrong];
+          : [...usedSentences, sentenceKey(question)];
         const nextNum = questionNum + 1;
         setUsedSentences(used);
         advanceQuestionNum();
@@ -184,11 +219,13 @@ function FixSentencePlay({
     });
   }, [progress, sentences, resetQuestionNum]);
 
+  const correctWord = getFixSentenceReplacement(question);
+
   const handleAnswer = (option: string) => {
     if (answered) return;
     setAnswered(true);
 
-    if (option === question.mistake) {
+    if (option === correctWord) {
       const pts = 10 + progress.streak;
       progress.setScore((s) => s + pts);
       progress.setStreak((s) => s + 1);
@@ -215,7 +252,7 @@ function FixSentencePlay({
       progress.setWrong((w) => w + 1);
       const fb = {
         type: "wrong" as const,
-        message: t("games.fixWrong", { mistake: question.mistake }),
+        message: t("games.fixWrong", { word: correctWord }),
       };
       setFeedback(fb);
       progress.save({
@@ -256,7 +293,7 @@ function FixSentencePlay({
               <div>
                 <div className="bg-white/90 rounded-2xl p-5 shadow border-2 border-blue-100 text-center">
                   <p className="text-sm text-blue-500 font-medium mb-3">{t("games.findMistake")}</p>
-                  <p className="text-2xl font-bold text-gray-800 leading-relaxed">{question.wrong}</p>
+                  <HighlightedWrongSentence text={question.wrong} mistake={question.mistake} />
                 </div>
                 <p className="text-center text-lg font-semibold text-gray-600 mt-4">
                   {t("games.whichWordWrong")}
@@ -269,7 +306,7 @@ function FixSentencePlay({
                     key={opt}
                     onClick={() => handleAnswer(opt)}
                     disabled={answered}
-                    className={`game-btn-option text-xl py-4 ${answered && opt === question.mistake ? "correct" : ""} ${answered && opt !== question.mistake ? "opacity-50" : ""}`}
+                    className={`game-btn-option text-xl py-4 ${answered && opt === correctWord ? "correct" : ""} ${answered && opt !== correctWord ? "opacity-50" : ""}`}
                   >
                     {opt}
                   </button>
@@ -336,6 +373,7 @@ export default function FixSentencePage() {
 
   return (
     <FixSentencePlay
+      key={`${difficulty}-${sentences.length}`}
       sentences={sentences}
       sessionSize={content!.sessionSize}
       difficulty={difficulty}
