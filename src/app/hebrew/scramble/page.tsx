@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useEffect, useMemo } from "react";
+import { useState, useCallback, useEffect, useMemo, useRef } from "react";
 import { useGameResume } from "@/hooks/useGameResume";
 import { useGameSession } from "@/hooks/useGameSession";
 import { GameShell, GamePage } from "@/components/GameShell";
@@ -50,6 +50,13 @@ function ScramblePlay({
   const [answered, setAnswered] = useState(false);
   const { current: questionNum, setCurrent: setQuestionNum, reset: resetQuestionNum, advance: advanceQuestionNum } =
     useQuestionCounter(sessionSize);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (!answered && !sessionComplete && !slotDone) {
+      inputRef.current?.focus();
+    }
+  }, [wordData.word, answered, sessionComplete, slotDone]);
 
   useEffect(() => {
     setUsedWords([]);
@@ -247,6 +254,7 @@ function ScramblePlay({
 
             <div className="bg-white/95 rounded-2xl p-4 sm:p-6 shadow-md border-2 border-blue-200 flex flex-col justify-center min-h-[10rem]">
               <input
+                ref={inputRef}
                 type="text"
                 value={guess}
                 onChange={(e) => setGuess(e.target.value)}
