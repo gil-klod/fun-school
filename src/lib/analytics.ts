@@ -4,6 +4,7 @@ import {
   gameStrengthKey,
   subjectStrengthKey,
 } from "@/lib/analyticsKeys";
+import { toStudentObjectId } from "@/lib/students/objectId";
 import OpenAI from "openai";
 
 function accuracy(correct: number, wrong: number) {
@@ -12,7 +13,12 @@ function accuracy(correct: number, wrong: number) {
 }
 
 export async function computeAnalytics(studentId: string) {
-  const progresses = await GameProgress.find({ studentId });
+  const studentObjectId = toStudentObjectId(studentId);
+  if (!studentObjectId) {
+    throw new Error("Invalid studentId");
+  }
+
+  const progresses = await GameProgress.find({ studentId: studentObjectId });
 
   const subjectMap = new Map<string, SubjectStat>();
   const gameMap = new Map<string, GameStat>();
@@ -93,8 +99,9 @@ export async function computeAnalytics(studentId: string) {
   }
 
   return UserAnalytics.findOneAndUpdate(
-    { studentId },
+    { studentId: studentObjectId },
     {
+      studentId: studentObjectId,
       subjectStats,
       gameStats,
       strengths: allStrengths,

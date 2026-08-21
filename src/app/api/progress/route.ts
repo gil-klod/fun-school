@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { connectDB } from "@/lib/db";
 import { requireOwnedStudent } from "@/lib/students/server";
+import { toStudentObjectId } from "@/lib/students/objectId";
 import { GameProgress } from "@/models/GameProgress";
 import { computeAnalytics } from "@/lib/analytics";
 
@@ -25,6 +26,11 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "studentId required" }, { status: 400 });
   }
 
+  const studentObjectId = toStudentObjectId(studentId);
+  if (!studentObjectId) {
+    return NextResponse.json({ error: "Invalid studentId" }, { status: 400 });
+  }
+
   const { searchParams } = new URL(request.url);
   const subjectId = searchParams.get("subjectId");
   const gameId = searchParams.get("gameId");
@@ -32,7 +38,7 @@ export async function GET(request: Request) {
 
   if (subjectId && gameId) {
     const query: Record<string, unknown> = {
-      studentId,
+      studentId: studentObjectId,
       subjectId,
       gameId,
     };
@@ -47,7 +53,7 @@ export async function GET(request: Request) {
     return NextResponse.json({ progress });
   }
 
-  const all = await GameProgress.find({ studentId }).sort({ lastPlayedAt: -1 });
+  const all = await GameProgress.find({ studentId: studentObjectId }).sort({ lastPlayedAt: -1 });
   return NextResponse.json({ progresses: all });
 }
 
@@ -71,13 +77,21 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Student not found" }, { status: 404 });
     }
 
+    const studentObjectId = toStudentObjectId(String(studentId));
+    if (!studentObjectId) {
+      return NextResponse.json({ error: "Invalid studentId" }, { status: 400 });
+    }
+
     const diff = [1, 2, 3].includes(Number(difficulty)) ? Number(difficulty) : 2;
 
     await connectDB();
 
     const progress = await GameProgress.findOneAndUpdate(
-      { studentId, subjectId, gameId, difficulty: diff },
+      { studentId: studentObjectId, subjectId, gameId, difficulty: diff },
       {
+        studentId: studentObjectId,
+        subjectId,
+        gameId,
         difficulty: diff,
         score: score ?? 0,
         streak: streak ?? 0,
@@ -91,7 +105,11 @@ export async function POST(request: Request) {
       { upsert: true, new: true }
     );
 
-    await computeAnalytics(studentId);
+    try {
+      await computeAnalytics(String(studentId));
+    } catch (analyticsErr) {
+      console.error("Analytics compute failed after progress save:", analyticsErr);
+    }
 
     return NextResponse.json({ progress });
   } catch (err) {

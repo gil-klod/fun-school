@@ -80,6 +80,30 @@ export default function DashboardPage() {
         if (!cancelled) {
           setAnalytics(analyticsData?.analytics ?? null);
           setProject(projectData?.project ?? null);
+
+          if (
+            analyticsData?.analytics &&
+            !analyticsData.analytics.gameStats.some(
+              (g: { correct: number; wrong: number }) => g.correct + g.wrong > 0
+            )
+          ) {
+            const progressRes = await fetch(`/api/progress?studentId=${studentId}`);
+            if (progressRes.ok) {
+              const progressData = await progressRes.json();
+              const hasAnswers = (progressData.progresses ?? []).some(
+                (p: { correct: number; wrong: number }) => p.correct + p.wrong > 0
+              );
+              if (hasAnswers) {
+                const refreshRes = await fetch(`/api/analytics?studentId=${studentId}`, {
+                  method: "POST",
+                });
+                if (refreshRes.ok && !cancelled) {
+                  const refreshed = await refreshRes.json();
+                  setAnalytics(refreshed.analytics ?? null);
+                }
+              }
+            }
+          }
         }
       } catch (err) {
         console.error(err);

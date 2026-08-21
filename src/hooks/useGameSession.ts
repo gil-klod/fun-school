@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import type { DifficultyLevel } from "@/lib/content/types";
+import { useStudent } from "@/components/students";
 import { useGameContent } from "@/hooks/useGameContent";
 import { useGameProgress } from "@/hooks/useGameProgress";
 
@@ -22,6 +23,7 @@ function readGameUrlFlags(): { difficulty: DifficultyLevel; isProjectGame: boole
 }
 
 export function useGameSession(subjectId: string, gameId: string) {
+  const { activeStudent, ready: studentReady } = useStudent();
   const [urlFlags, setUrlFlags] = useState({ difficulty: 2 as DifficultyLevel, isProjectGame: false });
 
   useEffect(() => {
@@ -48,6 +50,8 @@ export function useGameSession(subjectId: string, gameId: string) {
     setDifficulty(level);
   };
 
+  const needsStudent = studentReady && !activeStudent;
+
   return {
     difficulty,
     changeDifficulty,
@@ -56,6 +60,7 @@ export function useGameSession(subjectId: string, gameId: string) {
     content,
     contentLoading,
     contentError,
-    ready: progress.loaded && !!content,
+    needsStudent,
+    ready: progress.loaded && !!content && studentReady && !!activeStudent,
   };
 }

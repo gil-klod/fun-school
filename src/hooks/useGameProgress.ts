@@ -53,6 +53,17 @@ const emptyProgress = (defaultState: Record<string, unknown>): ProgressData => (
   status: "in_progress",
 });
 
+function hasStatUpdate(overrides?: Partial<ProgressData>) {
+  return (
+    overrides?.status !== undefined ||
+    overrides?.correct !== undefined ||
+    overrides?.wrong !== undefined ||
+    overrides?.score !== undefined ||
+    overrides?.streak !== undefined ||
+    overrides?.round !== undefined
+  );
+}
+
 export function useGameProgress({
   subjectId,
   gameId,
@@ -92,6 +103,7 @@ export function useGameProgress({
     setWrong(fresh.wrong);
     setGameState(fresh.state);
     setHasSavedProgress(false);
+    latest.current = fresh;
   }, [defaultState]);
 
   useEffect(() => {
@@ -121,6 +133,16 @@ export function useGameProgress({
             setWrong(progress.wrong ?? 0);
             setGameState(state);
             setHasSavedProgress(true);
+            latest.current = {
+              score: progress.score ?? 0,
+              streak: progress.streak ?? 0,
+              round: progress.round ?? 1,
+              correct: progress.correct ?? 0,
+              wrong: progress.wrong ?? 0,
+              state,
+              difficulty,
+              status: "in_progress",
+            };
           } else if (!cancelled) {
             resetProgress();
           }
@@ -138,20 +160,35 @@ export function useGameProgress({
     };
   }, [subjectId, gameId, difficulty, studentId, studentReady, resetProgress]);
 
+  const applyOverrides = useCallback(
+    (overrides?: Partial<ProgressData>) => {
+      if (!overrides) return;
+      latest.current = {
+        ...latest.current,
+        ...overrides,
+        difficulty,
+        state: overrides.state ?? latest.current.state,
+        status: overrides.status ?? latest.current.status ?? "in_progress",
+      };
+    },
+    [difficulty]
+  );
+
   const persistProgress = useCallback(
-    async (overrides?: Partial<ProgressData>) => {
-      if (!loaded || !studentId) return false;
+    async (overrides?: Partial<ProgressData>, options?: { keepalive?: boolean }) => {
+      if (!studentId) return false;
 
       if (saveTimer.current) {
         clearTimeout(saveTimer.current);
         saveTimer.current = null;
       }
 
+      applyOverrides(overrides);
+
       const data: ProgressData = {
         ...latest.current,
-        ...overrides,
         difficulty,
-        status: overrides?.status ?? latest.current.status ?? "in_progress",
+        status: latest.current.status ?? "in_progress",
       };
 
       try {
@@ -159,39 +196,51 @@ export function useGameProgress({
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ studentId, subjectId, gameId, difficulty, ...data }),
+          keepalive: options?.keepalive ?? false,
         });
+        if (!res.ok) {
+          const message = await res.text();
+          console.error("[fun-school] Progress save failed:", res.status, message);
+        }
         return res.ok;
       } catch (err) {
         console.error("Failed to save progress:", err);
         return false;
       }
     },
-    [loaded, studentId, subjectId, gameId, difficulty]
+    [studentId, subjectId, gameId, difficulty, applyOverrides]
   );
 
   const save = useCallback(
     (overrides?: Partial<ProgressData>) => {
-      if (!loaded || !studentId) return;
+      if (!studentId) {
+        if (loaded) {
+          console.warn("[fun-school] Progress not saved: no active student selected.");
+        }
+        return;
+      }
 
-      if (overrides?.status !== undefined) {
-        void persistProgress(overrides);
+      applyOverrides(overrides);
+
+      if (hasStatUpdate(overrides)) {
+        void persistProgress();
         return;
       }
 
       if (saveTimer.current) clearTimeout(saveTimer.current);
       saveTimer.current = setTimeout(() => {
-        void persistProgress(overrides);
-      }, 500);
+        void persistProgress();
+      }, 300);
     },
-    [loaded, studentId, persistProgress]
+    [studentId, loaded, applyOverrides, persistProgress]
   );
 
   useEffect(() => {
     const flushPendingSave = () => {
-      if (!loaded || !studentId || !saveTimer.current) return;
+      if (!studentId || !saveTimer.current) return;
       clearTimeout(saveTimer.current);
       saveTimer.current = null;
-      void persistProgress();
+      void persistProgress(undefined, { keepalive: true });
     };
 
     const onHide = () => {
@@ -206,7 +255,7 @@ export function useGameProgress({
       window.removeEventListener("pagehide", flushPendingSave);
       document.removeEventListener("visibilitychange", onHide);
     };
-  }, [loaded, studentId, persistProgress]);
+  }, [studentId, persistProgress]);
 
   const notifyProjectComplete = useCallback(async () => {
     if (!projectId || !projectDay || !projectSlot || !studentId) return;
@@ -227,13 +276,35 @@ export function useGameProgress({
   }, [projectId, projectDay, projectSlot, studentId]);
 
   const markCompleted = useCallback(() => {
+    latest.current = {
+      score,
+      streak,
+      round,
+      correct,
+      wrong,
+      state: gameState,
+      difficulty,
+      status: "completed",
+    };
     void persistProgress({ status: "completed" });
     if (projectId) void notifyProjectComplete();
-  }, [persistProgress, projectId, notifyProjectComplete]);
+  }, [
+    score,
+    streak,
+    round,
+    correct,
+    wrong,
+    gameState,
+    difficulty,
+    persistProgress,
+    projectId,
+    notifyProjectComplete,
+  ]);
 
   return {
-    loaded,
+    loaded: loaded && studentReady && !!studentId,
     hasSavedProgress,
+    canSave: !!studentId,
     difficulty,
     score,
     setScore,
