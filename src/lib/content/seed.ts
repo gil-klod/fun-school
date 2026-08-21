@@ -263,6 +263,20 @@ export async function fetchGameContentBundle(
     }
   }
 
+  if (gameId === "sentences") {
+    const sentenceItems = items.filter((item) => item.itemType === "sentence");
+    if (sentenceItems.length < 50) {
+      const pool =
+        difficulty === 1
+          ? SENTENCE_CHALLENGES.slice(0, Math.max(1, Math.ceil(SENTENCE_CHALLENGES.length / 2)))
+          : SENTENCE_CHALLENGES;
+      items = pool.map((q) => ({
+        itemType: "sentence",
+        data: q as unknown as Record<string, unknown>,
+      }));
+    }
+  }
+
   const sessionSize =
     gameId === "multiplication" ||
     gameId === "shuk" ||

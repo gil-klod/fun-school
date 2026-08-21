@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useMemo, useEffect } from "react";
+import { useState, useCallback, useMemo, useEffect, useRef } from "react";
 import { useGameResume } from "@/hooks/useGameResume";
 import { useGameSession } from "@/hooks/useGameSession";
 import { GameShell, GamePage } from "@/components/GameShell";
@@ -25,6 +25,26 @@ interface WordToken {
   word: string;
 }
 
+function challengeKey(challenge: SentenceChallenge): string {
+  return challenge.correct;
+}
+
+function pickChallenge(
+  challenges: SentenceChallenge[],
+  usedKeys: string[]
+): SentenceChallenge {
+  const available = challenges.filter((c) => !usedKeys.includes(challengeKey(c)));
+  const pool = available.length > 0 ? available : challenges;
+  return pool[Math.floor(Math.random() * pool.length)];
+}
+
+function findChallenge(
+  challenges: SentenceChallenge[],
+  key: string
+): SentenceChallenge | undefined {
+  return challenges.find((c) => challengeKey(c) === key);
+}
+
 function seededShuffle<T>(items: T[], seed: number): T[] {
   const copy = [...items];
   let state = seed;
@@ -36,10 +56,18 @@ function seededShuffle<T>(items: T[], seed: number): T[] {
   return copy;
 }
 
-function buildWordBank(challengeIndex: number, words: string[]): WordToken[] {
+function hashString(value: string): number {
+  let hash = 0;
+  for (let i = 0; i < value.length; i++) {
+    hash = (hash * 31 + value.charCodeAt(i)) & 0x7fffffff;
+  }
+  return hash;
+}
+
+function buildWordBank(challenge: SentenceChallenge): WordToken[] {
   return seededShuffle(
-    words.map((word, i) => ({ id: `${challengeIndex}-${i}`, word })),
-    challengeIndex + 1
+    challenge.words.map((word, i) => ({ id: `${challengeKey(challenge)}-${i}`, word })),
+    hashString(challenge.correct)
   );
 }
 
@@ -77,20 +105,18 @@ function SentencesPlay({
   const [sessionComplete, setSessionComplete] = useState(false);
   const { current: questionNum, setCurrent: setQuestionNum, reset: resetQuestionNum, advance: advanceQuestionNum } =
     useQuestionCounter(sessionSize);
+  const [usedKeys, setUsedKeys] = useState<string[]>([]);
+  const [challenge, setChallenge] = useState<SentenceChallenge>(() => pickChallenge(challenges, []));
   const [selected, setSelected] = useState<WordToken[]>([]);
   const [feedback, setFeedback] = useState<{
     type: "correct" | "wrong";
     message: string;
   } | null>(null);
   const [answered, setAnswered] = useState(false);
+  const prevDifficultyRef = useRef(difficulty);
+  const initializedRef = useRef(false);
 
-  const challengeIndex = (questionNum - 1) % challenges.length;
-  const challenge = challenges[challengeIndex];
-
-  const wordBank = useMemo(
-    () => buildWordBank(challengeIndex, challenge.words),
-    [challengeIndex, challenge.words]
-  );
+  const wordBank = useMemo(() => buildWordBank(challenge), [challenge]);
 
   const selectedIds = useMemo(() => new Set(selected.map((t) => t.id)), [selected]);
   const availableWords = useMemo(
@@ -98,31 +124,74 @@ function SentencesPlay({
     [wordBank, selectedIds]
   );
 
-  useEffect(() => {
+  const resetSession = useCallback(() => {
+    setUsedKeys([]);
+    setChallenge(pickChallenge(challenges, []));
     setSelected([]);
     setFeedback(null);
     setAnswered(false);
     setSessionComplete(false);
     setSlotDone(false);
     resetQuestionNum();
-  }, [difficulty, challenges.length, resetQuestionNum]);
+  }, [challenges, resetQuestionNum]);
+
+  const advanceToNext = useCallback(
+    (used: string[]) => {
+      const next = pickChallenge(challenges, used);
+      setUsedKeys(used);
+      setChallenge(next);
+      setSelected([]);
+      setFeedback(null);
+      setAnswered(false);
+      progress.save({
+        state: {
+          challengeKey: challengeKey(next),
+          usedKeys: used,
+          selected: [],
+          answered: false,
+          feedback: null,
+          questionNum,
+        },
+      });
+    },
+    [challenges, progress, questionNum]
+  );
 
   useEffect(() => {
-    setSelected([]);
-    setFeedback(null);
-    setAnswered(false);
-  }, [questionNum]);
+    if (!progress.loaded) return;
+
+    if (!initializedRef.current) {
+      initializedRef.current = true;
+      if (!progress.hasSavedProgress) {
+        resetSession();
+      }
+      return;
+    }
+
+    if (prevDifficultyRef.current !== difficulty) {
+      prevDifficultyRef.current = difficulty;
+      resetSession();
+    }
+  }, [progress.loaded, progress.hasSavedProgress, difficulty, resetSession]);
 
   useGameResume(
     progress.loaded,
     progress.hasSavedProgress,
     progress.gameState,
     (s) => {
+      const used = (s.usedKeys as string[]) ?? [];
+      setUsedKeys(used);
+
       if (typeof s.questionNum === "number") {
-        const savedNum = s.questionNum as number;
-        setQuestionNum(savedNum);
-        const savedChallenge = challenges[(savedNum - 1) % challenges.length];
-        const bank = buildWordBank((savedNum - 1) % challenges.length, savedChallenge.words);
+        setQuestionNum(s.questionNum);
+      }
+
+      const savedKey = typeof s.challengeKey === "string" ? s.challengeKey : null;
+      const restored = savedKey ? findChallenge(challenges, savedKey) : undefined;
+
+      if (restored) {
+        setChallenge(restored);
+        const bank = buildWordBank(restored);
         const savedSelected = s.selected;
         if (Array.isArray(savedSelected)) {
           if (savedSelected.length > 0 && typeof savedSelected[0] === "object") {
@@ -135,9 +204,32 @@ function SentencesPlay({
         }
         setAnswered(!!s.answered);
         if (s.feedback) setFeedback(s.feedback as typeof feedback);
+        return;
       }
+
+      const first = pickChallenge(challenges, []);
+      setUsedKeys([]);
+      setChallenge(first);
+      setSelected([]);
+      setAnswered(false);
+      setFeedback(null);
+      setQuestionNum(1);
+      progress.save({
+        state: {
+          questionNum: 1,
+          challengeKey: challengeKey(first),
+          usedKeys: [],
+          selected: [],
+          answered: false,
+          feedback: null,
+        },
+      });
     },
     () => {
+      const used = (progress.gameState.usedKeys as string[]) ?? [];
+      const lastKey = progress.gameState.challengeKey as string | undefined;
+      const updatedUsed =
+        lastKey && !used.includes(lastKey) ? [...used, lastKey] : used;
       const savedNum = (progress.gameState.questionNum as number) ?? questionNum;
       if (savedNum >= sessionSize) {
         progress.markCompleted();
@@ -145,6 +237,7 @@ function SentencesPlay({
         else setSessionComplete(true);
         return;
       }
+      setUsedKeys(updatedUsed);
       advanceQuestionNum();
       setSelected([]);
       setFeedback(null);
@@ -152,8 +245,9 @@ function SentencesPlay({
       progress.setRound((r) => r + 1);
       progress.save({
         round: progress.round + 1,
-        state: { questionNum: savedNum + 1, selected: [], answered: false, feedback: null },
+        state: { questionNum: savedNum + 1 },
       });
+      advanceToNext(updatedUsed);
     }
   );
 
@@ -163,25 +257,38 @@ function SentencesPlay({
       sessionSize,
       progress.markCompleted,
       () => {
+        const key = challengeKey(challenge);
+        const used = usedKeys.includes(key) ? usedKeys : [...usedKeys, key];
         const nextNum = questionNum + 1;
+        setUsedKeys(used);
         advanceQuestionNum();
-        setSelected([]);
-        setFeedback(null);
-        setAnswered(false);
         progress.setRound((r) => r + 1);
         progress.save({
           round: progress.round + 1,
-          state: { questionNum: nextNum, selected: [], answered: false, feedback: null },
+          state: { questionNum: nextNum },
         });
+        advanceToNext(used);
       }
     );
     if (result === "project") setSlotDone(true);
     if (result === "complete") setSessionComplete(true);
-  }, [project, questionNum, sessionSize, progress, advanceQuestionNum]);
+  }, [
+    project,
+    questionNum,
+    sessionSize,
+    progress,
+    challenge,
+    usedKeys,
+    advanceQuestionNum,
+    advanceToNext,
+  ]);
 
   const playAgain = useCallback(() => {
+    const first = pickChallenge(challenges, []);
     setSessionComplete(false);
     resetQuestionNum();
+    setUsedKeys([]);
+    setChallenge(first);
     setSelected([]);
     setFeedback(null);
     setAnswered(false);
@@ -197,22 +304,47 @@ function SentencesPlay({
       correct: 0,
       wrong: 0,
       status: "in_progress",
-      state: { questionNum: 1, selected: [], answered: false, feedback: null },
+      state: {
+        questionNum: 1,
+        challengeKey: challengeKey(first),
+        usedKeys: [],
+        selected: [],
+        answered: false,
+        feedback: null,
+      },
     });
-  }, [progress, resetQuestionNum]);
+  }, [progress, challenges, resetQuestionNum]);
 
   const addWord = (token: WordToken) => {
     if (answered) return;
     const next = [...selected, token];
     setSelected(next);
-    progress.save({ state: { questionNum, selected: next, answered, feedback } });
+    progress.save({
+      state: {
+        questionNum,
+        challengeKey: challengeKey(challenge),
+        usedKeys,
+        selected: next,
+        answered,
+        feedback,
+      },
+    });
   };
 
   const removeWord = (idx: number) => {
     if (answered) return;
     const next = selected.filter((_, i) => i !== idx);
     setSelected(next);
-    progress.save({ state: { questionNum, selected: next, answered, feedback } });
+    progress.save({
+      state: {
+        questionNum,
+        challengeKey: challengeKey(challenge),
+        usedKeys,
+        selected: next,
+        answered,
+        feedback,
+      },
+    });
   };
 
   const checkAnswer = () => {
@@ -231,7 +363,14 @@ function SentencesPlay({
         score: progress.score + pts,
         streak: progress.streak + 1,
         correct: progress.correct + 1,
-        state: { questionNum, selected, answered: true, feedback: fb },
+        state: {
+          questionNum,
+          challengeKey: challengeKey(challenge),
+          usedKeys,
+          selected,
+          answered: true,
+          feedback: fb,
+        },
       });
     } else {
       progress.setStreak(0);
@@ -247,7 +386,14 @@ function SentencesPlay({
       progress.save({
         streak: 0,
         wrong: progress.wrong + 1,
-        state: { questionNum, selected, answered: true, feedback: fb },
+        state: {
+          questionNum,
+          challengeKey: challengeKey(challenge),
+          usedKeys,
+          selected,
+          answered: true,
+          feedback: fb,
+        },
       });
     }
   };
@@ -387,6 +533,7 @@ export default function SentencesPage() {
 
   return (
     <SentencesPlay
+      key={`${difficulty}-${challenges.length}`}
       challenges={challenges}
       sessionSize={content!.sessionSize}
       difficulty={difficulty}
