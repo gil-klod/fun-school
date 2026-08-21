@@ -15,8 +15,8 @@ export const MASCOT_SPEECH_HE: Record<string, Record<UserGender, string>> = {
     female: "מדהימה! כפיים, כפיים!",
   },
   "mascot.correct1": {
-    male: "מעולה! המשך כך!",
-    female: "מעולה! המשיכי כך!",
+    male: "מצוין! המשך כך!",
+    female: "מצוינת! המשיכי כך!",
   },
   "mascot.correct2": {
     male: "מבריק! ידעתי, שתצליח!",

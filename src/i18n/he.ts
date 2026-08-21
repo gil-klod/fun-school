@@ -232,7 +232,7 @@ export const he: Dictionary = {
     unmute: "הפעל קול למיילו",
     replay: "נגן שוב",
     correct0: "מדהים! כפיים, כפיים!",
-    correct1: "מעולה! המשך כך!",
+    correct1: "מצוין! המשך כך!",
     correct2: "מבריק! ידעתי, שתצליח!",
     correct3: "כוכב על!",
     wrong0: "כמעט! נסה שוב, אתה יכול!",

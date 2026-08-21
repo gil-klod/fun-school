@@ -12,7 +12,7 @@ import { useLocale } from "@/i18n/LocaleProvider";
 import { useProjectGame } from "@/hooks/useProjectGame";
 import { ProjectSlotDone } from "@/components/projects/ProjectSlotDone";
 import { SessionComplete } from "@/components/SessionComplete";
-import { SpeakButton, WordWithSpeaker } from "@/components/EnglishSpeakButton";
+import { EnglishSpeakButton, SpeakButton, WordWithSpeaker } from "@/components/EnglishSpeakButton";
 
 interface SentenceChallenge {
   words: string[];
@@ -302,6 +302,16 @@ function SentencesPlay({
                   ))
                 )}
               </div>
+
+              {answered && (
+                <div
+                  dir="ltr"
+                  className="flex flex-col items-center gap-2 rounded-xl border-2 border-green-200 bg-green-50 px-4 py-3"
+                >
+                  <p className="text-lg font-bold text-green-800">{challenge.correct}</p>
+                  <EnglishSpeakButton text={challenge.correct} />
+                </div>
+              )}
             </div>
 
             <div dir="ltr">
