@@ -18,7 +18,7 @@ import {
   MILO_REVIEW_STORAGE_KEY,
   type MiloReviewStatus,
 } from "@/lib/mascot/reviewRows";
-import { speakText, stopSpeaking } from "@/components/mascot/speech";
+import { speakText, stopSpeaking, warmSpeechVoices } from "@/components/mascot/speech";
 
 type ReviewMap = Record<string, MiloReviewStatus>;
 type ReviewFilter = "all" | "unchecked" | "bad";
@@ -143,6 +143,7 @@ export default function AdminMiloPage() {
 
   useEffect(() => {
     setReviews(loadReviews());
+    warmSpeechVoices();
   }, []);
 
   const persistReviews = useCallback((next: ReviewMap) => {
@@ -165,6 +166,7 @@ export default function AdminMiloPage() {
     setPlayingId(audioId);
     await speakText(text, locale, {
       audioId,
+      muted: false,
       onEnd: () => setPlayingId(null),
     });
   }

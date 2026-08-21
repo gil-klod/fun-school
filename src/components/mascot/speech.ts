@@ -47,6 +47,11 @@ function isMobileDevice(): boolean {
   return /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
 }
 
+/** Prefer device voices on mobile when API TTS is slow or blocked. */
+function preferBrowserHebrew(): boolean {
+  return isMobileDevice();
+}
+
 /** Call once after user interaction so Chrome loads voice list. */
 export function warmSpeechVoices() {
   if (typeof window === "undefined" || !window.speechSynthesis) return;
@@ -128,13 +133,39 @@ function clearAudio() {
 export interface SpeakOptions {
   muted?: boolean;
   audioId?: MiloAudioId;
+  /** Skip pre-recorded MP3 and use online/browser TTS (admin preview). */
+  preferTts?: boolean;
   onStart?: () => void;
   onEnd?: () => void;
+}
+
+async function hasRecordedAudio(src: string): Promise<boolean> {
+  try {
+    const res = await fetch(src, { method: "HEAD" });
+    if (!res.ok) return false;
+    const type = res.headers.get("content-type") ?? "";
+    return type.includes("audio") || type.includes("octet-stream");
+  } catch {
+    return false;
+  }
 }
 
 function playAudioFile(src: string, options: SpeakOptions): Promise<boolean> {
   return new Promise((resolve) => {
     clearAudio();
+    let settled = false;
+    const finish = (ok: boolean) => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timer);
+      if (!ok) {
+        speaking = false;
+        clearAudio();
+      }
+      resolve(ok);
+    };
+
+    const timer = setTimeout(() => finish(false), 2500);
     currentAudio = new Audio(src);
 
     currentAudio.onplay = () => {
@@ -145,19 +176,11 @@ function playAudioFile(src: string, options: SpeakOptions): Promise<boolean> {
       speaking = false;
       clearAudio();
       options.onEnd?.();
-      resolve(true);
+      finish(true);
     };
-    currentAudio.onerror = () => {
-      speaking = false;
-      clearAudio();
-      resolve(false);
-    };
+    currentAudio.onerror = () => finish(false);
 
-    currentAudio.play().catch(() => {
-      speaking = false;
-      clearAudio();
-      resolve(false);
-    });
+    currentAudio.play().catch(() => finish(false));
   });
 }
 
@@ -251,7 +274,7 @@ function speakViaBrowser(
 /**
  * 1. Pre-recorded MP3 (public/audio/milo/) when audioId is set
  * 2. Simple online TTS (/api/tts) when clip is missing or fails
- * 3. Device TTS as last resort (English everywhere; Hebrew on mobile with voice)
+ * 3. Device TTS as last resort (English everywhere; Hebrew when a voice exists)
  */
 export async function speakText(
   text: string,
@@ -259,26 +282,40 @@ export async function speakText(
   options: SpeakOptions = {}
 ) {
   if (typeof window === "undefined") return;
-  if (options.muted ?? isMascotMuted()) return;
+  if (options.muted ?? isMascotMuted()) {
+    options.onEnd?.();
+    return;
+  }
 
   const spoken = miloSpeechText(text, locale);
-  if (!spoken) return;
+  if (!spoken) {
+    options.onEnd?.();
+    return;
+  }
 
   stopSpeaking();
 
-  if (options.audioId) {
-    const played = await playAudioFile(miloAudioUrl(options.audioId), options);
-    if (played) return;
+  if (options.audioId && !options.preferTts) {
+    const src = miloAudioUrl(options.audioId);
+    if (await hasRecordedAudio(src)) {
+      const played = await playAudioFile(src, options);
+      if (played) return;
+    }
+  }
+
+  const voices = cachedVoices.length ? cachedVoices : await waitForVoices();
+  const voice = pickVoice(voices, locale);
+  const tryBrowserFirst = locale === "he" && preferBrowserHebrew() && !!voice;
+
+  if (tryBrowserFirst) {
+    const browserOk = await speakViaBrowser(spoken, locale, voice, options);
+    if (browserOk) return;
   }
 
   const apiOk = await speakViaApi(spoken, locale, options);
   if (apiOk) return;
 
-  const voices = cachedVoices.length ? cachedVoices : await waitForVoices();
-  const voice = pickVoice(voices, locale);
-
-  const allowBrowser =
-    locale === "en" || (locale === "he" && isMobileDevice() && !!voice);
+  const allowBrowser = locale === "en" || (locale === "he" && !!voice);
 
   if (allowBrowser) {
     await speakViaBrowser(spoken, locale, voice, options);
