@@ -291,6 +291,18 @@ export async function fetchGameContentBundle(
     }
   }
 
+  if (gameId === "mystery") {
+    const templates = MYSTERY_TEMPLATES.filter((t) => (t.minDifficulty ?? 1) <= difficulty);
+    const configItems = items.filter((item) => item.itemType === "config");
+    items = [
+      ...configItems,
+      ...templates.map((t) => ({
+        itemType: "mystery-template" as const,
+        data: t as unknown as Record<string, unknown>,
+      })),
+    ];
+  }
+
   const sessionSize =
     gameId === "multiplication" ||
     gameId === "shuk" ||
