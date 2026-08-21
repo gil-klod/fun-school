@@ -12,6 +12,7 @@ import { useLocale } from "@/i18n/LocaleProvider";
 import { useProjectGame } from "@/hooks/useProjectGame";
 import { ProjectSlotDone } from "@/components/projects/ProjectSlotDone";
 import { SessionComplete } from "@/components/SessionComplete";
+import { EnglishSpeakButton } from "@/components/EnglishSpeakButton";
 import { shuffleArray } from "@/lib/content/generators";
 import type { Locale } from "@/i18n/types";
 
@@ -262,7 +263,10 @@ function VocabularyPlay({
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4 items-center">
               <div className="bg-white/90 rounded-2xl p-5 sm:p-8 shadow border-2 border-green-100 text-center">
                 <span className="text-5xl sm:text-6xl">{question.emoji}</span>
-                <p className="text-xl font-bold text-gray-800 mt-4">{question.prompt}</p>
+                <div className="mt-4 flex items-center justify-center gap-2">
+                  <p className="text-xl font-bold text-gray-800">{question.prompt}</p>
+                  <EnglishSpeakButton text={question.englishWord} />
+                </div>
               </div>
 
               <GameOptionsGrid>

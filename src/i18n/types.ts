@@ -264,5 +264,6 @@ export interface Dictionary {
     storyWrong: string;
     vocabPromptHeToEn: string;
     vocabPromptEnToHe: string;
+    hearEnglish: string;
   };
 }

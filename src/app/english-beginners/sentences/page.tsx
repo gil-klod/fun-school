@@ -12,6 +12,7 @@ import { useLocale } from "@/i18n/LocaleProvider";
 import { useProjectGame } from "@/hooks/useProjectGame";
 import { ProjectSlotDone } from "@/components/projects/ProjectSlotDone";
 import { SessionComplete } from "@/components/SessionComplete";
+import { EnglishSpeakButton } from "@/components/EnglishSpeakButton";
 
 interface SentenceChallenge {
   words: string[];
@@ -271,9 +272,10 @@ function SentencesPlay({
         {!sessionComplete && !slotDone ? (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
             <div>
-              <p className="text-center text-gray-600 mb-4" dir="rtl">
-                {challenge.translation}
-              </p>
+              <div className="flex items-center justify-center gap-2 mb-4" dir="rtl">
+                <p className="text-center text-gray-600">{challenge.translation}</p>
+                <EnglishSpeakButton text={challenge.correct} />
+              </div>
 
               <div
                 dir="ltr"

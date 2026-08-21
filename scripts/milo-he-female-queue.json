@@ -1,12 +1,12 @@
 [
   {
     "filename": "he--mascot.welcome--female.mp3",
-    "text": "היי! אני מילו בחרי נושא ובואי נשחק!",
+    "text": "היי!, אני מיילו. בחרי נושא,, וואי נשחק!",
     "id": "he:mascot.welcome:female"
   },
   {
     "filename": "he--mascot.correct0--female.mp3",
-    "text": "מדהימה! כפיים כפיים!",
+    "text": "מדהימה! כפיים, כפיים!",
     "id": "he:mascot.correct0:female"
   },
   {
@@ -16,7 +16,7 @@
   },
   {
     "filename": "he--mascot.correct2--female.mp3",
-    "text": "מבריקה! ידעתי שתצליחי!",
+    "text": "מבריקה! ידעתי, שתצליחי!",
     "id": "he:mascot.correct2:female"
   },
   {
@@ -26,12 +26,12 @@
   },
   {
     "filename": "he--mascot.wrong0--female.mp3",
-    "text": "כמעט! נסי שוב — את יכולה!",
+    "text": "כמעט! נסי שוב, את יכולה!",
     "id": "he:mascot.wrong0:female"
   },
   {
     "filename": "he--mascot.wrong1--female.mp3",
-    "text": "לא נורא! מכל טעות לומדים.",
+    "text": "לא נורא! מכל טעות, לומדים.",
     "id": "he:mascot.wrong1:female"
   },
   {
@@ -41,22 +41,22 @@
   },
   {
     "filename": "he--context--home--female--0.mp3",
-    "text": "אני מילו! בחרי נושא — אני כבר מחזיקה את התשובות... סתם, לא באמת.",
+    "text": "אני מיילו! בחרי נושא, , אני כבר מחזיקה את התשובות. סתם, לא באמת.",
     "id": "he:context:home:female:0"
   },
   {
     "filename": "he--context--home--female--1.mp3",
-    "text": "ארבעה נושאים, הרבה משחקים, אפס שיעורי בית משעממים!",
+    "text": "ארבעה נושאים, הרבה משחקים, ואפס שיעורי בית משעממים!",
     "id": "he:context:home:female:1"
   },
   {
     "filename": "he--context--home--female--2.mp3",
-    "text": "טיפ מילו: התחל מחשבון — שם המספרים לא מתווכחים. בניגוד לי.",
+    "text": "טיפ מיילו: התחל מחשבון, , שם המספרים לא מתווכחים. בניגוד לי.",
     "id": "he:context:home:female:2"
   },
   {
     "filename": "he--context--dashboard--female--0.mp3",
-    "text": "הנה ההתקדמות שלך! אני גאה — כמעט כמו שאמא שלך גאה. כמעט.",
+    "text": "הנה ההתקדמות שלך! אני גאה, , כמעט כמו שאמא שלך גאה. כמעט.",
     "id": "he:context:dashboard:female:0"
   },
   {
@@ -66,7 +66,7 @@
   },
   {
     "filename": "he--context--dashboard--female--2.mp3",
-    "text": "אם המספרים נמוכים — זה רק כי לא שיחקת עדיין היום!",
+    "text": "אם המספרים נמוכים, , זה רק כי לא שיחקת עדיין היום!",
     "id": "he:context:dashboard:female:2"
   },
   {
@@ -76,42 +76,42 @@
   },
   {
     "filename": "he--context--subject.math--female--1.mp3",
-    "text": "כפל, שוק וחידות — מי אמר שמתמטיקה לא יכולה להיות כיפית?",
+    "text": "כפל, שוק וחידות, , מי אמר שמתמטיקה לא יכולה להיות כיפית?",
     "id": "he:context:subject.math:female:1"
   },
   {
     "filename": "he--context--subject.math--female--2.mp3",
-    "text": "בואי נראה אם הכפל יכול לעמוד בקצב שלך!",
+    "text": "בואי, נראה אם הכפל יכול לעמוד בקצב שלך!",
     "id": "he:context:subject.math:female:2"
   },
   {
     "filename": "he--context--subject.hebrew--female--0.mp3",
-    "text": "עברית! האותיות הולכות לכל הכיוונים ואני עדיין מבולבל.",
+    "text": "עברית! האותיות הולכות לכל הכיוונים, ואני עדיין מבולבל.",
     "id": "he:context:subject.hebrew:female:0"
   },
   {
     "filename": "he--context--subject.hebrew--female--1.mp3",
-    "text": "ערבוב אותיות, תיקון משפטים — בלש עברי בדרך!",
+    "text": "ערבוב אותיות, תיקון משפטים, , בלש עברי בדרך!",
     "id": "he:context:subject.hebrew:female:1"
   },
   {
     "filename": "he--context--subject.hebrew--female--2.mp3",
-    "text": "מילה טובה ביום שומרת את המורה רחוקה. או משהו כזה.",
+    "text": "מילה טובה ביום, שומרת את המורה רחוקה. או משהו כזה.",
     "id": "he:context:subject.hebrew:female:2"
   },
   {
     "filename": "he--context--subject.english-beginners--female--0.mp3",
-    "text": "זמן אנגלית! אל תדאג — גם אני מתבלבל לפעמים.",
+    "text": "זמן אנגלית! אל תדאג, , גם אני מתבלבל לפעמים.",
     "id": "he:context:subject.english-beginners:female:0"
   },
   {
     "filename": "he--context--subject.english-beginners--female--1.mp3",
-    "text": "אנגלית למתחילים — מילים, משפטים, צבעים. קדימה!",
+    "text": "אנגלית למתחילים, , מילים, משפטים, צבעים. קדימה!",
     "id": "he:context:subject.english-beginners:female:1"
   },
   {
     "filename": "he--context--subject.english-beginners--female--2.mp3",
-    "text": "מילה אחת בכל פעם — ואת כבר מדברת אנגלית. כמעט!",
+    "text": "מילה אחת בכל פעם, , ואת כבר מדברת אנגלית. כמעט!",
     "id": "he:context:subject.english-beginners:female:2"
   },
   {
@@ -121,7 +121,7 @@
   },
   {
     "filename": "he--context--subject.english-natives--female--1.mp3",
-    "text": "דקדוק, אוצר מילים, קריאה — את כבר כמעט שם.",
+    "text": "דקדוק, אוצר מילים, קריאה, , את כבר כמעט שם.",
     "id": "he:context:subject.english-natives:female:1"
   },
   {
@@ -141,12 +141,12 @@
   },
   {
     "filename": "he--context--game.math.multiplication--female--2.mp3",
-    "text": "שבע כפול שמונה? קל. שש כפול שבע? ...תני לי שנייה. את קודם!",
+    "text": "שבע כפול שמונה? קל. שש כפול שבע? תני לי שנייה, את קודם!",
     "id": "he:context:game.math.multiplication:female:2"
   },
   {
     "filename": "he--context--game.math.shuk--female--0.mp3",
-    "text": "שוק! קנה, שלם, קבל עודף — ואל תשכח לחייך לירקן.",
+    "text": "שוק! קנה, שלם, קבל עודף, , ואל תשכח לחייך לירקן.",
     "id": "he:context:game.math.shuk:female:0"
   },
   {
@@ -156,7 +156,7 @@
   },
   {
     "filename": "he--context--game.math.shuk--female--2.mp3",
-    "text": "חשבון וקניות — אתגר שוק!",
+    "text": "חשבון וקניות, , אתגר שוק!",
     "id": "he:context:game.math.shuk:female:2"
   },
   {
@@ -171,12 +171,12 @@
   },
   {
     "filename": "he--context--game.math.mystery--female--2.mp3",
-    "text": "בלש מספרים — המשקפיים על!",
+    "text": "בלש מספרים, , המשקפיים על!",
     "id": "he:context:game.math.mystery:female:2"
   },
   {
     "filename": "he--context--game.hebrew.scramble--female--0.mp3",
-    "text": "ערבוב אותיות! מ-כ-ח-ו-ל ל... משהו כחול. כנראה.",
+    "text": "ערבוב אותיות! מ-כ-ח-ו-ל ל, משהו כחול. כנראה.",
     "id": "he:context:game.hebrew.scramble:female:0"
   },
   {
@@ -186,7 +186,7 @@
   },
   {
     "filename": "he--context--game.hebrew.scramble--female--2.mp3",
-    "text": "אם נראה לך שזה כלב — בדקי שוב!",
+    "text": "אם נראה לך שזה כלב, , בדקי שוב!",
     "id": "he:context:game.hebrew.scramble:female:2"
   },
   {
@@ -196,7 +196,7 @@
   },
   {
     "filename": "he--context--game.hebrew.fix-sentence--female--1.mp3",
-    "text": "תקני את המשפט — המורה תגיד וואו. אולי.",
+    "text": "תקני את המשפט, , המורה תגיד וואו. אולי.",
     "id": "he:context:game.hebrew.fix-sentence:female:1"
   },
   {
@@ -206,7 +206,7 @@
   },
   {
     "filename": "he--context--game.hebrew.comprehension--female--0.mp3",
-    "text": "קראי את הסיפור — יש שאלות. בלי לחשוף את הסוף!",
+    "text": "קראי את הסיפור, , יש שאלות. בלי לחשוף את הסוף!",
     "id": "he:context:game.hebrew.comprehension:female:0"
   },
   {
@@ -221,12 +221,12 @@
   },
   {
     "filename": "he--context--game.english-beginners.vocabulary--female--0.mp3",
-    "text": "התאמת מילים! חתול באנגלית זה קט. כלב זה...",
+    "text": "התאמת מילים! חתול באנגלית זה קט. כלב זה,.",
     "id": "he:context:game.english-beginners.vocabulary:female:0"
   },
   {
     "filename": "he--context--game.english-beginners.vocabulary--female--1.mp3",
-    "text": "אנגלית ועברית — מילה אחת בכל פעם.",
+    "text": "אנגלית ועברית, , מילה אחת בכל פעם.",
     "id": "he:context:game.english-beginners.vocabulary:female:1"
   },
   {
@@ -236,12 +236,12 @@
   },
   {
     "filename": "he--context--game.english-beginners.sentences--female--0.mp3",
-    "text": "בני משפט! סדרי את המילים נכון — אני סומכת עלייך.",
+    "text": "בני משפט! סדרי את המילים נכון, , אני סומכת עלייך.",
     "id": "he:context:game.english-beginners.sentences:female:0"
   },
   {
     "filename": "he--context--game.english-beginners.sentences--female--1.mp3",
-    "text": "סדר מילים כמו קוביות — רק בלי לדרוך עליהן.",
+    "text": "סדר מילים כמו קוביות, , רק בלי לדרוך עליהן.",
     "id": "he:context:game.english-beginners.sentences:female:1"
   },
   {
@@ -256,7 +256,7 @@
   },
   {
     "filename": "he--context--game.english-beginners.colors-numbers--female--1.mp3",
-    "text": "באיזה צבע השמיים? ...ביום. לא בלילה.",
+    "text": "באיזה צבע השמיים? , ביום. לא בלילה.",
     "id": "he:context:game.english-beginners.colors-numbers:female:1"
   },
   {
@@ -271,7 +271,7 @@
   },
   {
     "filename": "he--context--game.english-natives.grammar--female--1.mp3",
-    "text": "עבר, הווה, עתיד — אני מבולבל בכל הזמנים.",
+    "text": "עבר, הווה, עתיד, , אני מבולבל בכל הזמנים.",
     "id": "he:context:game.english-natives.grammar:female:1"
   },
   {
@@ -306,12 +306,12 @@
   },
   {
     "filename": "he--context--game.english-natives.comprehension--female--2.mp3",
-    "text": "הבנה ותשובה — זה הניצחון!",
+    "text": "הבנה ותשובה, , זה הניצחון!",
     "id": "he:context:game.english-natives.comprehension:female:2"
   },
   {
     "filename": "he--context--default--female--0.mp3",
-    "text": "היי! אני מילו — לחצי עליי לעוד חוכמה. או צחוק.",
+    "text": "היי!, אני מיילו, , לחצי עליי לעוד חוכמה. או צחוק.",
     "id": "he:context:default:female:0"
   },
   {
