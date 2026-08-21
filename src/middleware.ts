@@ -16,7 +16,8 @@ export default auth((req) => {
     pathname.startsWith("/api/auth") ||
     pathname.startsWith("/api/content") ||
     pathname.startsWith("/api/seed") ||
-    pathname.startsWith("/api/tts");
+    pathname.startsWith("/api/tts") ||
+    pathname.startsWith("/demo/tts");
 
   const isAdminRoute =
     pathname.startsWith("/admin") || pathname.startsWith("/api/admin");
