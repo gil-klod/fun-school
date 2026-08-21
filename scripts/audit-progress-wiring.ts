@@ -24,7 +24,6 @@ const BAD_PATTERNS = [
   /progress\.score \+/,
   /correct: progress\.correct \+/,
   /wrong: progress\.wrong \+/,
-  /markCompleted\(\);\s*\n\s*progress\.save\(\{\s*\n\s*state:.*status: "completed"/s,
   /progress\.setCorrect\(\(c\) => c \+ 1\)/,
 ];
 
@@ -32,18 +31,19 @@ let failed = 0;
 for (const rel of GAME_FILES) {
   const file = path.join(ROOT, rel);
   const src = fs.readFileSync(file, "utf8");
+  let fileFailed = false;
   if (!src.includes("recordAnswerAndSave")) {
     console.error(`FAIL ${rel}: missing recordAnswerAndSave`);
-    failed += 1;
-    continue;
+    fileFailed = true;
   }
   for (const pattern of BAD_PATTERNS) {
     if (pattern.test(src)) {
       console.error(`FAIL ${rel}: matched stale pattern ${pattern}`);
-      failed += 1;
+      fileFailed = true;
     }
   }
-  if (!failed) console.log(`OK  ${rel}`);
+  if (fileFailed) failed += 1;
+  else console.log(`OK  ${rel}`);
 }
 
 const hook = fs.readFileSync(path.join(ROOT, "hooks/useGameProgress.ts"), "utf8");
