@@ -76,6 +76,16 @@ export const MASCOT_LINES: Record<
       "רמז: זה מספר. עזרתי?",
       "בלש מספרים, — המשקפיים על!",
     ]),
+    "game.math.analog-clock": genderLines([
+      "שעון מחוגים! המחוג הקצר — שעות. הארוך — דקות. קל, נכון?",
+      "מה השעה? לא, אל תסתכל על הטלפון!",
+      "תיקון: זה לא שעון דיגיטלי. אבל כיף!",
+    ]),
+    "game.math.sequences": genderLines([
+      "סדרות מספרים! 2, 4, 6, — מה בא אחר כך?",
+      "מצא את הדפוס, — ואז תעוף!",
+      "מספרים ברצף, — כמו צעדי ריקוד!",
+    ]),
     "game.hebrew.scramble": genderLines([
       "ערבוב אותיות! מ-כ-ח-ו-ל ל... משהו כחול. כנראה.",
       "אותיות מבולבלות? אני מרגיש בבית.",
@@ -184,6 +194,16 @@ export const MASCOT_LINES: Record<
       "Mystery number! I guess forty-two. It's always forty-two. No? Okay.",
       "Hint: it's a number. Helpful?",
       "Number detective — magnifying glass on!",
+    ],
+    "game.math.analog-clock": [
+      "Analog clock! Short hand = hours. Long hand = minutes. Easy, right?",
+      "What time is it? Don't peek at your phone!",
+      "Not a digital clock — but more fun!",
+    ],
+    "game.math.sequences": [
+      "Number sequences! 2, 4, 6 — what comes next?",
+      "Spot the pattern, then fly!",
+      "Numbers in a row — like dance steps!",
     ],
     "game.hebrew.scramble": [
       "Scrambled letters! Mixed up? I feel right at home.",

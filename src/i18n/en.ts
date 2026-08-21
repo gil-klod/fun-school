@@ -203,11 +203,13 @@ export const en: Dictionary = {
   subjects: {
     math: {
       title: "Math",
-      description: "Times tables, market math & number puzzles",
+      description: "Times tables, clocks, sequences & number puzzles",
       games: {
         multiplication: { title: "Multiplication Boss", description: "Beat the times-table bosses!" },
         shuk: { title: "Market Challenge", description: "Shop at the market with shekels and calculate change!" },
         mystery: { title: "Mystery Number", description: "Find the hidden number!" },
+        "analog-clock": { title: "Analog Clock", description: "Read the clock and pick the time!" },
+        sequences: { title: "Number Sequences", description: "What number comes next?" },
       },
     },
     hebrew: {
@@ -294,6 +296,14 @@ export const en: Dictionary = {
     shukWrong: "Change is ₪{change}. Total was ₪{total}, paid ₪{paid}.",
     mysteryCorrect: "You found it! 🕵️",
     mysteryWrong: "The answer was {answer}.",
+    clockCorrect: "Perfect! You can tell the time! 🕐",
+    clockWrong: "The time was {answer}.",
+    nextClock: "Next Clock →",
+    whatTimeIsIt: "What time is it?",
+    sequencesCorrect: "Great pattern spotting! 🔢",
+    sequencesWrong: "The answer was {answer}.",
+    nextSequence: "Next Sequence →",
+    whatComesNext: "What number comes next?",
     scrambleCorrect: "Excellent!",
     scrambleWrong: "The word was: {word}",
     fixCorrect: "Correct!",

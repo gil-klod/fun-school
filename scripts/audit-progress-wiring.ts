@@ -13,6 +13,8 @@ const GAME_FILES = [
   "app/math/multiplication/page.tsx",
   "app/math/mystery/page.tsx",
   "app/math/shuk/page.tsx",
+  "app/math/analog-clock/page.tsx",
+  "app/math/sequences/page.tsx",
   "app/english-beginners/vocabulary/page.tsx",
   "app/english-beginners/sentences/page.tsx",
   "app/english-beginners/colors-numbers/page.tsx",

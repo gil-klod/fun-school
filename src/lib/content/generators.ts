@@ -1,6 +1,9 @@
 import type {
+  ClockConfig,
+  DifficultyLevel,
   MysteryConfig,
   MultiplicationConfig,
+  SequencesConfig,
   ShukConfig,
   ShukItem,
 } from "./types";
@@ -164,6 +167,105 @@ export function shuffleArray<T>(arr: T[]): T[] {
 
 export function buildOptions(correct: number, count = 3): number[] {
   return shuffleArray([correct, ...generateWrongAnswers(correct, count)]);
+}
+
+export const CLOCK_CONFIGS: Record<DifficultyLevel, ClockConfig> = {
+  1: { minuteStep: 60 },
+  2: { minuteStep: 30 },
+  3: { minuteStep: 5 },
+};
+
+export const SEQUENCES_CONFIGS: Record<DifficultyLevel, SequencesConfig> = {
+  1: { minStart: 1, maxStart: 10, stepMin: 1, stepMax: 2, visibleCount: 3 },
+  2: { minStart: 1, maxStart: 30, stepMin: 2, stepMax: 5, visibleCount: 4 },
+  3: { minStart: 5, maxStart: 99, stepMin: 3, stepMax: 12, visibleCount: 4 },
+};
+
+export interface ClockQuestion {
+  hour: number;
+  minute: number;
+  label: string;
+}
+
+export interface SequenceQuestion {
+  numbers: number[];
+  answer: number;
+}
+
+export function formatClockTime(hour: number, minute: number): string {
+  return `${hour}:${minute.toString().padStart(2, "0")}`;
+}
+
+export function generateClock(config: ClockConfig): ClockQuestion {
+  const hour = Math.floor(Math.random() * 12) + 1;
+  const stepCount = Math.floor(60 / config.minuteStep);
+  const minute = (Math.floor(Math.random() * stepCount) * config.minuteStep) % 60;
+  return { hour, minute, label: formatClockTime(hour, minute) };
+}
+
+export function buildTimeOptions(hour: number, minute: number, minuteStep: number): string[] {
+  const correct = formatClockTime(hour, minute);
+  const wrong = new Set<string>();
+  let guard = 0;
+  while (wrong.size < 3 && guard < 40) {
+    guard += 1;
+    const h = Math.floor(Math.random() * 12) + 1;
+    const stepCount = Math.floor(60 / minuteStep);
+    const m = (Math.floor(Math.random() * stepCount) * minuteStep) % 60;
+    const label = formatClockTime(h, m);
+    if (label !== correct) wrong.add(label);
+  }
+  return shuffleArray([correct, ...Array.from(wrong)]);
+}
+
+export function generateSequence(config: SequencesConfig): SequenceQuestion {
+  const step =
+    Math.floor(Math.random() * (config.stepMax - config.stepMin + 1)) + config.stepMin;
+  const span = config.maxStart - config.minStart;
+  const start =
+    config.minStart + Math.floor(Math.random() * (span + 1));
+  const numbers: number[] = [];
+  for (let i = 0; i < config.visibleCount; i++) {
+    numbers.push(start + step * i);
+  }
+  const answer = start + step * config.visibleCount;
+  return { numbers, answer };
+}
+
+export function buildSequenceOptions(correct: number, step: number): number[] {
+  const wrong = new Set<number>();
+  let guard = 0;
+  while (wrong.size < 3 && guard < 40) {
+    guard += 1;
+    const offset = (Math.floor(Math.random() * 5) + 1) * step * (Math.random() > 0.5 ? 1 : -1);
+    const candidate = correct + offset;
+    if (candidate > 0 && candidate !== correct) wrong.add(candidate);
+  }
+  while (wrong.size < 3) {
+    const candidate = correct + wrong.size + 1;
+    if (candidate !== correct) wrong.add(candidate);
+  }
+  return shuffleArray([correct, ...Array.from(wrong)]);
+}
+
+export function newClockRound(config: ClockConfig) {
+  const question = generateClock(config);
+  return {
+    question,
+    options: buildTimeOptions(question.hour, question.minute, config.minuteStep),
+  };
+}
+
+export function newSequenceRound(config: SequencesConfig) {
+  const question = generateSequence(config);
+  const step =
+    question.numbers.length >= 2
+      ? question.numbers[1] - question.numbers[0]
+      : config.stepMin;
+  return {
+    question,
+    options: buildSequenceOptions(question.answer, Math.max(1, step)),
+  };
 }
 
 export function normalizeShukChallenge(raw: unknown): ShukChallenge | null {

@@ -203,11 +203,13 @@ export const he: Dictionary = {
   subjects: {
     math: {
       title: "חשבון",
-      description: "טבלאות כפל, חשבון בשוק וחידות מספרים",
+      description: "טבלאות כפל, שעון, סדרות וחידות מספרים",
       games: {
         multiplication: { title: "בוס הכפל", description: "הבס את טבלאות הכפל!" },
         shuk: { title: "אתגר השוק", description: "קנה בשוק וחשב עודף!" },
         mystery: { title: "מספר מסתורי", description: "מצא את המספר הנסתר!" },
+        "analog-clock": { title: "שעון מחוגים", description: "קרא את השעון ובחר את השעה!" },
+        sequences: { title: "סדרות מספרים", description: "איזה מספר בא אחר כך?" },
       },
     },
     hebrew: {
@@ -294,6 +296,14 @@ export const he: Dictionary = {
     shukWrong: "העודף הוא ₪{change}. סה\"כ ₪{total}, שילמת ₪{paid}.",
     mysteryCorrect: "מצאת! 🕵️",
     mysteryWrong: "התשובה הייתה {answer}.",
+    clockCorrect: "מעולה! אתה יודע לקרוא שעון! 🕐",
+    clockWrong: "השעה הייתה {answer}.",
+    nextClock: "שעון הבא ←",
+    whatTimeIsIt: "מה השעה?",
+    sequencesCorrect: "זיהית את הסדר! 🔢",
+    sequencesWrong: "התשובה הייתה {answer}.",
+    nextSequence: "סדרה הבאה ←",
+    whatComesNext: "איזה מספר בא אחר כך?",
     scrambleCorrect: "מצוין!",
     scrambleWrong: "המילה הייתה: {word}",
     fixCorrect: "נכון!",

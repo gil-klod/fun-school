@@ -10,6 +10,7 @@ import {
 import { HEBREW_WORDS, FIX_SENTENCES } from "@/lib/data/hebrew";
 import { HEBREW_STORIES_BY_LEVEL } from "@/lib/data/hebrew-stories";
 import { SHUK_ITEMS, MYSTERY_TEMPLATES } from "@/lib/data/math";
+import { CLOCK_CONFIGS, SEQUENCES_CONFIGS } from "@/lib/content/generators";
 
 type SeedDoc = {
   subjectId: string;
@@ -25,6 +26,8 @@ function configs(): SeedDoc[] {
     { subjectId: "math", gameId: "multiplication" },
     { subjectId: "math", gameId: "shuk" },
     { subjectId: "math", gameId: "mystery" },
+    { subjectId: "math", gameId: "analog-clock" },
+    { subjectId: "math", gameId: "sequences" },
   ];
 
   const multConfigs: Record<DifficultyLevel, Record<string, unknown>> = {
@@ -45,20 +48,35 @@ function configs(): SeedDoc[] {
     3: { maxN: 12, maxAnswer: 12, maxResult: 99 },
   };
 
+  const clockConfigs: Record<DifficultyLevel, Record<string, unknown>> = {
+    1: { minuteStep: 60 },
+    2: { minuteStep: 30 },
+    3: { minuteStep: 5 },
+  };
+
+  const sequencesConfigs: Record<DifficultyLevel, Record<string, unknown>> = {
+    1: { minStart: 1, maxStart: 10, stepMin: 1, stepMax: 2, visibleCount: 3 },
+    2: { minStart: 1, maxStart: 30, stepMin: 2, stepMax: 5, visibleCount: 4 },
+    3: { minStart: 5, maxStart: 99, stepMin: 3, stepMax: 12, visibleCount: 4 },
+  };
+
+  const configByGame: Record<string, Record<DifficultyLevel, Record<string, unknown>>> = {
+    multiplication: multConfigs,
+    shuk: shukConfigs,
+    mystery: mysteryConfigs,
+    "analog-clock": clockConfigs,
+    sequences: sequencesConfigs,
+  };
+
   const docs: SeedDoc[] = [];
   for (const { subjectId, gameId } of games) {
     for (const difficulty of [1, 2, 3] as DifficultyLevel[]) {
-      let data: Record<string, unknown>;
-      if (gameId === "multiplication") data = multConfigs[difficulty];
-      else if (gameId === "shuk") data = shukConfigs[difficulty];
-      else data = mysteryConfigs[difficulty];
-
       docs.push({
         subjectId,
         gameId,
         difficulty,
         itemType: "config",
-        data,
+        data: configByGame[gameId][difficulty],
         sortOrder: 0,
       });
     }
@@ -232,6 +250,26 @@ export async function fetchGameContentBundle(
   }).sort({ itemType: 1, sortOrder: 1 });
 
   if (rows.length === 0) {
+    if (gameId === "analog-clock") {
+      return {
+        subjectId,
+        gameId,
+        difficulty,
+        config: CLOCK_CONFIGS[difficulty],
+        items: [],
+        sessionSize: 10,
+      };
+    }
+    if (gameId === "sequences") {
+      return {
+        subjectId,
+        gameId,
+        difficulty,
+        config: SEQUENCES_CONFIGS[difficulty],
+        items: [],
+        sessionSize: 10,
+      };
+    }
     return null;
   }
 
@@ -318,6 +356,8 @@ export async function fetchGameContentBundle(
     gameId === "multiplication" ||
     gameId === "shuk" ||
     gameId === "mystery" ||
+    gameId === "analog-clock" ||
+    gameId === "sequences" ||
     gameId === "scramble" ||
     gameId === "fix-sentence" ||
     gameId === "vocabulary" ||

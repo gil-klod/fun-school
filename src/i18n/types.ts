@@ -266,6 +266,14 @@ export interface Dictionary {
     shukWrong: string;
     mysteryCorrect: string;
     mysteryWrong: string;
+    clockCorrect: string;
+    clockWrong: string;
+    nextClock: string;
+    whatTimeIsIt: string;
+    sequencesCorrect: string;
+    sequencesWrong: string;
+    nextSequence: string;
+    whatComesNext: string;
     scrambleCorrect: string;
     scrambleWrong: string;
     fixCorrect: string;

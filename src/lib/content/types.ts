@@ -52,3 +52,17 @@ export interface MysteryConfig {
   maxAnswer: number;
   maxResult: number;
 }
+
+export interface ClockConfig {
+  /** Minutes between valid times (60 = whole hours only). */
+  minuteStep: 5 | 15 | 30 | 60;
+}
+
+export interface SequencesConfig {
+  minStart: number;
+  maxStart: number;
+  stepMin: number;
+  stepMax: number;
+  /** How many numbers shown before the missing one. */
+  visibleCount: number;
+}

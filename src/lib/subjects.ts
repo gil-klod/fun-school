@@ -34,6 +34,22 @@ export const subjects: SubjectInfo[] = [
         emoji: "🔍",
         href: "/math/mystery",
       },
+      {
+        id: "analog-clock",
+        title: "Analog Clock",
+        titleHe: "שעון מחוגים",
+        description: "Read the clock and pick the time!",
+        emoji: "🕐",
+        href: "/math/analog-clock",
+      },
+      {
+        id: "sequences",
+        title: "Number Sequences",
+        titleHe: "סדרות מספרים",
+        description: "What number comes next?",
+        emoji: "🔢",
+        href: "/math/sequences",
+      },
     ],
   },
   {
