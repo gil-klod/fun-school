@@ -1,5 +1,7 @@
 "use client";
 
+import Link from "next/link";
+import { useSession } from "next-auth/react";
 import { SubjectCard } from "@/components/SubjectCard";
 import { HomeDemo } from "@/components/HomeDemo";
 import { HomeDailyProject } from "@/components/projects/HomeDailyProject";
@@ -10,6 +12,8 @@ import { useLocale } from "@/i18n/LocaleProvider";
 
 export default function HomePage() {
   const { t } = useLocale();
+  const { status } = useSession();
+  const showDemo = status === "unauthenticated";
 
   return (
     <main className={`flex-1 py-6 sm:py-8 ${APP_CONTAINER}`}>
@@ -21,7 +25,7 @@ export default function HomePage() {
         <p className="text-base sm:text-lg text-gray-500 mt-2">{t("home.subtitle")}</p>
       </header>
 
-      <HomeDemo />
+      {showDemo && <HomeDemo />}
 
       <HomeDailyProject />
       <MascotWelcome />

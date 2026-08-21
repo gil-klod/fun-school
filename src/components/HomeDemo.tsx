@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { useSession } from "next-auth/react";
 import { GameOptionsGrid } from "@/components/GameShell";
 import { Feedback } from "@/components/Feedback";
 import { useLocale } from "@/i18n/LocaleProvider";
@@ -10,7 +9,6 @@ import { HOME_DEMO_QUESTIONS } from "@/lib/demoQuestions";
 
 export function HomeDemo() {
   const { t, locale, gameTitle, subjectTitle } = useLocale();
-  const { data: session } = useSession();
   const [step, setStep] = useState(0);
   const [answered, setAnswered] = useState(false);
   const [feedback, setFeedback] = useState<{ type: "correct" | "wrong"; message: string } | null>(
@@ -154,24 +152,13 @@ export function HomeDemo() {
       </div>
 
       <div className="mt-5 text-center">
-        {session?.user ? (
-          <Link
-            href="/dashboard"
-            className="inline-flex items-center justify-center gap-2 w-full sm:w-auto min-w-[16rem] px-8 py-4 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white text-lg sm:text-xl font-extrabold shadow-lg hover:shadow-xl transition-all"
-          >
-            {t("home.demoPlayNow")} →
-          </Link>
-        ) : (
-          <Link
-            href="/register"
-            className="inline-flex items-center justify-center gap-2 w-full sm:w-auto min-w-[16rem] px-8 py-4 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white text-lg sm:text-xl font-extrabold shadow-lg hover:shadow-xl transition-all animate-pop"
-          >
-            {t("home.demoRegister")} 🎒
-          </Link>
-        )}
-        {!session?.user && (
-          <p className="text-sm text-gray-500 mt-3">{t("home.demoRegisterHint")}</p>
-        )}
+        <Link
+          href="/register"
+          className="inline-flex items-center justify-center gap-2 w-full sm:w-auto min-w-[16rem] px-8 py-4 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white text-lg sm:text-xl font-extrabold shadow-lg hover:shadow-xl transition-all animate-pop"
+        >
+          {t("home.demoRegister")} 🎒
+        </Link>
+        <p className="text-sm text-gray-500 mt-3">{t("home.demoRegisterHint")}</p>
       </div>
     </section>
   );
