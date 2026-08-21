@@ -1,12 +1,13 @@
 "use client";
 
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useEffect, useMemo } from "react";
 import { useGameResume } from "@/hooks/useGameResume";
 import { useGameSession } from "@/hooks/useGameSession";
 import { GameShell, GamePage } from "@/components/GameShell";
 import { GameStatus } from "@/components/GameStatus";
 import { Feedback } from "@/components/Feedback";
 import { GameContentGate } from "@/components/GameContentGate";
+import { useQuestionCounter } from "@/hooks/useQuestionCounter";
 import { useLocale } from "@/i18n/LocaleProvider";
 import { useProjectGame } from "@/hooks/useProjectGame";
 import { ProjectSlotDone } from "@/components/projects/ProjectSlotDone";
@@ -21,6 +22,19 @@ interface QuizGameProps {
   contentDir?: "ltr" | "rtl";
 }
 
+function questionKey(question: QuizQuestion): string {
+  return question.question;
+}
+
+function pickQuestion(
+  questions: QuizQuestion[],
+  exclude: string[] = []
+): QuizQuestion {
+  const pool = questions.filter((q) => !exclude.includes(questionKey(q)));
+  const list = pool.length > 0 ? pool : questions;
+  return list[Math.floor(Math.random() * list.length)];
+}
+
 function QuizGamePlay({
   subjectId,
   gameId,
@@ -28,12 +42,14 @@ function QuizGamePlay({
   emoji,
   contentDir,
   questions,
+  sessionSize,
   difficulty,
   changeDifficulty,
   progress,
   lockDifficulty,
 }: QuizGameProps & {
   questions: QuizQuestion[];
+  sessionSize: number;
   difficulty: ReturnType<typeof useGameSession>["difficulty"];
   changeDifficulty: ReturnType<typeof useGameSession>["changeDifficulty"];
   progress: ReturnType<typeof useGameSession>["progress"];
@@ -41,64 +57,143 @@ function QuizGamePlay({
 }) {
   const { t, gameTitle } = useLocale();
   const project = useProjectGame();
-
-  const [index, setIndex] = useState(0);
+  const [slotDone, setSlotDone] = useState(false);
+  const [sessionComplete, setSessionComplete] = useState(false);
+  const [usedQuestions, setUsedQuestions] = useState<string[]>([]);
+  const [question, setQuestion] = useState<QuizQuestion>(() => pickQuestion(questions));
   const [feedback, setFeedback] = useState<{
     type: "correct" | "wrong";
     message: string;
     explanation?: string;
   } | null>(null);
   const [answered, setAnswered] = useState(false);
-  const [finished, setFinished] = useState(false);
+  const { current: questionNum, setCurrent: setQuestionNum, reset: resetQuestionNum, advance: advanceQuestionNum } =
+    useQuestionCounter(sessionSize);
 
-  const question = questions[index % questions.length];
-
-  const nextQuestion = useCallback(() => {
-    if (index + 1 >= questions.length) {
-      setFinished(true);
-      progress.markCompleted();
-      return;
-    }
-    const nextIdx = index + 1;
-    setIndex(nextIdx);
+  useEffect(() => {
+    setUsedQuestions([]);
+    setQuestion(pickQuestion(questions));
     setFeedback(null);
     setAnswered(false);
-    progress.setRound((r) => r + 1);
-    progress.save({
-      round: progress.round + 1,
-      state: { index: nextIdx, answered: false, feedback: null, finished: false },
-    });
-  }, [index, questions.length, progress]);
+    setSessionComplete(false);
+    setSlotDone(false);
+    resetQuestionNum();
+  }, [difficulty, questions, resetQuestionNum]);
+
+  const advanceToNext = useCallback(
+    (currentUsed: string[]) => {
+      const q = pickQuestion(questions, currentUsed);
+      setQuestion(q);
+      setFeedback(null);
+      setAnswered(false);
+      progress.save({
+        state: {
+          question: q,
+          usedQuestions: currentUsed,
+          answered: false,
+          feedback: null,
+          questionNum,
+        },
+      });
+    },
+    [progress, questions, questionNum]
+  );
 
   useGameResume(
     progress.loaded,
     progress.hasSavedProgress,
     progress.gameState,
     (s) => {
-      if (s.index !== undefined) setIndex(s.index as number);
-      setFinished(!!s.finished);
-      setAnswered(!!s.answered);
-      if (s.feedback) setFeedback(s.feedback as typeof feedback);
+      const used = (s.usedQuestions as string[]) ?? [];
+      setUsedQuestions(used);
+      if (s.question) {
+        setQuestion(s.question as QuizQuestion);
+        setAnswered(!!s.answered);
+        if (s.feedback) setFeedback(s.feedback as typeof feedback);
+        if (typeof s.questionNum === "number") setQuestionNum(s.questionNum);
+      }
     },
     () => {
-      const idx = progress.gameState.index as number;
-      if (idx + 1 >= questions.length) {
-        setFinished(true);
+      const used = (progress.gameState.usedQuestions as string[]) ?? [];
+      const lastKey = (progress.gameState.question as QuizQuestion | undefined)?.question;
+      const updatedUsed =
+        lastKey && !used.includes(lastKey) ? [...used, lastKey] : used;
+      const savedNum = (progress.gameState.questionNum as number) ?? questionNum;
+      if (savedNum >= sessionSize) {
         progress.markCompleted();
-      } else {
-        const nextIdx = idx + 1;
-        setIndex(nextIdx);
-        setFeedback(null);
-        setAnswered(false);
-        setFinished(false);
-        progress.setRound((r) => r + 1);
-        progress.save({
-          round: progress.round + 1,
-          state: { index: nextIdx, answered: false, feedback: null, finished: false },
-        });
+        if (project.isProjectGame) setSlotDone(true);
+        else setSessionComplete(true);
+        return;
       }
+      setUsedQuestions(updatedUsed);
+      progress.setRound((r) => r + 1);
+      advanceQuestionNum();
+      progress.save({
+        round: progress.round + 1,
+        state: { questionNum: savedNum + 1 },
+      });
+      advanceToNext(updatedUsed);
     }
   );
+
+  const nextQuestion = useCallback(() => {
+    const result = project.handleSessionNext(
+      questionNum,
+      sessionSize,
+      progress.markCompleted,
+      () => {
+        const key = questionKey(question);
+        const used = usedQuestions.includes(key) ? usedQuestions : [...usedQuestions, key];
+        const nextNum = questionNum + 1;
+        setUsedQuestions(used);
+        advanceQuestionNum();
+        progress.setRound((r) => r + 1);
+        progress.save({ round: progress.round + 1, state: { questionNum: nextNum } });
+        advanceToNext(used);
+      }
+    );
+    if (result === "project") setSlotDone(true);
+    if (result === "complete") setSessionComplete(true);
+  }, [
+    project,
+    questionNum,
+    sessionSize,
+    progress,
+    usedQuestions,
+    question,
+    advanceQuestionNum,
+    advanceToNext,
+  ]);
+
+  const playAgain = useCallback(() => {
+    setSessionComplete(false);
+    resetQuestionNum();
+    setUsedQuestions([]);
+    const q = pickQuestion(questions);
+    setQuestion(q);
+    setFeedback(null);
+    setAnswered(false);
+    progress.setScore(0);
+    progress.setStreak(0);
+    progress.setRound(1);
+    progress.setCorrect(0);
+    progress.setWrong(0);
+    progress.save({
+      score: 0,
+      streak: 0,
+      round: 1,
+      correct: 0,
+      wrong: 0,
+      status: "in_progress",
+      state: {
+        question: q,
+        usedQuestions: [],
+        answered: false,
+        feedback: null,
+        questionNum: 1,
+      },
+    });
+  }, [progress, questions, resetQuestionNum]);
 
   const handleAnswer = (optionIndex: number) => {
     if (answered) return;
@@ -108,10 +203,11 @@ function QuizGamePlay({
       const fb = { type: "correct" as const, message: t("games.correct") };
       setFeedback(fb);
       void progress.recordAnswerAndSave(true, {
-        index,
+        question,
+        usedQuestions,
         answered: true,
         feedback: fb,
-        finished: false,
+        questionNum,
       });
     } else {
       const fb = {
@@ -121,10 +217,11 @@ function QuizGamePlay({
       };
       setFeedback(fb);
       void progress.recordAnswerAndSave(false, {
-        index,
+        question,
+        usedQuestions,
         answered: true,
         feedback: fb,
-        finished: false,
+        questionNum,
       });
     }
   };
@@ -137,39 +234,37 @@ function QuizGamePlay({
         contentDir={contentDir}
         difficulty={difficulty}
         onDifficultyChange={changeDifficulty}
-        difficultyDisabled={(answered && !finished) || lockDifficulty}
+        difficultyDisabled={answered || lockDifficulty}
       >
         <GameStatus
-          current={index + 1}
-          total={questions.length}
+          current={questionNum}
+          total={sessionSize}
           correct={progress.correct}
           wrong={progress.wrong}
           score={progress.score}
         />
 
-        {!finished ? (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4 items-start">
-            <div className="bg-white/90 rounded-2xl p-4 shadow border-2 border-pink-100">
-              <p className="text-lg font-bold text-gray-800">{question.question}</p>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-              {question.options.map((opt, i) => (
-                <button
-                  key={i}
-                  onClick={() => handleAnswer(i)}
-                  disabled={answered}
-                  className={`game-btn-option text-base py-3 text-left ${answered && i === question.correctIndex ? "correct" : ""} ${answered && i !== question.correctIndex ? "opacity-50" : ""}`}
-                >
-                  {opt}
-                </button>
-              ))}
-            </div>
-          </div>
-        ) : null}
-
-        {!finished ? (
+        {!sessionComplete && !slotDone ? (
           <>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4 items-start">
+              <div className="bg-white/90 rounded-2xl p-4 shadow border-2 border-pink-100">
+                <p className="text-lg font-bold text-gray-800">{question.question}</p>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                {question.options.map((opt, i) => (
+                  <button
+                    key={`${question.question}-${i}`}
+                    onClick={() => handleAnswer(i)}
+                    disabled={answered}
+                    className={`game-btn-option text-base py-3 text-left ${answered && i === question.correctIndex ? "correct" : ""} ${answered && i !== question.correctIndex ? "opacity-50" : ""}`}
+                  >
+                    {opt}
+                  </button>
+                ))}
+              </div>
+            </div>
+
             {feedback && (
               <div className="mb-3">
                 <Feedback
@@ -182,36 +277,14 @@ function QuizGamePlay({
 
             {answered && (
               <button onClick={nextQuestion} className="game-btn game-btn-primary w-full sm:max-w-md sm:mx-auto sm:block">
-                {index + 1 >= questions.length ? t("common.seeResults") : t("common.nextQuestion")}
+                {questionNum >= sessionSize ? t("common.seeResults") : t("common.nextQuestion")}
               </button>
             )}
           </>
-        ) : project.isProjectGame ? (
+        ) : slotDone ? (
           <ProjectSlotDone />
         ) : (
-          <SessionComplete
-            score={progress.score}
-            onPlayAgain={() => {
-              setIndex(0);
-              progress.setScore(0);
-              progress.setStreak(0);
-              progress.setRound(1);
-              progress.setCorrect(0);
-              progress.setWrong(0);
-              setFinished(false);
-              setFeedback(null);
-              setAnswered(false);
-              progress.save({
-                score: 0,
-                streak: 0,
-                round: 1,
-                correct: 0,
-                wrong: 0,
-                status: "in_progress",
-                state: { index: 0, answered: false, feedback: null, finished: false },
-              });
-            }}
-          />
+          <SessionComplete score={progress.score} onPlayAgain={playAgain} />
         )}
       </GameShell>
     </GamePage>
@@ -245,9 +318,10 @@ export function QuizGame(props: QuizGameProps) {
 
   return (
     <QuizGamePlay
-      key={difficulty}
+      key={`${difficulty}-${questions.length}`}
       {...props}
       questions={questions}
+      sessionSize={content!.sessionSize}
       difficulty={difficulty}
       changeDifficulty={changeDifficulty}
       progress={progress}

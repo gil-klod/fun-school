@@ -323,6 +323,7 @@ export async function fetchGameContentBundle(
     gameId === "scramble" ||
     gameId === "fix-sentence" ||
     gameId === "vocabulary" ||
+    gameId === "grammar" ||
     gameId === "colors-numbers" ||
     gameId === "sentences"
       ? 10
