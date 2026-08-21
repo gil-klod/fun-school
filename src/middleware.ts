@@ -11,6 +11,7 @@ export default auth((req) => {
 
   const publicPaths = ["/login", "/register", "/verify-email"];
   const isPublic =
+    pathname === "/" ||
     publicPaths.some((p) => pathname.startsWith(p)) ||
     pathname.startsWith("/api/auth") ||
     pathname.startsWith("/api/content") ||
