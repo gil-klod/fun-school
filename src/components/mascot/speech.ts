@@ -542,7 +542,7 @@ export function isSpeaking() {
   return speaking;
 }
 
-const TTS_CHUNK_CHARS = 280;
+const TTS_CHUNK_CHARS = 200;
 
 function hardSplitSpeech(text: string, maxLen: number): string[] {
   const parts: string[] = [];

@@ -1,7 +1,7 @@
 const USER_AGENT =
   "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36";
 
-const MAX_CHARS = 280;
+const MAX_CHARS = 200;
 
 export async function fetchGoogleTtsBuffer(
   text: string,

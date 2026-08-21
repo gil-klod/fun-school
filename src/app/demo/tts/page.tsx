@@ -71,7 +71,7 @@ export default function TtsDemoPage() {
 
   const testApiRaw = () =>
     wrap("Raw /api/tts fetch + play", async () => {
-      const snippet = (processed || speech).slice(0, 280);
+      const snippet = (processed || speech).slice(0, 200);
       addLog(`API text length: ${snippet.length}`);
       const res = await fetch(
         `/api/tts?lang=he&text=${encodeURIComponent(snippet)}`,
@@ -220,8 +220,9 @@ export default function TtsDemoPage() {
           </div>
 
           <p className="text-sm text-gray-500">
-            Milo עובד? → Google TTS תקין. Story לא? → בעיה ב-speechStoryText. Raw API נכשל? →
-            בעיית שרת/רשת. Browser בלבד רועש? → קול Ubuntu — לא Google.
+            Milo = short text (&lt;200 chars) → Google TTS works. Story = long → must split into
+            chunks ≤200 chars (same voice as Milo). Raw API נכשל על טקסט ארוך? → Google limit.
+            Browser בלבד רועש? → קול Ubuntu.
           </p>
         </section>
       </div>

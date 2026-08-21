@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { fetchGoogleTtsBuffer } from "@/lib/mascot/googleTts";
 
-const MAX_CHARS = 280;
+const MAX_CHARS = 200;
 
 /** Proxy TTS for locales missing browser voices (Hebrew on many desktops). */
 export async function GET(req: NextRequest) {
