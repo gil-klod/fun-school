@@ -352,6 +352,13 @@ export async function fetchGameContentBundle(
     ];
   }
 
+  if (gameId === "sequences") {
+    config = { ...SEQUENCES_CONFIGS[difficulty], ...(config ?? {}) };
+  }
+  if (gameId === "analog-clock" && !config) {
+    config = CLOCK_CONFIGS[difficulty] as unknown as Record<string, unknown>;
+  }
+
   const sessionSize =
     gameId === "multiplication" ||
     gameId === "shuk" ||

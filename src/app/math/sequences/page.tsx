@@ -17,6 +17,7 @@ import {
   formatSequenceDisplay,
   formatSequenceAnswers,
   newSequenceRound,
+  normalizeSequenceRound,
   sequenceRoundCorrectAnswer,
 } from "@/lib/content/generators";
 import type { SequencesConfig } from "@/lib/content/types";
@@ -41,7 +42,7 @@ function SequencesPlay({
   const [slotDone, setSlotDone] = useState(false);
   const [sessionComplete, setSessionComplete] = useState(false);
   const [round, setRound] = useState(() => newSequenceRound(config));
-  const { question, options, optionKind } = round;
+  const { question, options } = round;
   const [feedback, setFeedback] = useState<{
     type: "correct" | "wrong";
     message: string;
@@ -63,7 +64,7 @@ function SequencesPlay({
     progress.gameState,
     (s) => {
       if (s.round) {
-        setRound(s.round as ReturnType<typeof newSequenceRound>);
+        setRound(normalizeSequenceRound(s.round, config));
         setAnswered(!!s.answered);
         if (s.feedback) setFeedback(s.feedback as typeof feedback);
         if (typeof s.questionNum === "number") setQuestionNum(s.questionNum);
@@ -204,7 +205,7 @@ function SequencesPlay({
               </div>
 
               <GameOptionsGrid>
-                {options.map((opt) => (
+                {(options ?? []).map((opt) => (
                   <button
                     key={String(opt)}
                     onClick={() => handleAnswer(opt)}

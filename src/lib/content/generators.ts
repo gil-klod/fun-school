@@ -220,11 +220,13 @@ export function buildTimeOptions(hour: number, minute: number, minuteStep: numbe
   return shuffleArray([correct, ...Array.from(wrong)]);
 }
 
-export function formatSequenceDisplay(display: (number | null)[]): string {
+export function formatSequenceDisplay(display: (number | null)[] | undefined): string {
+  if (!Array.isArray(display) || display.length === 0) return "?";
   return display.map((n) => (n === null ? "?" : String(n))).join(", ");
 }
 
-export function formatSequenceAnswers(answers: number[]): string {
+export function formatSequenceAnswers(answers: number[] | undefined): string {
+  if (!Array.isArray(answers) || answers.length === 0) return "?";
   return answers.join(", ");
 }
 
@@ -307,12 +309,85 @@ export function newClockRound(config: ClockConfig) {
   };
 }
 
-export function newSequenceRound(config: SequencesConfig) {
+export type SequenceRound = {
+  question: SequenceQuestion;
+  optionKind: "pair" | "number";
+  options: number[] | string[];
+};
+
+function isSequenceQuestion(raw: unknown): raw is SequenceQuestion {
+  if (!raw || typeof raw !== "object") return false;
+  const q = raw as Record<string, unknown>;
+  return Array.isArray(q.display) && Array.isArray(q.answers);
+}
+
+/** Rebuild round from saved state — handles legacy `{ numbers, answer }` progress. */
+export function normalizeSequenceRound(raw: unknown, config: SequencesConfig): SequenceRound {
+  if (raw && typeof raw === "object") {
+    const r = raw as Record<string, unknown>;
+    const questionRaw = r.question;
+
+    if (isSequenceQuestion(questionRaw)) {
+      const question = questionRaw;
+      const savedOptions = r.options;
+      if (Array.isArray(savedOptions) && savedOptions.length > 0) {
+        return {
+          question,
+          optionKind: r.optionKind === "pair" ? "pair" : "number",
+          options: savedOptions as number[] | string[],
+        };
+      }
+      if (question.mode === "two") {
+        return {
+          question,
+          optionKind: "pair",
+          options: buildSequencePairOptions(
+            question.answers[0],
+            question.answers[1],
+            question.step
+          ),
+        };
+      }
+      return {
+        question,
+        optionKind: "number",
+        options: buildSequenceOptions(question.answers[0], question.step),
+      };
+    }
+
+    if (questionRaw && typeof questionRaw === "object") {
+      const legacy = questionRaw as Record<string, unknown>;
+      if (Array.isArray(legacy.numbers) && typeof legacy.answer === "number") {
+        const numbers = legacy.numbers as number[];
+        const answer = legacy.answer;
+        const step =
+          numbers.length >= 2 && numbers[1] - numbers[0] > 0
+            ? numbers[1] - numbers[0]
+            : config.stepMin;
+        const question: SequenceQuestion = {
+          display: [...numbers, null],
+          answers: [answer],
+          step,
+          mode: "one",
+        };
+        const options =
+          Array.isArray(r.options) && r.options.length > 0
+            ? (r.options as number[])
+            : buildSequenceOptions(answer, step);
+        return { question, optionKind: "number", options };
+      }
+    }
+  }
+
+  return newSequenceRound(config);
+}
+
+export function newSequenceRound(config: SequencesConfig): SequenceRound {
   const question = generateSequence(config);
   if (question.mode === "two") {
     return {
       question,
-      optionKind: "pair" as const,
+      optionKind: "pair",
       options: buildSequencePairOptions(
         question.answers[0],
         question.answers[1],
@@ -322,14 +397,12 @@ export function newSequenceRound(config: SequencesConfig) {
   }
   return {
     question,
-    optionKind: "number" as const,
+    optionKind: "number",
     options: buildSequenceOptions(question.answers[0], question.step),
   };
 }
 
-export function sequenceRoundCorrectAnswer(
-  round: ReturnType<typeof newSequenceRound>
-): number | string {
+export function sequenceRoundCorrectAnswer(round: SequenceRound): number | string {
   if (round.optionKind === "pair") {
     return sequencePairKey(round.question.answers[0], round.question.answers[1]);
   }
