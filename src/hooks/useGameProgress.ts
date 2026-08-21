@@ -79,12 +79,46 @@ export function useGameProgress({
   const [round, setRoundState] = useState(1);
   const [correct, setCorrectState] = useState(0);
   const [wrong, setWrongState] = useState(0);
-  const [gameState, setGameState] = useState<Record<string, unknown>>(defaultState);
+  const [gameState, setGameStateState] = useState<Record<string, unknown>>(defaultState);
   const latest = useRef<ProgressData>(emptyProgress(defaultState));
+  /** Only write to DB after real gameplay — prevents reopening a finished game from wiping stats. */
+  const sessionDirty = useRef(false);
 
-  useEffect(() => {
-    latest.current = { score, streak, round, correct, wrong, state: gameState, difficulty };
-  }, [score, streak, round, correct, wrong, gameState, difficulty]);
+  const applyLoadedProgress = useCallback(
+    (
+      progress: {
+        score?: number;
+        streak?: number;
+        round?: number;
+        correct?: number;
+        wrong?: number;
+        state?: Record<string, unknown>;
+        status?: "in_progress" | "completed";
+      },
+      resumeInProgress: boolean
+    ) => {
+      const state = (progress.state ?? {}) as Record<string, unknown>;
+      setScoreState(progress.score ?? 0);
+      setStreakState(progress.streak ?? 0);
+      setRoundState(progress.round ?? 1);
+      setCorrectState(progress.correct ?? 0);
+      setWrongState(progress.wrong ?? 0);
+      setGameStateState(state);
+      latest.current = {
+        score: progress.score ?? 0,
+        streak: progress.streak ?? 0,
+        round: progress.round ?? 1,
+        correct: progress.correct ?? 0,
+        wrong: progress.wrong ?? 0,
+        state,
+        difficulty,
+        status: progress.status ?? "in_progress",
+      };
+      setHasSavedProgress(resumeInProgress);
+      sessionDirty.current = resumeInProgress;
+    },
+    [difficulty]
+  );
 
   const setScore = useCallback((value: SetStateAction<number>) => {
     setScoreState((prev) => {
@@ -126,6 +160,14 @@ export function useGameProgress({
     });
   }, []);
 
+  const setGameState = useCallback((value: SetStateAction<Record<string, unknown>>) => {
+    setGameStateState((prev) => {
+      const next = resolveStateAction(value, prev);
+      latest.current = { ...latest.current, state: next };
+      return next;
+    });
+  }, []);
+
   const resetProgress = useCallback(() => {
     const fresh = emptyProgress(defaultState);
     setScoreState(fresh.score);
@@ -133,9 +175,10 @@ export function useGameProgress({
     setRoundState(fresh.round);
     setCorrectState(fresh.correct);
     setWrongState(fresh.wrong);
-    setGameState(fresh.state);
+    setGameStateState(fresh.state);
     setHasSavedProgress(false);
     latest.current = fresh;
+    sessionDirty.current = false;
   }, [defaultState]);
 
   useEffect(() => {
@@ -157,25 +200,11 @@ export function useGameProgress({
         );
         if (res.ok) {
           const { progress } = await res.json();
-          if (!cancelled && progress && progress.status === "in_progress") {
-            const state = (progress.state ?? {}) as Record<string, unknown>;
-            setScoreState(progress.score ?? 0);
-            setStreakState(progress.streak ?? 0);
-            setRoundState(progress.round ?? 1);
-            setCorrectState(progress.correct ?? 0);
-            setWrongState(progress.wrong ?? 0);
-            setGameState(state);
-            setHasSavedProgress(true);
-            latest.current = {
-              score: progress.score ?? 0,
-              streak: progress.streak ?? 0,
-              round: progress.round ?? 1,
-              correct: progress.correct ?? 0,
-              wrong: progress.wrong ?? 0,
-              state,
-              difficulty,
-              status: "in_progress",
-            };
+          if (!cancelled && progress?.status === "in_progress") {
+            applyLoadedProgress(progress, true);
+          } else if (!cancelled && progress?.status === "completed") {
+            // Keep saved stats in DB — do not zero on remount/unmount.
+            applyLoadedProgress(progress, false);
           } else if (!cancelled) {
             resetProgress();
           }
@@ -191,20 +220,20 @@ export function useGameProgress({
     return () => {
       cancelled = true;
     };
-  }, [subjectId, gameId, difficulty, studentId, studentReady, resetProgress]);
+  }, [subjectId, gameId, difficulty, studentId, studentReady, resetProgress, applyLoadedProgress]);
 
   const persistChain = useRef(Promise.resolve(true));
 
   const persistProgress = useCallback(async () => {
     if (!studentId) return false;
 
-    const data: ProgressData = {
-      ...latest.current,
-      difficulty,
-      status: latest.current.status ?? "in_progress",
-    };
-
     const run = async (): Promise<boolean> => {
+      const data: ProgressData = {
+        ...latest.current,
+        difficulty,
+        status: latest.current.status ?? "in_progress",
+      };
+
       try {
         const res = await fetch("/api/progress", {
           method: "POST",
@@ -248,6 +277,7 @@ export function useGameProgress({
         };
       }
 
+      sessionDirty.current = true;
       return persistProgress();
     },
     [studentId, loaded, persistProgress, difficulty]
@@ -255,7 +285,7 @@ export function useGameProgress({
 
   useEffect(() => {
     const flushPendingSave = () => {
-      if (!studentId) return;
+      if (!studentId || !sessionDirty.current) return;
       void persistProgress();
     };
 
@@ -303,7 +333,7 @@ export function useGameProgress({
       wrong: prev.wrong + (wasCorrect ? 0 : 1),
     };
 
-    latest.current = { ...prev, ...next };
+    latest.current = { ...prev, ...next, status: "in_progress" };
     setScoreState(next.score);
     setStreakState(next.streak);
     setCorrectState(next.correct);
@@ -318,6 +348,7 @@ export function useGameProgress({
       if (state) {
         latest.current = { ...latest.current, state };
       }
+      sessionDirty.current = true;
       return persistProgress();
     },
     [recordAnswer, persistProgress]
@@ -328,6 +359,7 @@ export function useGameProgress({
       ...latest.current,
       status: "completed",
     };
+    sessionDirty.current = true;
     void persistProgress();
     if (projectId) void notifyProjectComplete();
   }, [persistProgress, projectId, notifyProjectComplete]);

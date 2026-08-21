@@ -24,6 +24,7 @@ export function buildStatsFromProgressRecords(progresses: ProgressRecord[]) {
     const correct = Number(p.correct ?? 0);
     const wrong = Number(p.wrong ?? 0);
     const score = Number(p.score ?? 0);
+    if (correct + wrong === 0) continue;
 
     const sub = subjectMap.get(p.subjectId) ?? {
       subjectId: p.subjectId,

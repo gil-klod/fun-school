@@ -75,13 +75,13 @@ export default function DashboardPage() {
       setLoading(true);
       try {
         const [analyticsData, projectData, progressData] = await Promise.all([
-          fetch(`/api/analytics?studentId=${studentId}`).then(async (res) =>
+          fetch(`/api/analytics?studentId=${studentId}`, { credentials: "same-origin" }).then(async (res) =>
             res.ok ? res.json() : null
           ),
-          fetch(`/api/projects?studentId=${studentId}`).then(async (res) =>
+          fetch(`/api/projects?studentId=${studentId}`, { credentials: "same-origin" }).then(async (res) =>
             res.ok ? res.json() : null
           ),
-          fetch(`/api/progress?studentId=${studentId}`).then(async (res) =>
+          fetch(`/api/progress?studentId=${studentId}`, { credentials: "same-origin" }).then(async (res) =>
             res.ok ? res.json() : { progresses: [] }
           ),
         ]);
@@ -121,12 +121,17 @@ export default function DashboardPage() {
     if (!activeStudent?.id) return;
     setRefreshing(true);
     try {
-      const res = await fetch(`/api/analytics?studentId=${activeStudent.id}`, { method: "POST" });
+      const res = await fetch(`/api/analytics?studentId=${activeStudent.id}`, {
+        method: "POST",
+        credentials: "same-origin",
+      });
       if (res.ok) {
         const data = await res.json();
         setAnalytics(data.analytics);
       }
-      const progressRes = await fetch(`/api/progress?studentId=${activeStudent.id}`);
+      const progressRes = await fetch(`/api/progress?studentId=${activeStudent.id}`, {
+        credentials: "same-origin",
+      });
       if (progressRes.ok) {
         const progressData = await progressRes.json();
         const progressStats = buildStatsFromProgressRecords(progressData.progresses ?? []);

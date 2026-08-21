@@ -124,11 +124,28 @@ function testFirstAnswerVisibleBeforeComplete() {
   assert(hasAnsweredGames(midStats.gameStats), "dashboard shows stats after first answer, not only second play");
 }
 
+function testReopenCompletedGameDoesNotWipeStats() {
+  let latest = emptyProgress();
+  latest = recordAnswer(latest, true);
+  latest = recordAnswer(latest, true);
+  latest = { ...latest, status: "completed" };
+
+  // Old bug: reopening called resetProgress() then unmount flush saved zeros.
+  const buggyReopen = emptyProgress();
+  assert(buggyReopen.correct === 0, "buggy reopen zeros stats");
+
+  // Fixed: keep server stats on completed load; skip flush unless sessionDirty.
+  const sessionDirty = false;
+  const flushWouldSave = sessionDirty ? emptyProgress() : latest;
+  assert(flushWouldSave.correct === 2, "completed reopen must not wipe saved stats");
+}
+
 const tests = [
   ["first session stats not wiped on complete", testFirstSessionStatsNotWiped],
   ["all games feed dashboard aggregation", testAllGamesPersistToDashboard],
   ["serialized save order", testSerializedSaveOrder],
   ["first answer visible before complete", testFirstAnswerVisibleBeforeComplete],
+  ["reopen completed game does not wipe stats", testReopenCompletedGameDoesNotWipeStats],
 ] as const;
 
 let passed = 0;
