@@ -53,17 +53,6 @@ const emptyProgress = (defaultState: Record<string, unknown>): ProgressData => (
   status: "in_progress",
 });
 
-function hasStatUpdate(overrides?: Partial<ProgressData>) {
-  return (
-    overrides?.status !== undefined ||
-    overrides?.correct !== undefined ||
-    overrides?.wrong !== undefined ||
-    overrides?.score !== undefined ||
-    overrides?.streak !== undefined ||
-    overrides?.round !== undefined
-  );
-}
-
 function resolveStateAction<T>(value: SetStateAction<T>, prev: T): T {
   return typeof value === "function" ? (value as (current: T) => T)(prev) : value;
 }
@@ -91,7 +80,6 @@ export function useGameProgress({
   const [correct, setCorrectState] = useState(0);
   const [wrong, setWrongState] = useState(0);
   const [gameState, setGameState] = useState<Record<string, unknown>>(defaultState);
-  const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const latest = useRef<ProgressData>(emptyProgress(defaultState));
 
   useEffect(() => {
@@ -164,7 +152,8 @@ export function useGameProgress({
       setLoaded(false);
       try {
         const res = await fetch(
-          `/api/progress?subjectId=${subjectId}&gameId=${gameId}&difficulty=${difficulty}&studentId=${studentId}`
+          `/api/progress?subjectId=${subjectId}&gameId=${gameId}&difficulty=${difficulty}&studentId=${studentId}`,
+          { credentials: "same-origin" }
         );
         if (res.ok) {
           const { progress } = await res.json();
@@ -204,40 +193,33 @@ export function useGameProgress({
     };
   }, [subjectId, gameId, difficulty, studentId, studentReady, resetProgress]);
 
-  const persistProgress = useCallback(
-    async (options?: { keepalive?: boolean }) => {
-      if (!studentId) return false;
+  const persistProgress = useCallback(async () => {
+    if (!studentId) return false;
 
-      if (saveTimer.current) {
-        clearTimeout(saveTimer.current);
-        saveTimer.current = null;
+    const data: ProgressData = {
+      ...latest.current,
+      difficulty,
+      status: latest.current.status ?? "in_progress",
+    };
+
+    try {
+      const res = await fetch("/api/progress", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "same-origin",
+        keepalive: true,
+        body: JSON.stringify({ studentId, subjectId, gameId, difficulty, ...data }),
+      });
+      if (!res.ok) {
+        const message = await res.text();
+        console.error("[fun-school] Progress save failed:", res.status, message);
       }
-
-      const data: ProgressData = {
-        ...latest.current,
-        difficulty,
-        status: latest.current.status ?? "in_progress",
-      };
-
-      try {
-        const res = await fetch("/api/progress", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ studentId, subjectId, gameId, difficulty, ...data }),
-          keepalive: options?.keepalive ?? false,
-        });
-        if (!res.ok) {
-          const message = await res.text();
-          console.error("[fun-school] Progress save failed:", res.status, message);
-        }
-        return res.ok;
-      } catch (err) {
-        console.error("Failed to save progress:", err);
-        return false;
-      }
-    },
-    [studentId, subjectId, gameId, difficulty]
-  );
+      return res.ok;
+    } catch (err) {
+      console.error("Failed to save progress:", err);
+      return false;
+    }
+  }, [studentId, subjectId, gameId, difficulty]);
 
   const save = useCallback(
     (overrides?: Partial<ProgressData>) => {
@@ -245,40 +227,28 @@ export function useGameProgress({
         if (loaded) {
           console.warn("[fun-school] Progress not saved: no active student selected.");
         }
-        return;
+        return Promise.resolve(false);
       }
 
-      if (overrides?.state) {
-        latest.current = { ...latest.current, state: overrides.state };
-      }
-      if (overrides?.status) {
-        latest.current = { ...latest.current, status: overrides.status };
-      }
-
-      if (hasStatUpdate(overrides)) {
-        if (overrides?.score !== undefined) latest.current.score = overrides.score;
-        if (overrides?.streak !== undefined) latest.current.streak = overrides.streak;
-        if (overrides?.round !== undefined) latest.current.round = overrides.round;
-        if (overrides?.correct !== undefined) latest.current.correct = overrides.correct;
-        if (overrides?.wrong !== undefined) latest.current.wrong = overrides.wrong;
-        void persistProgress();
-        return;
+      if (overrides) {
+        latest.current = {
+          ...latest.current,
+          ...overrides,
+          difficulty,
+          state: overrides.state ?? latest.current.state,
+          status: overrides.status ?? latest.current.status ?? "in_progress",
+        };
       }
 
-      if (saveTimer.current) clearTimeout(saveTimer.current);
-      saveTimer.current = setTimeout(() => {
-        void persistProgress();
-      }, 300);
+      return persistProgress();
     },
-    [studentId, loaded, persistProgress]
+    [studentId, loaded, persistProgress, difficulty]
   );
 
   useEffect(() => {
     const flushPendingSave = () => {
-      if (!studentId || !saveTimer.current) return;
-      clearTimeout(saveTimer.current);
-      saveTimer.current = null;
-      void persistProgress({ keepalive: true });
+      if (!studentId) return;
+      void persistProgress();
     };
 
     const onHide = () => {
@@ -301,6 +271,7 @@ export function useGameProgress({
       await fetch("/api/projects/complete-slot", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "same-origin",
         body: JSON.stringify({
           studentId,
           projectId,
@@ -313,8 +284,32 @@ export function useGameProgress({
     }
   }, [projectId, projectDay, projectSlot, studentId]);
 
+  const recordAnswer = useCallback(
+    (wasCorrect: boolean) => {
+      const prev = latest.current;
+      const nextStreak = wasCorrect ? prev.streak + 1 : 0;
+      const points = wasCorrect ? 10 + prev.streak : 0;
+      const next = {
+        score: wasCorrect ? prev.score + points : prev.score,
+        streak: nextStreak,
+        correct: prev.correct + (wasCorrect ? 1 : 0),
+        wrong: prev.wrong + (wasCorrect ? 0 : 1),
+      };
+
+      latest.current = { ...prev, ...next };
+      setScoreState(next.score);
+      setStreakState(next.streak);
+      setCorrectState(next.correct);
+      setWrongState(next.wrong);
+
+      return next;
+    },
+    []
+  );
+
   const markCompleted = useCallback(() => {
     latest.current = {
+      ...latest.current,
       score,
       streak,
       round,
@@ -343,6 +338,7 @@ export function useGameProgress({
     loaded: loaded && studentReady && !!studentId,
     hasSavedProgress,
     canSave: !!studentId,
+    activeStudentName: activeStudent?.name ?? null,
     difficulty,
     score,
     setScore,
@@ -357,6 +353,7 @@ export function useGameProgress({
     gameState,
     setGameState,
     resetProgress,
+    recordAnswer,
     save,
     markCompleted,
   };

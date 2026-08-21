@@ -4,7 +4,7 @@ import { connectDB } from "@/lib/db";
 import { requireOwnedStudent } from "@/lib/students/server";
 import { toStudentObjectId } from "@/lib/students/objectId";
 import { GameProgress } from "@/models/GameProgress";
-import { listGameProgressForStudent } from "@/lib/progressServer";
+import { listGameProgressForStudent, saveGameProgress } from "@/lib/progressServer";
 import { computeAnalytics } from "@/lib/analytics";
 
 async function resolveStudentId(request: Request, userId: string): Promise<string | null> {
@@ -83,28 +83,24 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Invalid studentId" }, { status: 400 });
     }
 
-    const diff = [1, 2, 3].includes(Number(difficulty)) ? Number(difficulty) : 2;
+    const diff = ([1, 2, 3].includes(Number(difficulty)) ? Number(difficulty) : 2) as 1 | 2 | 3;
 
     await connectDB();
 
-    const progress = await GameProgress.findOneAndUpdate(
-      { studentId: studentObjectId, subjectId, gameId, difficulty: diff },
-      {
-        studentId: studentObjectId,
-        subjectId,
-        gameId,
-        difficulty: diff,
-        score: score ?? 0,
-        streak: streak ?? 0,
-        round: round ?? 1,
-        correct: correct ?? 0,
-        wrong: wrong ?? 0,
-        state: state ?? {},
-        status: status ?? "in_progress",
-        lastPlayedAt: new Date(),
-      },
-      { upsert: true, new: true }
-    );
+    const progress = await saveGameProgress({
+      studentId: String(studentId),
+      userId: session.user.id,
+      subjectId,
+      gameId,
+      difficulty: diff,
+      score: Number(score ?? 0),
+      streak: Number(streak ?? 0),
+      round: Number(round ?? 1),
+      correct: Number(correct ?? 0),
+      wrong: Number(wrong ?? 0),
+      state: (state ?? {}) as Record<string, unknown>,
+      status: status === "completed" ? "completed" : "in_progress",
+    });
 
     try {
       await computeAnalytics(String(studentId), session.user.id);

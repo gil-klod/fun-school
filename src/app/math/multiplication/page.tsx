@@ -192,29 +192,20 @@ function MultiplicationPlay({
     setAnswered(true);
 
     if (answer === correct) {
-      const pts = 10 + progress.streak;
-      progress.setScore((s) => s + pts);
-      progress.setStreak((s) => s + 1);
-      progress.setCorrect((c) => c + 1);
+      progress.recordAnswer(true);
       const fb = { type: "correct" as const, message: t("games.multiplicationCorrect") };
       setFeedback(fb);
-      progress.save({
-        score: progress.score + pts,
-        streak: progress.streak + 1,
-        correct: progress.correct + 1,
+      void progress.save({
         state: { table, round, answered: true, feedback: fb, questionNum },
       });
     } else {
-      progress.setStreak(0);
-      progress.setWrong((w) => w + 1);
+      progress.recordAnswer(false);
       const fb = {
         type: "wrong" as const,
         message: t("games.multiplicationWrong", { answer: correct }),
       };
       setFeedback(fb);
-      progress.save({
-        streak: 0,
-        wrong: progress.wrong + 1,
+      void progress.save({
         state: { table, round, answered: true, feedback: fb, questionNum },
       });
     }
@@ -229,7 +220,13 @@ function MultiplicationPlay({
         onDifficultyChange={changeDifficulty}
         difficultyDisabled={answered || lockDifficulty}
         toolbar={
-          <div className="flex gap-2 overflow-x-auto pb-0.5 scrollbar-none">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            {progress.activeStudentName ? (
+              <p className="text-sm font-semibold text-indigo-600">
+                {t("dashboard.trackingStudent", { name: progress.activeStudentName })}
+              </p>
+            ) : null}
+            <div className="flex gap-2 overflow-x-auto pb-0.5 scrollbar-none">
             <button
               type="button"
               onClick={() => switchTable(undefined)}
@@ -247,6 +244,7 @@ function MultiplicationPlay({
                 <MathLtr>×{tbl}</MathLtr>
               </button>
             ))}
+            </div>
           </div>
         }
       >
