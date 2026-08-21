@@ -4,8 +4,8 @@ import type { DifficultyLevel } from "@/lib/content/types";
 import { GRAMMAR_QUESTIONS, VOCAB_QUESTIONS, ENGLISH_STORIES } from "@/lib/data/english-natives";
 import {
   BEGINNER_VOCAB,
-  SENTENCE_CHALLENGES,
   COLORS_NUMBERS,
+  sentencesForDifficulty,
 } from "@/lib/data/english-beginners";
 import { HEBREW_WORDS, FIX_SENTENCES } from "@/lib/data/hebrew";
 import { HEBREW_STORIES_BY_LEVEL } from "@/lib/data/hebrew-stories";
@@ -115,14 +115,14 @@ function buildSeedDocs(): SeedDoc[] {
         "vocab",
         (v) => ({ ...v })
       ),
-      ...sliceByDifficulty(
-        SENTENCE_CHALLENGES,
+      ...sentencesForDifficulty(difficulty).map((s, i) => ({
+        subjectId: "english-beginners",
+        gameId: "sentences",
         difficulty,
-        "english-beginners",
-        "sentences",
-        "sentence",
-        (s) => ({ ...s })
-      ),
+        itemType: "sentence",
+        data: { ...s },
+        sortOrder: i + 1,
+      })),
       ...sliceByDifficulty(
         COLORS_NUMBERS,
         difficulty,
@@ -264,17 +264,15 @@ export async function fetchGameContentBundle(
   }
 
   if (gameId === "sentences") {
-    const sentenceItems = items.filter((item) => item.itemType === "sentence");
-    if (sentenceItems.length < 50) {
-      const pool =
-        difficulty === 1
-          ? SENTENCE_CHALLENGES.slice(0, Math.max(1, Math.ceil(SENTENCE_CHALLENGES.length / 2)))
-          : SENTENCE_CHALLENGES;
-      items = pool.map((q) => ({
-        itemType: "sentence",
+    const pool = sentencesForDifficulty(difficulty);
+    const configItems = items.filter((item) => item.itemType === "config");
+    items = [
+      ...configItems,
+      ...pool.map((q) => ({
+        itemType: "sentence" as const,
         data: q as unknown as Record<string, unknown>,
-      }));
-    }
+      })),
+    ];
   }
 
   if (gameId === "fix-sentence") {
