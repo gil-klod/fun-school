@@ -11,36 +11,6 @@ import { HEBREW_WORDS, FIX_SENTENCES } from "@/lib/data/hebrew";
 import { HEBREW_STORIES_BY_LEVEL } from "@/lib/data/hebrew-stories";
 import { SHUK_ITEMS, MYSTERY_TEMPLATES } from "@/lib/data/math";
 
-const EXTRA_GRAMMAR_HARD = [
-  {
-    question: "We ___ to the beach every summer.",
-    options: ["goes", "go", "going", "went"],
-    correctIndex: 1,
-    explanation: "We + go in present simple",
-  },
-  {
-    question: "The bird ___ in the sky.",
-    options: ["fly", "flies", "flying", "flied"],
-    correctIndex: 1,
-    explanation: "Singular bird → flies",
-  },
-];
-
-const EXTRA_VOCAB_HARD = [
-  {
-    question: "What does 'ancient' mean?",
-    options: ["Very new", "Very old", "Very big", "Very small"],
-    correctIndex: 1,
-    explanation: "Ancient = very old",
-  },
-  {
-    question: "What is the opposite of 'expand'?",
-    options: ["Grow", "Shrink", "Build", "Open"],
-    correctIndex: 1,
-    explanation: "Expand ↔ Shrink",
-  },
-];
-
 type SeedDoc = {
   subjectId: string;
   gameId: string;
@@ -229,28 +199,6 @@ function buildSeedDocs(): SeedDoc[] {
     }
     );
 
-    if (difficulty === 3) {
-      EXTRA_GRAMMAR_HARD.forEach((q, i) => {
-        docs.push({
-          subjectId: "english-natives",
-          gameId: "grammar",
-          difficulty: 3,
-          itemType: "quiz",
-          data: { ...q },
-          sortOrder: GRAMMAR_QUESTIONS.length + i + 1,
-        });
-      });
-      EXTRA_VOCAB_HARD.forEach((q, i) => {
-        docs.push({
-          subjectId: "english-natives",
-          gameId: "vocabulary",
-          difficulty: 3,
-          itemType: "quiz",
-          data: { ...q },
-          sortOrder: VOCAB_QUESTIONS.length + i + 1,
-        });
-      });
-    }
   }
 
   return docs;

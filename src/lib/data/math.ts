@@ -1,6 +1,16 @@
+import type { ShukItem } from "./shuk-items";
+import { SHUK_ITEMS } from "./shuk-items";
+
 export interface MultiplicationQuestion {
   a: number;
   b: number;
+}
+
+export type { ShukItem };
+export { SHUK_ITEMS };
+
+export function getShukItemName(item: ShukItem, locale: "he" | "en"): string {
+  return locale === "he" ? item.nameHe : item.name;
 }
 
 export const TABLES = [2, 3, 4, 5, 10] as const;
@@ -10,28 +20,6 @@ export function generateMultiplication(table?: number): MultiplicationQuestion {
   const b = Math.floor(Math.random() * 9) + 1;
   return { a: t, b };
 }
-
-export interface ShukItem {
-  name: string;
-  nameHe: string;
-  price: number;
-  emoji: string;
-}
-
-export function getShukItemName(item: ShukItem, locale: "he" | "en"): string {
-  return locale === "he" ? item.nameHe : item.name;
-}
-
-export const SHUK_ITEMS: ShukItem[] = [
-  { name: "Apple", nameHe: "תפוח", price: 3, emoji: "🍎" },
-  { name: "Bread", nameHe: "לחם", price: 8, emoji: "🍞" },
-  { name: "Juice", nameHe: "מיץ", price: 6, emoji: "🧃" },
-  { name: "Banana", nameHe: "בננה", price: 2, emoji: "🍌" },
-  { name: "Cookie", nameHe: "עוגייה", price: 4, emoji: "🍪" },
-  { name: "Water", nameHe: "מים", price: 5, emoji: "💧" },
-  { name: "Orange", nameHe: "תפוז", price: 3, emoji: "🍊" },
-  { name: "Chips", nameHe: "חטיף", price: 7, emoji: "🥔" },
-];
 
 export function generateShukChallenge() {
   const count = Math.floor(Math.random() * 2) + 2;

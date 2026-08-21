@@ -15,7 +15,7 @@ import { SessionComplete } from "@/components/SessionComplete";
 import { shuffleArray } from "@/lib/content/generators";
 
 interface ColorNumberItem {
-  type: "color" | "number";
+  type: string;
   prompt: string;
   promptHe: string;
   answer: string;

@@ -4,25 +4,8 @@ export { ENGLISH_BEGINNER_VOCAB as BEGINNER_VOCAB } from "./english-beginner-voc
 export type { SentenceChallenge } from "./english-beginner-sentences";
 export { ENGLISH_BEGINNER_SENTENCES as SENTENCE_CHALLENGES } from "./english-beginner-sentences";
 
-export interface ColorNumberQuestion {
-  type: "color" | "number";
-  prompt: string;
-  promptHe: string;
-  answer: string;
-  options: string[];
-  emoji: string;
-}
-
-export const COLORS_NUMBERS: ColorNumberQuestion[] = [
-  { type: "color", prompt: "What color is this?", promptHe: "מה הצבע?", answer: "Red", options: ["Red", "Blue", "Green", "Yellow"], emoji: "🔴" },
-  { type: "color", prompt: "What color is this?", promptHe: "מה הצבע?", answer: "Blue", options: ["Red", "Blue", "Green", "Yellow"], emoji: "🔵" },
-  { type: "color", prompt: "What color is this?", promptHe: "מה הצבע?", answer: "Green", options: ["Red", "Blue", "Green", "Yellow"], emoji: "🟢" },
-  { type: "color", prompt: "What color is this?", promptHe: "מה הצבע?", answer: "Yellow", options: ["Red", "Blue", "Green", "Yellow"], emoji: "🟡" },
-  { type: "number", prompt: "How many?", promptHe: "כמה?", answer: "Three", options: ["One", "Two", "Three", "Four"], emoji: "3️⃣" },
-  { type: "number", prompt: "How many?", promptHe: "כמה?", answer: "Five", options: ["Three", "Four", "Five", "Six"], emoji: "5️⃣" },
-  { type: "number", prompt: "How many?", promptHe: "כמה?", answer: "Seven", options: ["Five", "Six", "Seven", "Eight"], emoji: "7️⃣" },
-  { type: "number", prompt: "How many?", promptHe: "כמה?", answer: "Ten", options: ["Eight", "Nine", "Ten", "Eleven"], emoji: "🔟" },
-];
+export type { ColorNumberQuestion } from "./english-colors-numbers";
+export { ENGLISH_COLORS_NUMBERS as COLORS_NUMBERS } from "./english-colors-numbers";
 
 export function shuffleArray<T>(arr: T[]): T[] {
   const copy = [...arr];
