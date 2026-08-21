@@ -55,7 +55,7 @@ export function GameShell({
 
 export function GamePage({ children }: { children: React.ReactNode }) {
   return (
-    <main className={`flex-1 py-4 sm:py-6 ${APP_CONTAINER}`}>{children}</main>
+    <main className={`flex-1 py-4 sm:py-6 pb-24 sm:pb-6 ${APP_CONTAINER}`}>{children}</main>
   );
 }
 

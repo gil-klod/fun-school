@@ -2,8 +2,10 @@
 
 import Link from "next/link";
 import { DirectionalArrow } from "@/components/DirectionalArrow";
+import { DailyProjectCalendar } from "@/components/projects/DailyProjectCalendar";
 import { useLocale } from "@/i18n/LocaleProvider";
 import { getGameTitle, translate } from "@/i18n";
+import { daySlotsDone, isDayFullyComplete, slotComplete } from "@/lib/projects/dayProgress";
 import { projectGameHref } from "@/lib/projects/links";
 import { projectSlotContentLocale } from "@/lib/subjectLocale";
 import type { DailyProjectPayload, ProjectSlot } from "@/lib/projects/types";
@@ -16,12 +18,6 @@ const SLOT_EMOJI: Record<ProjectSlot, string> = {
   hebrew: "📖",
   english: "🌱",
 };
-
-function slotComplete(day: DailyProjectPayload["days"][0], slot: ProjectSlot): boolean {
-  if (slot === "math") return !!day.mathCompletedAt;
-  if (slot === "hebrew") return !!day.hebrewCompletedAt;
-  return !!day.englishCompletedAt;
-}
 
 function slotGame(day: DailyProjectPayload["days"][0], slot: ProjectSlot): string {
   if (slot === "math") return day.math.gameId;
@@ -42,9 +38,16 @@ export function DailyProjectBanner({
 }: DailyProjectBannerProps) {
   const { t, gameTitle } = useLocale();
   const day = project.days.find((d) => d.dayNumber === project.currentDay);
-  if (!day || project.status === "completed") return null;
+  if (!day) return null;
 
-  const doneCount = PROJECT_SLOTS.filter((slot) => slotComplete(day, slot)).length;
+  const doneCount = daySlotsDone(day);
+  const prevDay =
+    project.currentDay > 1
+      ? project.days.find((d) => d.dayNumber === project.currentDay - 1)
+      : undefined;
+  const todayComplete =
+    doneCount === PROJECT_SLOTS.length ||
+    (!!prevDay && isDayFullyComplete(prevDay) && doneCount === 0);
 
   return (
     <section className="mb-6 bg-gradient-to-br from-violet-50 to-indigo-50 border-2 border-indigo-200 rounded-3xl p-4 sm:p-5 shadow-sm">
@@ -55,12 +58,17 @@ export function DailyProjectBanner({
           </p>
           <h2 className="text-lg sm:text-xl font-bold text-gray-800">{project.name}</h2>
           <p className="text-sm text-gray-600">
-            {t("projects.dayProgress", {
-              name: studentName,
-              day: project.currentDay,
-              total: project.totalDays,
-              done: doneCount,
-            })}
+            {todayComplete && doneCount === 0
+              ? t("projects.dayCompleteProgress", {
+                  name: studentName,
+                  day: project.currentDay - 1,
+                })
+              : t("projects.dayProgress", {
+                  name: studentName,
+                  day: project.currentDay,
+                  total: project.totalDays,
+                  done: doneCount,
+                })}
           </p>
         </div>
         <Link
@@ -71,77 +79,80 @@ export function DailyProjectBanner({
         </Link>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-        {PROJECT_SLOTS.map((slot) => {
-          const complete = slotComplete(day, slot);
-          const gameId = slotGame(day, slot);
-          const subjectId =
-            slot === "math" ? "math" : slot === "hebrew" ? "hebrew" : englishSubjectId;
-          const subject = subjects.find((s) => s.id === subjectId);
-          const game = subject?.games.find((g) => g.id === gameId);
-          const href = complete
-            ? undefined
-            : projectGameHref(
-                englishSubjectId,
-                slot,
-                gameId,
-                project.id,
-                project.currentDay,
-                project.difficulty
-              );
+      <DailyProjectCalendar project={project} />
 
-          const slotLocale = projectSlotContentLocale(slot, englishSubjectId);
-          const slotLabel = slotLocale
-            ? translate(slotLocale, `projects.slot.${slot}`)
-            : t(`projects.slot.${slot}`);
-          const gameName = slotLocale
-            ? getGameTitle(slotLocale, subjectId, gameId)
-            : gameTitle(subjectId, gameId);
+      {todayComplete ? (
+        <div className="rounded-2xl border-2 border-emerald-200 bg-emerald-50/80 p-4 text-center mb-3">
+          <p className="text-lg font-bold text-emerald-800">{t("projects.dayCompleteTitle")}</p>
+          <p className="mt-2 text-sm text-emerald-900/90 leading-relaxed">{t("projects.dayCompleteSecret")}</p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+          {PROJECT_SLOTS.map((slot) => {
+            const complete = slotComplete(day, slot);
+            const gameId = slotGame(day, slot);
+            const subjectId =
+              slot === "math" ? "math" : slot === "hebrew" ? "hebrew" : englishSubjectId;
+            const subject = subjects.find((s) => s.id === subjectId);
+            const game = subject?.games.find((g) => g.id === gameId);
+            const href = complete
+              ? undefined
+              : projectGameHref(
+                  englishSubjectId,
+                  slot,
+                  gameId,
+                  project.id,
+                  project.currentDay,
+                  project.difficulty
+                );
 
-          const inner = (
-            <>
-              <span className="shrink-0 w-10 text-center text-2xl leading-none">
-                {game?.emoji ?? SLOT_EMOJI[slot]}
-              </span>
-              <div
-                className="flex-1 min-w-0 text-start"
-                dir={slotLocale === "en" ? "ltr" : slotLocale === "he" ? "rtl" : undefined}
-              >
-                <p className="text-xs font-semibold text-gray-500">{slotLabel}</p>
-                <p className="font-semibold text-gray-800 truncate">{gameName}</p>
-              </div>
-              {complete ? (
-                <span className="text-sm shrink-0 leading-none" aria-hidden>
-                  ✅
+            const slotLocale = projectSlotContentLocale(slot, englishSubjectId);
+            const slotLabel = slotLocale
+              ? translate(slotLocale, `projects.slot.${slot}`)
+              : t(`projects.slot.${slot}`);
+            const gameName = slotLocale
+              ? getGameTitle(slotLocale, subjectId, gameId)
+              : gameTitle(subjectId, gameId);
+
+            const inner = (
+              <>
+                <span className="shrink-0 w-10 text-center text-2xl leading-none">
+                  {game?.emoji ?? SLOT_EMOJI[slot]}
                 </span>
-              ) : (
-                <DirectionalArrow className="shrink-0 text-base font-bold text-indigo-500" />
-              )}
-            </>
-          );
+                <div
+                  className="flex-1 min-w-0 text-start"
+                  dir={slotLocale === "en" ? "ltr" : slotLocale === "he" ? "rtl" : undefined}
+                >
+                  <p className="text-xs font-semibold text-gray-500">{slotLabel}</p>
+                  <p className="font-semibold text-gray-800 truncate">{gameName}</p>
+                </div>
+                {complete ? (
+                  <span className="text-sm shrink-0 leading-none" aria-hidden>
+                    ✅
+                  </span>
+                ) : (
+                  <DirectionalArrow className="shrink-0 text-base font-bold text-indigo-500" />
+                )}
+              </>
+            );
 
-          const className = `flex items-center gap-3 p-3 rounded-2xl border-2 transition-colors text-start ${
-            complete
-              ? "bg-emerald-50 border-emerald-200 opacity-80"
-              : "bg-white border-indigo-100 hover:border-indigo-300 hover:bg-indigo-50/50"
-          }`;
+            const className = `flex items-center gap-3 p-3 rounded-2xl border-2 transition-colors text-start ${
+              complete
+                ? "bg-emerald-50 border-emerald-200 opacity-80"
+                : "bg-white border-indigo-100 hover:border-indigo-300 hover:bg-indigo-50/50"
+            }`;
 
-          return href ? (
-            <Link key={slot} href={href} className={className}>
-              {inner}
-            </Link>
-          ) : (
-            <div key={slot} className={className}>
-              {inner}
-            </div>
-          );
-        })}
-      </div>
-
-      {doneCount === 3 && (
-        <p className="mt-3 text-center text-sm font-semibold text-emerald-700">
-          {t("projects.dayComplete")}
-        </p>
+            return href ? (
+              <Link key={slot} href={href} className={className}>
+                {inner}
+              </Link>
+            ) : (
+              <div key={slot} className={className}>
+                {inner}
+              </div>
+            );
+          })}
+        </div>
       )}
     </section>
   );

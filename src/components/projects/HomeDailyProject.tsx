@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useStudent } from "@/components/students";
 import { DailyProjectBanner } from "@/components/projects/DailyProjectBanner";
+import { DailyProjectCompletedBanner } from "@/components/projects/DailyProjectCompletedBanner";
 import type { DailyProjectPayload } from "@/lib/projects/types";
 
 export function HomeDailyProject() {
@@ -31,7 +32,13 @@ export function HomeDailyProject() {
     };
   }, [ready, activeStudent]);
 
-  if (!activeStudent || !project || project.status === "completed") return null;
+  if (!activeStudent || !project) return null;
+
+  if (project.status === "completed") {
+    return (
+      <DailyProjectCompletedBanner project={project} studentName={activeStudent.name} />
+    );
+  }
 
   return (
     <DailyProjectBanner

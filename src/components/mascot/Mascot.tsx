@@ -13,8 +13,18 @@ export function Mascot() {
   if (!showCharacter) return null;
 
   return (
-    <div className="fixed bottom-4 start-4 z-40 max-w-[min(20rem,calc(100vw-2rem))] animate-bounce-in pointer-events-auto">
-      <div className="flex items-end gap-2 sm:gap-3">
+    <div
+      className={`fixed z-40 max-w-[min(20rem,calc(100vw-2rem))] animate-bounce-in pointer-events-auto start-4 ${
+        bubbleOpen
+          ? "max-sm:bottom-auto max-sm:top-16 max-sm:start-3 max-sm:end-3 max-sm:max-w-none bottom-4"
+          : "bottom-4"
+      }`}
+    >
+      <div
+        className={`flex gap-2 sm:gap-3 ${
+          bubbleOpen ? "max-sm:flex-col-reverse max-sm:items-start sm:items-end" : "items-end"
+        }`}
+      >
         <div className="relative shrink-0">
           <button
             type="button"

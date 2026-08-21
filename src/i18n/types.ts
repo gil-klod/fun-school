@@ -155,6 +155,13 @@ export interface Dictionary {
     dayProgress: string;
     edit: string;
     dayComplete: string;
+    dayCompleteTitle: string;
+    dayCompleteProgress: string;
+    dayCompleteSecret: string;
+    calendarTitle: string;
+    calendarDayHint: string;
+    projectCompleteTitle: string;
+    projectCompleteBody: string;
     name: string;
     days: string;
     englishTrack: string;
