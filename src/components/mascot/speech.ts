@@ -2,10 +2,12 @@ import type { Locale } from "@/i18n/types";
 import type { MiloAudioId } from "@/lib/mascot/audio";
 import { miloAudioUrl } from "@/lib/mascot/audio";
 import { miloSpeechText } from "@/lib/mascot/audioExport";
+import { splitMixedSpeechSegments } from "@/lib/mascot/mixedSpeech";
 
 const MUTE_KEY = "fun-school-mascot-muted";
 
 let speaking = false;
+let speakGeneration = 0;
 let cachedVoices: SpeechSynthesisVoice[] = [];
 let currentAudio: HTMLAudioElement | null = null;
 let audioUrl: string | null = null;
@@ -271,6 +273,79 @@ function speakViaBrowser(
   });
 }
 
+async function speakSegmentOnly(
+  text: string,
+  locale: Locale,
+  options: Pick<SpeakOptions, "muted" | "onStart" | "onEnd">
+): Promise<boolean> {
+  const spoken = miloSpeechText(text, locale);
+  if (!spoken) return false;
+
+  const voices = cachedVoices.length ? cachedVoices : await waitForVoices();
+  const voice = pickVoice(voices, locale);
+  const tryBrowserFirst = locale === "he" && preferBrowserHebrew() && !!voice;
+
+  if (tryBrowserFirst) {
+    const browserOk = await speakViaBrowser(spoken, locale, voice, options);
+    if (browserOk) return true;
+  }
+
+  const apiOk = await speakViaApi(spoken, locale, options);
+  if (apiOk) return true;
+
+  const allowBrowser = locale === "en" || (locale === "he" && !!voice);
+  if (allowBrowser) {
+    return speakViaBrowser(spoken, locale, voice, options);
+  }
+
+  return false;
+}
+
+/**
+ * Read mixed Hebrew/English like a person: Hebrew chunks in Hebrew, English in English.
+ */
+export async function speakMixedText(text: string, options: SpeakOptions = {}) {
+  if (typeof window === "undefined") return;
+  if (options.muted ?? isMascotMuted()) {
+    options.onEnd?.();
+    return;
+  }
+
+  const segments = splitMixedSpeechSegments(text);
+  if (!segments.length) {
+    options.onEnd?.();
+    return;
+  }
+
+  if (segments.length === 1) {
+    await speakText(segments[0]!.text, segments[0]!.locale, { ...options, audioId: undefined });
+    return;
+  }
+
+  stopSpeaking();
+  const gen = speakGeneration;
+  let started = false;
+
+  for (let i = 0; i < segments.length; i++) {
+    if (gen !== speakGeneration) return;
+
+    const { text: segmentText, locale } = segments[i]!;
+    await speakSegmentOnly(segmentText, locale, {
+      muted: options.muted,
+      onStart: started
+        ? undefined
+        : () => {
+            started = true;
+            options.onStart?.();
+          },
+    });
+  }
+
+  if (gen === speakGeneration) {
+    options.onEnd?.();
+  }
+}
+
 /**
  * 1. Pre-recorded MP3 (public/audio/milo/) when audioId is set
  * 2. Simple online TTS (/api/tts) when clip is missing or fails
@@ -303,29 +378,11 @@ export async function speakText(
     }
   }
 
-  const voices = cachedVoices.length ? cachedVoices : await waitForVoices();
-  const voice = pickVoice(voices, locale);
-  const tryBrowserFirst = locale === "he" && preferBrowserHebrew() && !!voice;
-
-  if (tryBrowserFirst) {
-    const browserOk = await speakViaBrowser(spoken, locale, voice, options);
-    if (browserOk) return;
-  }
-
-  const apiOk = await speakViaApi(spoken, locale, options);
-  if (apiOk) return;
-
-  const allowBrowser = locale === "en" || (locale === "he" && !!voice);
-
-  if (allowBrowser) {
-    await speakViaBrowser(spoken, locale, voice, options);
-    return;
-  }
-
-  options.onEnd?.();
+  await speakSegmentOnly(spoken, locale, options);
 }
 
 export function stopSpeaking() {
+  speakGeneration++;
   if (typeof window !== "undefined" && window.speechSynthesis) {
     window.speechSynthesis.cancel();
   }

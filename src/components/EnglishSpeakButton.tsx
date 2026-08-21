@@ -1,7 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { speakText, stopSpeaking, warmSpeechVoices } from "@/components/mascot/speech";
+import { speakMixedText, speakText, stopSpeaking, warmSpeechVoices } from "@/components/mascot/speech";
+import { isMixedLanguageText } from "@/lib/mascot/mixedSpeech";
 import { useLocale } from "@/i18n/LocaleProvider";
 import type { Locale } from "@/i18n/types";
 
@@ -30,10 +31,12 @@ export function SpeakButton({ text, locale = "en", className = "", size = "md" }
       stopSpeaking();
       setSpeaking(true);
       const spoken = text.replace(/"/g, "");
-      await speakText(spoken, locale, {
-        muted: false,
-        onEnd: () => setSpeaking(false),
-      });
+      const opts = { muted: false as const, onEnd: () => setSpeaking(false) };
+      if (isMixedLanguageText(spoken)) {
+        await speakMixedText(spoken, opts);
+      } else {
+        await speakText(spoken, locale, opts);
+      }
     },
     [text, locale]
   );
