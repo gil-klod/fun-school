@@ -29,7 +29,8 @@ export function SpeakButton({ text, locale = "en", className = "", size = "md" }
       if (!text.trim()) return;
       stopSpeaking();
       setSpeaking(true);
-      await speakText(text, locale, {
+      const spoken = text.replace(/"/g, "");
+      await speakText(spoken, locale, {
         muted: false,
         onEnd: () => setSpeaking(false),
       });

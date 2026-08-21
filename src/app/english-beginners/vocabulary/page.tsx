@@ -35,7 +35,7 @@ type VocabQuestion = {
 function generateQuestion(
   vocab: VocabPair[],
   usedWords: string[],
-  _locale: Locale,
+  locale: Locale,
   t: (key: string, params?: Record<string, string>) => string
 ): VocabQuestion {
   const available = vocab.filter((v) => !usedWords.includes(v.english));
@@ -50,7 +50,7 @@ function generateQuestion(
     prompt: askHebrew
       ? t("games.vocabPromptHeToEn", { word })
       : t("games.vocabPromptEnToHe", { word }),
-    promptLocale: askHebrew ? "he" : "en",
+    promptLocale: locale,
     optionsAreEnglish: askHebrew,
     correct: askHebrew ? correct.english : correct.hebrew,
     options: askHebrew
