@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useEffect, useMemo } from "react";
+import { useState, useCallback, useEffect, useMemo, useRef } from "react";
 import { useGameResume } from "@/hooks/useGameResume";
 import { useGameSession } from "@/hooks/useGameSession";
 import { GameShell, GamePage, GameOptionsGrid } from "@/components/GameShell";
@@ -24,6 +24,35 @@ interface ColorNumberItem {
   emoji: string;
 }
 
+const CATEGORY_I18N: Record<string, keyof import("@/i18n/types").Dictionary["games"]> = {
+  color: "wordCategoryColor",
+  number: "wordCategoryNumber",
+  shape: "wordCategoryShape",
+  food: "wordCategoryFood",
+  vehicle: "wordCategoryVehicle",
+  animal: "wordCategoryAnimal",
+  body: "wordCategoryBody",
+  clothing: "wordCategoryClothing",
+  school: "wordCategorySchool",
+  weather: "wordCategoryWeather",
+  home: "wordCategoryHome",
+  sport: "wordCategorySport",
+};
+
+function itemKey(item: ColorNumberItem): string {
+  return `${item.type}::${item.answer}`;
+}
+
+function pickItem(items: ColorNumberItem[], usedKeys: string[]): ColorNumberItem {
+  const available = items.filter((item) => !usedKeys.includes(itemKey(item)));
+  const pool = available.length > 0 ? available : items;
+  return pool[Math.floor(Math.random() * pool.length)];
+}
+
+function findItem(items: ColorNumberItem[], key: string): ColorNumberItem | undefined {
+  return items.find((item) => itemKey(item) === key);
+}
+
 function ColorsNumbersPlay({
   items,
   sessionSize,
@@ -45,31 +74,68 @@ function ColorsNumbersPlay({
   const [sessionComplete, setSessionComplete] = useState(false);
   const { current: questionNum, setCurrent: setQuestionNum, reset: resetQuestionNum, advance: advanceQuestionNum } =
     useQuestionCounter(sessionSize);
+  const [usedKeys, setUsedKeys] = useState<string[]>([]);
+  const [currentItem, setCurrentItem] = useState<ColorNumberItem>(() => pickItem(items, []));
   const [options, setOptions] = useState<string[]>(() =>
-    shuffleArray([...items[0].options])
+    shuffleArray([...pickItem(items, []).options])
   );
   const [feedback, setFeedback] = useState<{
     type: "correct" | "wrong";
     message: string;
   } | null>(null);
   const [answered, setAnswered] = useState(false);
+  const prevDifficultyRef = useRef(difficulty);
+  const initializedRef = useRef(false);
 
-  const item = items[(questionNum - 1) % items.length];
-
-  useEffect(() => {
-    setOptions(shuffleArray([...items[(questionNum - 1) % items.length].options]));
-    setFeedback(null);
-    setAnswered(false);
-  }, [questionNum, items]);
-
-  useEffect(() => {
-    resetQuestionNum();
-    setOptions(shuffleArray([...items[0].options]));
+  const resetSession = useCallback(() => {
+    const first = pickItem(items, []);
+    setUsedKeys([]);
+    setCurrentItem(first);
+    setOptions(shuffleArray([...first.options]));
     setFeedback(null);
     setAnswered(false);
     setSessionComplete(false);
     setSlotDone(false);
-  }, [difficulty, items, resetQuestionNum]);
+    resetQuestionNum();
+  }, [items, resetQuestionNum]);
+
+  const advanceToNext = useCallback(
+    (used: string[]) => {
+      const next = pickItem(items, used);
+      setUsedKeys(used);
+      setCurrentItem(next);
+      setOptions(shuffleArray([...next.options]));
+      setFeedback(null);
+      setAnswered(false);
+      progress.save({
+        state: {
+          currentKey: itemKey(next),
+          usedKeys: used,
+          answered: false,
+          feedback: null,
+          questionNum,
+        },
+      });
+    },
+    [items, progress, questionNum]
+  );
+
+  useEffect(() => {
+    if (!progress.loaded) return;
+
+    if (!initializedRef.current) {
+      initializedRef.current = true;
+      if (!progress.hasSavedProgress) {
+        resetSession();
+      }
+      return;
+    }
+
+    if (prevDifficultyRef.current !== difficulty) {
+      prevDifficultyRef.current = difficulty;
+      resetSession();
+    }
+  }, [progress.loaded, progress.hasSavedProgress, difficulty, resetSession]);
 
   const nextQuestion = useCallback(() => {
     const result = project.handleSessionNext(
@@ -77,23 +143,39 @@ function ColorsNumbersPlay({
       sessionSize,
       progress.markCompleted,
       () => {
+        const key = itemKey(currentItem);
+        const used = usedKeys.includes(key) ? usedKeys : [...usedKeys, key];
         const nextNum = questionNum + 1;
+        setUsedKeys(used);
         advanceQuestionNum();
         progress.setRound((r) => r + 1);
         progress.save({
           round: progress.round + 1,
-          state: { questionNum: nextNum, answered: false, feedback: null },
+          state: { questionNum: nextNum },
         });
+        advanceToNext(used);
       }
     );
     if (result === "project") setSlotDone(true);
     if (result === "complete") setSessionComplete(true);
-  }, [project, questionNum, sessionSize, progress, advanceQuestionNum]);
+  }, [
+    project,
+    questionNum,
+    sessionSize,
+    progress,
+    currentItem,
+    usedKeys,
+    advanceQuestionNum,
+    advanceToNext,
+  ]);
 
   const playAgain = useCallback(() => {
     setSessionComplete(false);
     resetQuestionNum();
-    setOptions(shuffleArray([...items[0].options]));
+    const first = pickItem(items, []);
+    setUsedKeys([]);
+    setCurrentItem(first);
+    setOptions(shuffleArray([...first.options]));
     setFeedback(null);
     setAnswered(false);
     progress.setScore(0);
@@ -108,7 +190,13 @@ function ColorsNumbersPlay({
       correct: 0,
       wrong: 0,
       status: "in_progress",
-      state: { questionNum: 1, answered: false, feedback: null },
+      state: {
+        questionNum: 1,
+        currentKey: itemKey(first),
+        usedKeys: [],
+        answered: false,
+        feedback: null,
+      },
     });
   }, [progress, items, resetQuestionNum]);
 
@@ -117,14 +205,48 @@ function ColorsNumbersPlay({
     progress.hasSavedProgress,
     progress.gameState,
     (s) => {
+      const used = (s.usedKeys as string[]) ?? [];
+      setUsedKeys(used);
+
       if (typeof s.questionNum === "number") {
         setQuestionNum(s.questionNum);
+      }
+
+      const savedKey = typeof s.currentKey === "string" ? s.currentKey : null;
+      const restored = savedKey ? findItem(items, savedKey) : undefined;
+
+      if (restored) {
+        setCurrentItem(restored);
         if (s.options) setOptions(s.options as string[]);
+        else setOptions(shuffleArray([...restored.options]));
         setAnswered(!!s.answered);
         if (s.feedback) setFeedback(s.feedback as typeof feedback);
+        return;
       }
+
+      // Legacy saves (fixed order / old deck) — start a fresh random session.
+      const first = pickItem(items, []);
+      setUsedKeys([]);
+      setCurrentItem(first);
+      setOptions(shuffleArray([...first.options]));
+      setAnswered(false);
+      setFeedback(null);
+      setQuestionNum(1);
+      progress.save({
+        state: {
+          questionNum: 1,
+          currentKey: itemKey(first),
+          usedKeys: [],
+          answered: false,
+          feedback: null,
+        },
+      });
     },
     () => {
+      const used = (progress.gameState.usedKeys as string[]) ?? [];
+      const lastKey = progress.gameState.currentKey as string | undefined;
+      const updatedUsed =
+        lastKey && !used.includes(lastKey) ? [...used, lastKey] : used;
       const savedNum = (progress.gameState.questionNum as number) ?? questionNum;
       if (savedNum >= sessionSize) {
         progress.markCompleted();
@@ -132,12 +254,14 @@ function ColorsNumbersPlay({
         else setSessionComplete(true);
         return;
       }
-      advanceQuestionNum();
+      setUsedKeys(updatedUsed);
       progress.setRound((r) => r + 1);
+      advanceQuestionNum();
       progress.save({
         round: progress.round + 1,
-        state: { questionNum: savedNum + 1, answered: false, feedback: null },
+        state: { questionNum: savedNum + 1 },
       });
+      advanceToNext(updatedUsed);
     }
   );
 
@@ -145,7 +269,7 @@ function ColorsNumbersPlay({
     if (answered) return;
     setAnswered(true);
 
-    if (answer === item.answer) {
+    if (answer === currentItem.answer) {
       const pts = 10 + progress.streak;
       progress.setScore((s) => s + pts);
       progress.setStreak((s) => s + 1);
@@ -156,25 +280,41 @@ function ColorsNumbersPlay({
         score: progress.score + pts,
         streak: progress.streak + 1,
         correct: progress.correct + 1,
-        state: { questionNum, options, answered: true, feedback: fb },
+        state: {
+          questionNum,
+          currentKey: itemKey(currentItem),
+          usedKeys,
+          options,
+          answered: true,
+          feedback: fb,
+        },
       });
     } else {
       progress.setStreak(0);
       progress.setWrong((w) => w + 1);
       const fb = {
         type: "wrong" as const,
-        message: t("games.colorsWrong", { answer: item.answer }),
+        message: t("games.colorsWrong", { answer: currentItem.answer }),
       };
       setFeedback(fb);
       progress.save({
         streak: 0,
         wrong: progress.wrong + 1,
-        state: { questionNum, options, answered: true, feedback: fb },
+        state: {
+          questionNum,
+          currentKey: itemKey(currentItem),
+          usedKeys,
+          options,
+          answered: true,
+          feedback: fb,
+        },
       });
     }
   };
 
-  const prompt = locale === "he" ? item.promptHe : item.prompt;
+  const prompt = locale === "he" ? currentItem.promptHe : currentItem.prompt;
+  const categoryKey = CATEGORY_I18N[currentItem.type];
+  const categoryLabel = categoryKey ? t(`games.${categoryKey}`) : currentItem.type;
 
   return (
     <GamePage>
@@ -197,7 +337,10 @@ function ColorsNumbersPlay({
           <>
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4 items-center">
               <div className="bg-white/90 rounded-2xl p-5 sm:p-8 shadow border-2 border-green-100 text-center">
-                <span className="text-6xl">{item.emoji}</span>
+                <span className="inline-block mb-2 rounded-full bg-indigo-100 px-3 py-1 text-xs font-bold text-indigo-700">
+                  {categoryLabel}
+                </span>
+                <span className="block text-6xl">{currentItem.emoji}</span>
                 <div className="mt-4 flex flex-col items-center gap-2">
                   <p className="text-xl font-bold text-gray-800">{prompt}</p>
                   <SpeakButton text={prompt} locale={locale} />
@@ -212,7 +355,7 @@ function ColorsNumbersPlay({
                     speakLocale="en"
                     disabled={answered}
                     onWordClick={() => handleAnswer(opt)}
-                    wordClassName={`game-btn-option w-full text-lg py-4 ${answered && opt === item.answer ? "correct" : ""} ${answered && opt !== item.answer ? "opacity-50" : ""}`}
+                    wordClassName={`game-btn-option w-full text-lg py-4 ${answered && opt === currentItem.answer ? "correct" : ""} ${answered && opt !== currentItem.answer ? "opacity-50" : ""}`}
                   />
                 ))}
               </GameOptionsGrid>
@@ -262,6 +405,7 @@ export default function ColorsNumbersPage() {
 
   return (
     <ColorsNumbersPlay
+      key={`${difficulty}-${items.length}`}
       items={items}
       sessionSize={content!.sessionSize}
       difficulty={difficulty}

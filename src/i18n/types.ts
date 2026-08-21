@@ -260,6 +260,18 @@ export interface Dictionary {
     sentenceWrong: string;
     colorsCorrect: string;
     colorsWrong: string;
+    wordCategoryColor: string;
+    wordCategoryNumber: string;
+    wordCategoryShape: string;
+    wordCategoryFood: string;
+    wordCategoryVehicle: string;
+    wordCategoryAnimal: string;
+    wordCategoryBody: string;
+    wordCategoryClothing: string;
+    wordCategorySchool: string;
+    wordCategoryWeather: string;
+    wordCategoryHome: string;
+    wordCategorySport: string;
     storyCorrect: string;
     storyWrong: string;
     vocabPromptHeToEn: string;

@@ -242,12 +242,26 @@ export async function fetchGameContentBundle(
   if (gameId === "shuk" && difficulty === 3 && config) {
     config = { maxQuantityPerItem: 3, ...config };
   }
-  const items = rows
+  let items = rows
     .filter((r) => r.itemType !== "config")
     .map((r) => ({
       itemType: r.itemType,
       data: r.data as Record<string, unknown>,
     }));
+
+  if (gameId === "colors-numbers") {
+    const colorItems = items.filter((item) => item.itemType === "color-number");
+    if (colorItems.length < 50) {
+      const pool =
+        difficulty === 1
+          ? COLORS_NUMBERS.slice(0, Math.max(1, Math.ceil(COLORS_NUMBERS.length / 2)))
+          : COLORS_NUMBERS;
+      items = pool.map((q) => ({
+        itemType: "color-number",
+        data: q as unknown as Record<string, unknown>,
+      }));
+    }
+  }
 
   const sessionSize =
     gameId === "multiplication" ||

@@ -272,9 +272,48 @@ function buildOptions(
   return options as [string, string, string, string];
 }
 
+function interleaveByCategory(raw: ItemDef[]): ItemDef[] {
+  const buckets = new Map<Category, ItemDef[]>();
+  for (const item of raw) {
+    const list = buckets.get(item.type) ?? [];
+    list.push(item);
+    buckets.set(item.type, list);
+  }
+
+  const order: Category[] = [
+    "color",
+    "number",
+    "shape",
+    "food",
+    "vehicle",
+    "animal",
+    "body",
+    "clothing",
+    "school",
+    "weather",
+    "home",
+    "sport",
+  ];
+
+  const result: ItemDef[] = [];
+  let added = true;
+  while (added) {
+    added = false;
+    for (const type of order) {
+      const bucket = buckets.get(type);
+      if (bucket?.length) {
+        result.push(bucket.shift()!);
+        added = true;
+      }
+    }
+  }
+  return result;
+}
+
 function buildItems(raw: ItemDef[]): GeneratedItem[] {
   const pools = buildCategoryPools(raw);
-  return raw.map((item, index) => {
+  const ordered = interleaveByCategory(raw);
+  return ordered.map((item, index) => {
     const pool = pools.get(item.type);
     if (!pool || pool.length < 4) {
       throw new Error(`Category "${item.type}" needs at least 4 items, got ${pool?.length ?? 0}`);
