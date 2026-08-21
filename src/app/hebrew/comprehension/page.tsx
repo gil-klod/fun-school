@@ -8,6 +8,8 @@ import { GameStatus } from "@/components/GameStatus";
 import { Feedback } from "@/components/Feedback";
 import { GameContentGate } from "@/components/GameContentGate";
 import { SessionComplete } from "@/components/SessionComplete";
+import { SpeakButton } from "@/components/EnglishSpeakButton";
+import { stopSpeaking } from "@/components/mascot/speech";
 import { useLocale } from "@/i18n/LocaleProvider";
 
 interface HebrewStory {
@@ -96,6 +98,11 @@ function HebrewComprehensionPlay({
   const hasNikud = Boolean(story.titleNikud && story.textNikud);
   const displayTitle = showNikud && story.titleNikud ? story.titleNikud : story.title;
   const displayText = showNikud && story.textNikud ? story.textNikud : story.text;
+  const storySpeech = `${displayTitle}. ${displayText}`;
+
+  useEffect(() => {
+    return () => stopSpeaking();
+  }, [storyIndex, difficulty, displayTitle, displayText]);
 
   const handleAnswer = (optionIndex: number) => {
     if (answered) return;
@@ -201,25 +208,28 @@ function HebrewComprehensionPlay({
           <div className="bg-white/90 rounded-2xl p-5 sm:p-6 shadow border-2 border-blue-100 xl:max-h-[28rem] xl:overflow-y-auto">
             <div className="flex flex-wrap items-start justify-between gap-2 mb-3">
               <h2 className="text-xl font-bold text-blue-700">{displayTitle}</h2>
-              {hasNikud && (
-                <button
-                  type="button"
-                  onClick={() => setShowNikud((v) => !v)}
-                  className={`shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-sm font-bold transition-all ${
-                    showNikud
-                      ? "bg-blue-500 text-white shadow-md ring-2 ring-blue-600"
-                      : "bg-white border-2 border-blue-200 text-blue-700 hover:border-blue-400"
-                  }`}
-                  aria-pressed={showNikud}
-                  aria-label={showNikud ? t("games.hideNikud") : t("games.showNikud")}
-                  title={showNikud ? t("games.hideNikud") : t("games.showNikud")}
-                >
-                  <span className="text-base leading-none" aria-hidden>
-                    אָ
-                  </span>
-                  <span>{showNikud ? t("games.hideNikud") : t("games.showNikud")}</span>
-                </button>
-              )}
+              <div className="flex flex-wrap items-center gap-2 shrink-0">
+                <SpeakButton text={storySpeech} locale="he" />
+                {hasNikud && (
+                  <button
+                    type="button"
+                    onClick={() => setShowNikud((v) => !v)}
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-sm font-bold transition-all ${
+                      showNikud
+                        ? "bg-blue-500 text-white shadow-md ring-2 ring-blue-600"
+                        : "bg-white border-2 border-blue-200 text-blue-700 hover:border-blue-400"
+                    }`}
+                    aria-pressed={showNikud}
+                    aria-label={showNikud ? t("games.hideNikud") : t("games.showNikud")}
+                    title={showNikud ? t("games.hideNikud") : t("games.showNikud")}
+                  >
+                    <span className="text-base leading-none" aria-hidden>
+                      אָ
+                    </span>
+                    <span>{showNikud ? t("games.hideNikud") : t("games.showNikud")}</span>
+                  </button>
+                )}
+              </div>
             </div>
             <p className="text-lg leading-relaxed text-gray-800">{displayText}</p>
           </div>
