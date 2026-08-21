@@ -118,6 +118,11 @@ export interface Dictionary {
     recTryNew: string;
     recStreak: string;
     recPractice: string;
+    dailyProjectOverall: string;
+    dailyProjectProgress: string;
+    dailyProjectComplete: string;
+    dailyProjectContinue: string;
+    gamesEmptyHint: string;
   };
   subjects: Record<string, SubjectStrings>;
   students: {

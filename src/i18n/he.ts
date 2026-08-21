@@ -104,6 +104,12 @@ export const he: Dictionary = {
     recTryNew: "נסו משחק חדש שעדיין לא שיחקתם!",
     recStreak: "נסו לשבור את הרצף הקודם!",
     recPractice: "תרגלו את {game} 10 דקות היום",
+    dailyProjectOverall: "התקדמות במשימה היומית",
+    dailyProjectProgress:
+      "{days}/{total} ימים הושלמו · {slots}/{slotsTotal} משימות · היום {today}/3",
+    dailyProjectComplete: "סיימת את כל ימי המשימה היומית! 🏆",
+    dailyProjectContinue: "למשימה היומית",
+    gamesEmptyHint: "שחקו גם במשחקים חופשיים כדי לראות ניתוח מפורט למטה.",
   },
   students: {
     title: "תלמידים",

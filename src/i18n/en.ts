@@ -104,6 +104,12 @@ export const en: Dictionary = {
     recTryNew: "Try a new game you haven't played yet!",
     recStreak: "Challenge yourself with a higher streak!",
     recPractice: "Practice {game} for 10 minutes today",
+    dailyProjectOverall: "Daily task progress",
+    dailyProjectProgress:
+      "{days}/{total} days done · {slots}/{slotsTotal} tasks · today {today}/3",
+    dailyProjectComplete: "You finished every day of the daily task! 🏆",
+    dailyProjectContinue: "Go to daily task",
+    gamesEmptyHint: "Play free games too to unlock detailed stats below.",
   },
   students: {
     title: "Students",

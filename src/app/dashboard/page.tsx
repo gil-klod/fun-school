@@ -12,6 +12,8 @@ import {
 import type { Locale } from "@/i18n/types";
 import { APP_CONTAINER } from "@/lib/layout";
 import { StudentSelector, useStudent } from "@/components/students";
+import { DashboardDailyProject } from "@/components/projects/DashboardDailyProject";
+import type { DailyProjectPayload } from "@/lib/projects/types";
 
 interface Analytics {
   strengths: string[];
@@ -48,6 +50,7 @@ export default function DashboardPage() {
   const { t, locale, subjectTitle, gameTitle } = useLocale();
   const { activeStudent, ready: studentReady } = useStudent();
   const [analytics, setAnalytics] = useState<Analytics | null>(null);
+  const [project, setProject] = useState<DailyProjectPayload | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
@@ -55,17 +58,23 @@ export default function DashboardPage() {
     if (!studentReady) return;
     if (!activeStudent?.id) {
       setAnalytics(null);
+      setProject(null);
       setLoading(false);
       return;
     }
 
     setLoading(true);
-    fetch(`/api/analytics?studentId=${activeStudent.id}`)
-      .then(async (res) => {
-        if (res.ok) {
-          const data = await res.json();
-          setAnalytics(data.analytics);
-        }
+    Promise.all([
+      fetch(`/api/analytics?studentId=${activeStudent.id}`).then(async (res) =>
+        res.ok ? res.json() : null
+      ),
+      fetch(`/api/projects?studentId=${activeStudent.id}`).then(async (res) =>
+        res.ok ? res.json() : null
+      ),
+    ])
+      .then(([analyticsData, projectData]) => {
+        setAnalytics(analyticsData?.analytics ?? null);
+        setProject(projectData?.project ?? null);
       })
       .catch(console.error)
       .finally(() => setLoading(false));
@@ -128,7 +137,8 @@ export default function DashboardPage() {
     );
   }
 
-  const hasData = analytics && analytics.gameStats.some((g) => g.correct + g.wrong > 0);
+  const hasGameData = analytics && analytics.gameStats.some((g) => g.correct + g.wrong > 0);
+  const hasDailyProject = !!project;
 
   return (
     <main className={`flex-1 py-6 sm:py-8 ${APP_CONTAINER}`}>
@@ -148,7 +158,7 @@ export default function DashboardPage() {
             {t("students.add")}
           </Link>
         </div>
-      ) : !hasData ? (
+      ) : !hasDailyProject && !hasGameData ? (
         <div className="bg-white/90 rounded-3xl p-8 text-center border-2 border-indigo-100">
           <p className="text-xl text-gray-600 mb-4">{t("dashboard.empty")}</p>
           <Link href="/" className="game-btn game-btn-primary inline-block">
@@ -157,6 +167,14 @@ export default function DashboardPage() {
         </div>
       ) : (
         <div className="space-y-6">
+          {hasDailyProject && <DashboardDailyProject project={project!} />}
+
+          {!hasGameData ? (
+            <div className="bg-white/90 rounded-2xl p-5 text-center border-2 border-indigo-100">
+              <p className="text-gray-600">{t("dashboard.gamesEmptyHint")}</p>
+            </div>
+          ) : (
+            <>
           <section className="bg-gradient-to-br from-indigo-500 to-purple-600 text-white rounded-3xl p-6 shadow-lg">
             <h2 className="text-xl font-bold mb-2">{t("dashboard.coachTitle")}</h2>
             <p className="text-indigo-100 leading-relaxed">{coachFeedback}</p>
@@ -266,6 +284,8 @@ export default function DashboardPage() {
               </table>
             </div>
           </section>
+            </>
+          )}
         </div>
       )}
     </main>
