@@ -304,5 +304,6 @@ export interface Dictionary {
     vocabPromptEnToHe: string;
     hearEnglish: string;
     readStory: string;
+    stopStory: string;
   };
 }

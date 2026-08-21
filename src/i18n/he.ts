@@ -334,5 +334,6 @@ export const he: Dictionary = {
     vocabPromptEnToHe: "מה זה \"{word}\" בעברית?",
     hearEnglish: "הקרא בקול",
     readStory: "הקרא את הסיפור",
+    stopStory: "עצור הקראה",
   },
 };
