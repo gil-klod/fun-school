@@ -49,6 +49,23 @@ function pickItem(items: ColorNumberItem[], usedKeys: string[]): ColorNumberItem
   return pool[Math.floor(Math.random() * pool.length)];
 }
 
+function createRandomQuestion(items: ColorNumberItem[], usedKeys: string[] = []) {
+  const item = pickItem(items, usedKeys);
+  return { item, options: shuffleArray([...item.options]) };
+}
+
+function optionsForItem(item: ColorNumberItem, saved?: string[]): string[] {
+  if (
+    saved &&
+    saved.length === item.options.length &&
+    saved.includes(item.answer) &&
+    saved.every((opt) => item.options.includes(opt))
+  ) {
+    return saved;
+  }
+  return shuffleArray([...item.options]);
+}
+
 function findItem(items: ColorNumberItem[], key: string): ColorNumberItem | undefined {
   return items.find((item) => itemKey(item) === key);
 }
@@ -75,10 +92,9 @@ function ColorsNumbersPlay({
   const { current: questionNum, setCurrent: setQuestionNum, reset: resetQuestionNum, advance: advanceQuestionNum } =
     useQuestionCounter(sessionSize);
   const [usedKeys, setUsedKeys] = useState<string[]>([]);
-  const [currentItem, setCurrentItem] = useState<ColorNumberItem>(() => pickItem(items, []));
-  const [options, setOptions] = useState<string[]>(() =>
-    shuffleArray([...pickItem(items, []).options])
-  );
+  const [question, setQuestion] = useState(() => createRandomQuestion(items));
+  const currentItem = question.item;
+  const options = question.options;
   const [feedback, setFeedback] = useState<{
     type: "correct" | "wrong";
     message: string;
@@ -88,10 +104,8 @@ function ColorsNumbersPlay({
   const initializedRef = useRef(false);
 
   const resetSession = useCallback(() => {
-    const first = pickItem(items, []);
     setUsedKeys([]);
-    setCurrentItem(first);
-    setOptions(shuffleArray([...first.options]));
+    setQuestion(createRandomQuestion(items));
     setFeedback(null);
     setAnswered(false);
     setSessionComplete(false);
@@ -101,15 +115,14 @@ function ColorsNumbersPlay({
 
   const advanceToNext = useCallback(
     (used: string[]) => {
-      const next = pickItem(items, used);
+      const next = createRandomQuestion(items, used);
       setUsedKeys(used);
-      setCurrentItem(next);
-      setOptions(shuffleArray([...next.options]));
+      setQuestion(next);
       setFeedback(null);
       setAnswered(false);
       progress.save({
         state: {
-          currentKey: itemKey(next),
+          currentKey: itemKey(next.item),
           usedKeys: used,
           answered: false,
           feedback: null,
@@ -170,12 +183,11 @@ function ColorsNumbersPlay({
   ]);
 
   const playAgain = useCallback(() => {
+    const first = createRandomQuestion(items);
     setSessionComplete(false);
     resetQuestionNum();
-    const first = pickItem(items, []);
     setUsedKeys([]);
-    setCurrentItem(first);
-    setOptions(shuffleArray([...first.options]));
+    setQuestion(first);
     setFeedback(null);
     setAnswered(false);
     progress.setScore(0);
@@ -192,7 +204,7 @@ function ColorsNumbersPlay({
       status: "in_progress",
       state: {
         questionNum: 1,
-        currentKey: itemKey(first),
+        currentKey: itemKey(first.item),
         usedKeys: [],
         answered: false,
         feedback: null,
@@ -216,26 +228,26 @@ function ColorsNumbersPlay({
       const restored = savedKey ? findItem(items, savedKey) : undefined;
 
       if (restored) {
-        setCurrentItem(restored);
-        if (s.options) setOptions(s.options as string[]);
-        else setOptions(shuffleArray([...restored.options]));
+        setQuestion({
+          item: restored,
+          options: optionsForItem(restored, s.options as string[] | undefined),
+        });
         setAnswered(!!s.answered);
         if (s.feedback) setFeedback(s.feedback as typeof feedback);
         return;
       }
 
       // Legacy saves (fixed order / old deck) — start a fresh random session.
-      const first = pickItem(items, []);
+      const first = createRandomQuestion(items);
       setUsedKeys([]);
-      setCurrentItem(first);
-      setOptions(shuffleArray([...first.options]));
+      setQuestion(first);
       setAnswered(false);
       setFeedback(null);
       setQuestionNum(1);
       progress.save({
         state: {
           questionNum: 1,
-          currentKey: itemKey(first),
+          currentKey: itemKey(first.item),
           usedKeys: [],
           answered: false,
           feedback: null,

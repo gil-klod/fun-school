@@ -79,19 +79,19 @@ const RAW: ItemDef[] = [
   { type: "number", answer: "Twelve", emoji: "1️⃣2️⃣" },
   { type: "number", answer: "Twenty", emoji: "2️⃣0️⃣" },
 
-  // shape (12)
+  // shape (12) — emoji must clearly match the shape name
   { type: "shape", answer: "Circle", emoji: "⭕" },
-  { type: "shape", answer: "Square", emoji: "🟧" },
+  { type: "shape", answer: "Square", emoji: "⬜" },
   { type: "shape", answer: "Triangle", emoji: "🔺" },
-  { type: "shape", answer: "Rectangle", emoji: "📐" },
+  { type: "shape", answer: "Rectangle", emoji: "▭" },
   { type: "shape", answer: "Star", emoji: "⭐" },
   { type: "shape", answer: "Heart", emoji: "❤️" },
   { type: "shape", answer: "Oval", emoji: "🥚" },
-  { type: "shape", answer: "Diamond", emoji: "💎" },
-  { type: "shape", answer: "Pentagon", emoji: "🔶" },
-  { type: "shape", answer: "Hexagon", emoji: "🔷" },
-  { type: "shape", answer: "Crescent", emoji: "🌙" },
-  { type: "shape", answer: "Cross", emoji: "➕" },
+  { type: "shape", answer: "Diamond", emoji: "♦️" },
+  { type: "shape", answer: "Pentagon", emoji: "⬟" },
+  { type: "shape", answer: "Hexagon", emoji: "⬡" },
+  { type: "shape", answer: "Crescent", emoji: "🌘" },
+  { type: "shape", answer: "Cross", emoji: "✖️" },
 
   // food (13)
   { type: "food", answer: "Apple", emoji: "🍎" },
@@ -183,7 +183,7 @@ const RAW: ItemDef[] = [
 
   // weather (12)
   { type: "weather", answer: "Sun", emoji: "☀️" },
-  { type: "weather", answer: "Moon", emoji: "🌙" },
+  { type: "weather", answer: "Moon", emoji: "🌕" },
   { type: "weather", answer: "Rain", emoji: "🌧️" },
   { type: "weather", answer: "Cloud", emoji: "☁️" },
   { type: "weather", answer: "Snow", emoji: "❄️" },
