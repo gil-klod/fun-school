@@ -1,6 +1,7 @@
 import type { Locale } from "@/i18n/types";
 import type { MiloAudioId } from "@/lib/mascot/audio";
 import { miloAudioUrl } from "@/lib/mascot/audio";
+import { miloSpeechText } from "@/lib/mascot/audioExport";
 
 const MUTE_KEY = "fun-school-mascot-muted";
 
@@ -260,7 +261,7 @@ export async function speakText(
   if (typeof window === "undefined") return;
   if (options.muted ?? isMascotMuted()) return;
 
-  const spoken = textForSpeech(text);
+  const spoken = miloSpeechText(text, locale);
   if (!spoken) return;
 
   stopSpeaking();

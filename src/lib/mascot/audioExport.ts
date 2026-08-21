@@ -1,5 +1,6 @@
 /** Node-safe exports for the audio generation script (no "use client"). */
 export { miloAudioFilename } from "./audio";
+import { punctuateHebrewForSpeech } from "./hebrewSpeech";
 
 export function textForSpeech(text: string): string {
   return text
@@ -7,4 +8,10 @@ export function textForSpeech(text: string): string {
     .replace(/[⚔️🛒🔍🔤✏️🕵️🎯🧩🌈📝🧙📚👏⭐🎒🎉💪💡🌟🏆]/g, "")
     .replace(/\s+/g, " ")
     .trim();
+}
+
+export function miloSpeechText(text: string, locale: "he" | "en"): string {
+  const cleaned = textForSpeech(text);
+  if (!cleaned) return "";
+  return locale === "he" ? punctuateHebrewForSpeech(cleaned) : cleaned;
 }

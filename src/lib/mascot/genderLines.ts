@@ -5,34 +5,34 @@ import { contextLineAudioId, speechLineAudioId } from "@/lib/mascot/audio";
 import { MASCOT_LINES, resolveMascotContext } from "./lines";
 
 /** Hebrew Milo speech with masculine / feminine second-person forms. */
-const MASCOT_SPEECH_HE: Record<string, Record<UserGender, string>> = {
+export const MASCOT_SPEECH_HE: Record<string, Record<UserGender, string>> = {
   "mascot.welcome": {
-    male: "היי! אני מילו 🎒 בחר נושא ובוא נשחק!",
-    female: "היי! אני מילו 🎒 בחרי נושא ובואי נשחק!",
+    male: "היי! אני מילו. בחר נושא, ובוא נשחק!",
+    female: "היי! אני מילו. בחרי נושא, ובואי נשחק!",
   },
   "mascot.correct0": {
-    male: "מדהים! כפיים כפיים! 👏",
-    female: "מדהימה! כפיים כפיים! 👏",
+    male: "מדהים! כפיים, כפיים!",
+    female: "מדהימה! כפיים, כפיים!",
   },
   "mascot.correct1": {
     male: "אתה בוער! המשך כך!",
     female: "את בוערת! המשיכי כך!",
   },
   "mascot.correct2": {
-    male: "מבריק! ידעתי שתצליח!",
-    female: "מבריקה! ידעתי שתצליחי!",
+    male: "מבריק! ידעתי, שתצליח!",
+    female: "מבריקה! ידעתי, שתצליחי!",
   },
   "mascot.correct3": {
-    male: "כוכב על! ⭐",
-    female: "כוכבת על! ⭐",
+    male: "כוכב על!",
+    female: "כוכבת על!",
   },
   "mascot.wrong0": {
-    male: "כמעט! נסה שוב — אתה יכול!",
-    female: "כמעט! נסי שוב — את יכולה!",
+    male: "כמעט! נסה שוב, אתה יכול!",
+    female: "כמעט! נסי שוב, את יכולה!",
   },
   "mascot.wrong1": {
-    male: "לא נורא! מכל טעות לומדים.",
-    female: "לא נורא! מכל טעות לומדים.",
+    male: "לא נורא! מכל טעות, לומדים.",
+    female: "לא נורא! מכל טעות, לומדים.",
   },
   "mascot.wrong2": {
     male: "קרוב! נעיף את השאלה הבאה!",

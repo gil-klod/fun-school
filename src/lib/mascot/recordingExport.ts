@@ -1,5 +1,5 @@
 import type { MiloTextEntry } from "@/lib/mascot/catalog";
-import { textForSpeech } from "@/lib/mascot/audioExport";
+import { miloSpeechText } from "@/lib/mascot/audioExport";
 
 /** Pause between Milo lines in MiniMax TTS — must match split script detection. */
 export const MINIMAX_LINE_PAUSE_SECONDS = 1.5;
@@ -38,7 +38,7 @@ export function formatMiloRecordingExport(
   mode: MiloRecordingPauseMode = "minimax"
 ): string {
   const separator = MILO_RECORDING_PAUSE_MODES[mode].separator;
-  return entries.map((entry) => textForSpeech(entry.text)).join(separator);
+  return entries.map((entry) => miloSpeechText(entry.text, entry.locale)).join(separator);
 }
 
 export function miloRecordingExportHint(lineCount: number, mode: MiloRecordingPauseMode): string {

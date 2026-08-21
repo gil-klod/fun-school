@@ -7,7 +7,7 @@
 import fs from "fs";
 import path from "path";
 import { getMiloTextCatalog } from "../src/lib/mascot/catalog";
-import { miloAudioFilename, textForSpeech } from "../src/lib/mascot/audioExport";
+import { miloAudioFilename, miloSpeechText } from "../src/lib/mascot/audioExport";
 
 const OUT_DIR = path.join(process.cwd(), "public/audio/milo");
 const DELAY_MS = 250;
@@ -45,7 +45,7 @@ async function main() {
       continue;
     }
 
-    const spoken = textForSpeech(entry.text);
+    const spoken = miloSpeechText(entry.text, entry.locale);
     if (!spoken) continue;
 
     process.stdout.write(`Generating ${filename}… `);
