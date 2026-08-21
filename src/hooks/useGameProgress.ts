@@ -173,6 +173,11 @@ export function useGameProgress({
     (overrides?: Partial<ProgressData>) => {
       if (!loaded || !studentId) return;
 
+      if (overrides?.status !== undefined) {
+        void persistProgress(overrides);
+        return;
+      }
+
       if (saveTimer.current) clearTimeout(saveTimer.current);
       saveTimer.current = setTimeout(() => {
         void persistProgress(overrides);
@@ -182,10 +187,26 @@ export function useGameProgress({
   );
 
   useEffect(() => {
-    return () => {
-      if (saveTimer.current) clearTimeout(saveTimer.current);
+    const flushPendingSave = () => {
+      if (!loaded || !studentId || !saveTimer.current) return;
+      clearTimeout(saveTimer.current);
+      saveTimer.current = null;
+      void persistProgress();
     };
-  }, []);
+
+    const onHide = () => {
+      if (document.visibilityState === "hidden") flushPendingSave();
+    };
+
+    window.addEventListener("pagehide", flushPendingSave);
+    document.addEventListener("visibilitychange", onHide);
+
+    return () => {
+      flushPendingSave();
+      window.removeEventListener("pagehide", flushPendingSave);
+      document.removeEventListener("visibilitychange", onHide);
+    };
+  }, [loaded, studentId, persistProgress]);
 
   const notifyProjectComplete = useCallback(async () => {
     if (!projectId || !projectDay || !projectSlot || !studentId) return;

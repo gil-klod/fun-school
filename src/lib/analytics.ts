@@ -15,7 +15,7 @@ export async function computeAnalytics(studentId: string) {
   const progresses = await GameProgress.find({ studentId });
 
   const subjectMap = new Map<string, SubjectStat>();
-  const gameStats: GameStat[] = [];
+  const gameMap = new Map<string, GameStat>();
 
   for (const p of progresses) {
     const sub = subjectMap.get(p.subjectId) ?? {
@@ -31,17 +31,24 @@ export async function computeAnalytics(studentId: string) {
     sub.accuracy = accuracy(sub.correct, sub.wrong);
     subjectMap.set(p.subjectId, sub);
 
-    gameStats.push({
+    const gameKey = `${p.subjectId}:${p.gameId}`;
+    const game = gameMap.get(gameKey) ?? {
       subjectId: p.subjectId,
       gameId: p.gameId,
-      correct: p.correct,
-      wrong: p.wrong,
-      accuracy: accuracy(p.correct, p.wrong),
-      score: p.score,
-    });
+      correct: 0,
+      wrong: 0,
+      accuracy: 0,
+      score: 0,
+    };
+    game.correct += p.correct;
+    game.wrong += p.wrong;
+    game.score = Math.max(game.score, p.score);
+    game.accuracy = accuracy(game.correct, game.wrong);
+    gameMap.set(gameKey, game);
   }
 
   const subjectStats = Array.from(subjectMap.values());
+  const gameStats = Array.from(gameMap.values());
   const playedGames = gameStats.filter((g) => g.correct + g.wrong > 0);
 
   const strengths = playedGames
