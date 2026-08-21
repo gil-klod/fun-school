@@ -28,13 +28,13 @@ export function SpeakButton({ text, locale = "en", className = "", size = "md" }
       event.stopPropagation();
       event.preventDefault();
       if (!text.trim()) return;
-      stopSpeaking();
       setSpeaking(true);
       const spoken = text.replace(/"/g, "");
       const opts = { muted: false as const, onEnd: () => setSpeaking(false) };
       if (isMixedLanguageText(spoken)) {
         await speakMixedText(spoken, opts);
       } else {
+        stopSpeaking();
         await speakText(spoken, locale, opts);
       }
     },

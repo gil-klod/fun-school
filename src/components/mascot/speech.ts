@@ -2,7 +2,7 @@ import type { Locale } from "@/i18n/types";
 import type { MiloAudioId } from "@/lib/mascot/audio";
 import { miloAudioUrl } from "@/lib/mascot/audio";
 import { miloSpeechText } from "@/lib/mascot/audioExport";
-import { splitMixedSpeechSegments } from "@/lib/mascot/mixedSpeech";
+import { splitMixedSpeechSegments, type SpeechSegment } from "@/lib/mascot/mixedSpeech";
 
 const MUTE_KEY = "fun-school-mascot-muted";
 
@@ -285,6 +285,25 @@ async function fetchTtsBlob(text: string, locale: Locale): Promise<Blob | null> 
   }
 }
 
+async function fetchMixedTtsBlob(segments: SpeechSegment[]): Promise<Blob | null> {
+  try {
+    const res = await fetch("/api/tts/mixed", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        segments: segments.map((segment) => ({
+          lang: segment.locale,
+          text: segment.text,
+        })),
+      }),
+    });
+    if (!res.ok) return null;
+    return res.blob();
+  } catch {
+    return null;
+  }
+}
+
 function delay(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
@@ -300,9 +319,14 @@ function playTtsBlob(
   return new Promise((resolve) => {
     clearAudio();
     audioUrl = URL.createObjectURL(blob);
-    currentAudio = new Audio(audioUrl);
+    const audio = new Audio();
+    audio.preload = "auto";
+    currentAudio = audio;
 
+    let settled = false;
     const finish = (ok: boolean) => {
+      if (settled) return;
+      settled = true;
       if (gen !== speakGeneration) {
         clearAudio();
         speaking = false;
@@ -314,19 +338,79 @@ function playTtsBlob(
       resolve(ok);
     };
 
-    if (!currentAudio) {
-      finish(false);
-      return;
-    }
-
-    currentAudio.onplay = () => {
+    audio.onplay = () => {
       speaking = true;
       options.onStart?.();
     };
-    currentAudio.onended = () => finish(true);
-    currentAudio.onerror = () => finish(false);
-    currentAudio.play().catch(() => finish(false));
+    audio.onended = () => finish(true);
+    audio.onerror = () => finish(false);
+
+    audio.addEventListener(
+      "canplaythrough",
+      () => {
+        if (gen !== speakGeneration) {
+          finish(false);
+          return;
+        }
+        audio.play().catch(() => finish(false));
+      },
+      { once: true }
+    );
+
+    audio.src = audioUrl;
+    audio.load();
   });
+}
+
+async function playMixedSegmentsChained(
+  segments: SpeechSegment[],
+  gen: number,
+  options: SpeakOptions
+): Promise<void> {
+  let started = false;
+  const blobs = await Promise.all(
+    segments.map((segment) => fetchTtsBlob(segment.text, segment.locale))
+  );
+
+  if (gen !== speakGeneration) return;
+
+  for (let i = 0; i < segments.length; i++) {
+    if (gen !== speakGeneration) return;
+
+    if (i > 0) {
+      await delay(MIXED_SEGMENT_GAP_MS);
+      if (gen !== speakGeneration) return;
+    }
+
+    const blob = blobs[i];
+    if (blob) {
+      await playTtsBlob(blob, gen, {
+        onStart: started
+          ? undefined
+          : () => {
+              started = true;
+              options.onStart?.();
+            },
+      });
+      continue;
+    }
+
+    const { text: segmentText, locale } = segments[i]!;
+    await speakSegmentOnly(
+      segmentText,
+      locale,
+      {
+        muted: options.muted,
+        onStart: started
+          ? undefined
+          : () => {
+              started = true;
+              options.onStart?.();
+            },
+      },
+      true
+    );
+  }
 }
 
 async function speakSegmentOnly(
@@ -387,51 +471,17 @@ export async function speakMixedText(text: string, options: SpeakOptions = {}) {
 
   stopSpeaking();
   const gen = speakGeneration;
-  let started = false;
 
-  const blobs = await Promise.all(
-    segments.map((segment) => fetchTtsBlob(segment.text, segment.locale))
-  );
-
+  const stitched = await fetchMixedTtsBlob(segments);
   if (gen !== speakGeneration) return;
 
-  for (let i = 0; i < segments.length; i++) {
-    if (gen !== speakGeneration) return;
-
-    if (i > 0) {
-      await delay(MIXED_SEGMENT_GAP_MS);
-      if (gen !== speakGeneration) return;
-    }
-
-    const blob = blobs[i];
-    if (blob) {
-      await playTtsBlob(blob, gen, {
-        onStart: started
-          ? undefined
-          : () => {
-              started = true;
-              options.onStart?.();
-            },
-      });
-      continue;
-    }
-
-    const { text: segmentText, locale } = segments[i]!;
-    await speakSegmentOnly(
-      segmentText,
-      locale,
-      {
-        muted: options.muted,
-        onStart: started
-          ? undefined
-          : () => {
-              started = true;
-              options.onStart?.();
-            },
-      },
-      true
-    );
+  if (stitched) {
+    await playTtsBlob(stitched, gen, { onStart: () => options.onStart?.() });
+    if (gen === speakGeneration) options.onEnd?.();
+    return;
   }
+
+  await playMixedSegmentsChained(segments, gen, options);
 
   if (gen === speakGeneration) {
     options.onEnd?.();
