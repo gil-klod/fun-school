@@ -137,6 +137,8 @@ export interface SpeakOptions {
   audioId?: MiloAudioId;
   /** Skip pre-recorded MP3 and use online/browser TTS (admin preview). */
   preferTts?: boolean;
+  /** Use Google TTS only — avoids garbled mobile browser Hebrew on long passages. */
+  apiOnly?: boolean;
   onStart?: () => void;
   onEnd?: () => void;
 }
@@ -193,11 +195,18 @@ async function speakViaApi(
 ): Promise<boolean> {
   try {
     const res = await fetch(
-      `/api/tts?lang=${locale}&text=${encodeURIComponent(text)}`
+      `/api/tts?lang=${locale}&text=${encodeURIComponent(text)}`,
+      { credentials: "same-origin" }
     );
     if (!res.ok) return false;
 
+    const contentType = res.headers.get("content-type") ?? "";
+    if (!contentType.includes("audio") && !contentType.includes("octet-stream")) {
+      return false;
+    }
+
     const blob = await res.blob();
+    if (blob.size < 256) return false;
     clearAudio();
     audioUrl = URL.createObjectURL(blob);
     currentAudio = new Audio(audioUrl);
@@ -416,11 +425,13 @@ async function playMixedSegmentsChained(
 async function speakSegmentOnly(
   text: string,
   locale: Locale,
-  options: Pick<SpeakOptions, "muted" | "onStart" | "onEnd">,
-  apiOnly = false
+  options: Pick<SpeakOptions, "muted" | "onStart" | "onEnd" | "apiOnly">,
+  apiOnlyOverride?: boolean
 ): Promise<boolean> {
   const spoken = miloSpeechText(text, locale);
   if (!spoken) return false;
+
+  const apiOnly = apiOnlyOverride ?? options.apiOnly ?? false;
 
   if (!apiOnly) {
     const voices = cachedVoices.length ? cachedVoices : await waitForVoices();
@@ -536,13 +547,26 @@ export function isSpeaking() {
   return speaking;
 }
 
-const TTS_CHUNK_CHARS = 250;
+const TTS_CHUNK_CHARS = 280;
+
+function hardSplitSpeech(text: string, maxLen: number): string[] {
+  const parts: string[] = [];
+  let rest = text.trim();
+  while (rest.length > maxLen) {
+    let cut = rest.lastIndexOf(" ", maxLen);
+    if (cut < Math.floor(maxLen * 0.4)) cut = maxLen;
+    parts.push(rest.slice(0, cut).trim());
+    rest = rest.slice(cut).trim();
+  }
+  if (rest) parts.push(rest);
+  return parts;
+}
 
 function splitSpeechChunks(text: string, maxLen = TTS_CHUNK_CHARS): string[] {
   if (text.length <= maxLen) return [text];
 
   const sentences = text.split(/(?<=[.!?…])\s+/).filter(Boolean);
-  if (sentences.length === 0) return [text.slice(0, maxLen)];
+  if (sentences.length === 0) return hardSplitSpeech(text, maxLen);
 
   const chunks: string[] = [];
   let buf = "";
@@ -557,13 +581,20 @@ function splitSpeechChunks(text: string, maxLen = TTS_CHUNK_CHARS): string[] {
       buf = sentence;
       continue;
     }
-    for (let i = 0; i < sentence.length; i += maxLen) {
-      chunks.push(sentence.slice(i, i + maxLen));
-    }
+    chunks.push(...hardSplitSpeech(sentence, maxLen));
     buf = "";
   }
   if (buf) chunks.push(buf);
   return chunks;
+}
+
+/** Read story passages with Google TTS — never the mobile browser Hebrew fallback. */
+export async function speakStoryText(
+  text: string,
+  locale: Locale,
+  options: SpeakOptions = {}
+) {
+  await speakLongText(text, locale, { ...options, apiOnly: true });
 }
 
 /** Read longer passages sentence-by-sentence (avoids TTS truncation). */
@@ -596,15 +627,22 @@ export async function speakLongText(
   for (let i = 0; i < chunks.length; i++) {
     if (gen !== speakGeneration) return;
     if (i > 0) await delay(MIXED_SEGMENT_GAP_MS);
-    await speakSegmentOnly(chunks[i]!, locale, {
-      muted: options.muted,
-      onStart: started
-        ? undefined
-        : () => {
-            started = true;
-            options.onStart?.();
-          },
-    });
+    const ok = await speakSegmentOnly(
+      chunks[i]!,
+      locale,
+      {
+        muted: options.muted,
+        apiOnly: options.apiOnly,
+        onStart: started
+          ? undefined
+          : () => {
+              started = true;
+              options.onStart?.();
+            },
+      },
+      options.apiOnly
+    );
+    if (!ok) break;
   }
 
   if (gen === speakGeneration) options.onEnd?.();

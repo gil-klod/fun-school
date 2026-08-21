@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { speakLongText, speakMixedText, speakText, stopSpeaking, warmSpeechVoices } from "@/components/mascot/speech";
+import { speakMixedText, speakStoryText, speakText, stopSpeaking, warmSpeechVoices } from "@/components/mascot/speech";
 import { isMixedLanguageText } from "@/lib/mascot/mixedSpeech";
 import { useLocale } from "@/i18n/LocaleProvider";
 import type { Locale } from "@/i18n/types";
@@ -94,7 +94,7 @@ export function StorySpeakButton({
       event.preventDefault();
       if (!speech.trim()) return;
       setSpeaking(true);
-      await speakLongText(speech.replace(/"/g, ""), locale, {
+      await speakStoryText(speech.replace(/"/g, ""), locale, {
         muted: false,
         onEnd: () => setSpeaking(false),
       });
