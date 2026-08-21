@@ -65,6 +65,20 @@ export interface Dictionary {
     subtitle: string;
     footer: string;
     tapToPlay: string;
+    demoTitle: string;
+    demoSubtitle: string;
+    demoNotice: string;
+    demoProgress: string;
+    demoCorrect: string;
+    demoWrong: string;
+    demoNext: string;
+    demoFinish: string;
+    demoAllDone: string;
+    demoAllDoneHint: string;
+    demoRestart: string;
+    demoRegister: string;
+    demoRegisterHint: string;
+    demoPlayNow: string;
   };
   auth: {
     loginTitle: string;
