@@ -200,13 +200,8 @@ async function speakViaApi(
     );
     if (!res.ok) return false;
 
-    const contentType = res.headers.get("content-type") ?? "";
-    if (!contentType.includes("audio") && !contentType.includes("octet-stream")) {
-      return false;
-    }
-
     const blob = await res.blob();
-    if (blob.size < 256) return false;
+    if (blob.size < 64) return false;
     clearAudio();
     audioUrl = URL.createObjectURL(blob);
     currentAudio = new Audio(audioUrl);
@@ -588,13 +583,36 @@ function splitSpeechChunks(text: string, maxLen = TTS_CHUNK_CHARS): string[] {
   return chunks;
 }
 
-/** Read story passages with Google TTS — never the mobile browser Hebrew fallback. */
+/** Read a story aloud — desktop: one browser utterance; otherwise chunked online TTS. */
 export async function speakStoryText(
   text: string,
   locale: Locale,
   options: SpeakOptions = {}
 ) {
-  await speakLongText(text, locale, { ...options, apiOnly: true });
+  if (typeof window === "undefined") return;
+  if (options.muted ?? isMascotMuted()) {
+    options.onEnd?.();
+    return;
+  }
+
+  const spoken = miloSpeechText(text, locale);
+  if (!spoken) {
+    options.onEnd?.();
+    return;
+  }
+
+  stopSpeaking();
+
+  const voices = cachedVoices.length ? cachedVoices : await waitForVoices();
+  const voice = pickVoice(voices, locale);
+  const canUseBrowser = locale === "en" || (locale === "he" && !!voice);
+
+  if (canUseBrowser && !isMobileDevice()) {
+    const browserOk = await speakViaBrowser(spoken, locale, voice, options);
+    if (browserOk) return;
+  }
+
+  await speakLongText(text, locale, options);
 }
 
 /** Read longer passages sentence-by-sentence (avoids TTS truncation). */
