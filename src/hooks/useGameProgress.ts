@@ -193,6 +193,8 @@ export function useGameProgress({
     };
   }, [subjectId, gameId, difficulty, studentId, studentReady, resetProgress]);
 
+  const persistChain = useRef(Promise.resolve(true));
+
   const persistProgress = useCallback(async () => {
     if (!studentId) return false;
 
@@ -202,23 +204,29 @@ export function useGameProgress({
       status: latest.current.status ?? "in_progress",
     };
 
-    try {
-      const res = await fetch("/api/progress", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "same-origin",
-        keepalive: true,
-        body: JSON.stringify({ studentId, subjectId, gameId, difficulty, ...data }),
-      });
-      if (!res.ok) {
-        const message = await res.text();
-        console.error("[fun-school] Progress save failed:", res.status, message);
+    const run = async (): Promise<boolean> => {
+      try {
+        const res = await fetch("/api/progress", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "same-origin",
+          keepalive: true,
+          body: JSON.stringify({ studentId, subjectId, gameId, difficulty, ...data }),
+        });
+        if (!res.ok) {
+          const message = await res.text();
+          console.error("[fun-school] Progress save failed:", res.status, message);
+        }
+        return res.ok;
+      } catch (err) {
+        console.error("Failed to save progress:", err);
+        return false;
       }
-      return res.ok;
-    } catch (err) {
-      console.error("Failed to save progress:", err);
-      return false;
-    }
+    };
+
+    const task = persistChain.current.then(run, run);
+    persistChain.current = task.catch(() => false);
+    return task;
   }, [studentId, subjectId, gameId, difficulty]);
 
   const save = useCallback(
@@ -284,55 +292,45 @@ export function useGameProgress({
     }
   }, [projectId, projectDay, projectSlot, studentId]);
 
-  const recordAnswer = useCallback(
-    (wasCorrect: boolean) => {
-      const prev = latest.current;
-      const nextStreak = wasCorrect ? prev.streak + 1 : 0;
-      const points = wasCorrect ? 10 + prev.streak : 0;
-      const next = {
-        score: wasCorrect ? prev.score + points : prev.score,
-        streak: nextStreak,
-        correct: prev.correct + (wasCorrect ? 1 : 0),
-        wrong: prev.wrong + (wasCorrect ? 0 : 1),
-      };
+  const recordAnswer = useCallback((wasCorrect: boolean) => {
+    const prev = latest.current;
+    const nextStreak = wasCorrect ? prev.streak + 1 : 0;
+    const points = wasCorrect ? 10 + prev.streak : 0;
+    const next = {
+      score: wasCorrect ? prev.score + points : prev.score,
+      streak: nextStreak,
+      correct: prev.correct + (wasCorrect ? 1 : 0),
+      wrong: prev.wrong + (wasCorrect ? 0 : 1),
+    };
 
-      latest.current = { ...prev, ...next };
-      setScoreState(next.score);
-      setStreakState(next.streak);
-      setCorrectState(next.correct);
-      setWrongState(next.wrong);
+    latest.current = { ...prev, ...next };
+    setScoreState(next.score);
+    setStreakState(next.streak);
+    setCorrectState(next.correct);
+    setWrongState(next.wrong);
 
-      return next;
+    return next;
+  }, []);
+
+  const recordAnswerAndSave = useCallback(
+    (wasCorrect: boolean, state?: Record<string, unknown>) => {
+      recordAnswer(wasCorrect);
+      if (state) {
+        latest.current = { ...latest.current, state };
+      }
+      return persistProgress();
     },
-    []
+    [recordAnswer, persistProgress]
   );
 
   const markCompleted = useCallback(() => {
     latest.current = {
       ...latest.current,
-      score,
-      streak,
-      round,
-      correct,
-      wrong,
-      state: gameState,
-      difficulty,
       status: "completed",
     };
     void persistProgress();
     if (projectId) void notifyProjectComplete();
-  }, [
-    score,
-    streak,
-    round,
-    correct,
-    wrong,
-    gameState,
-    difficulty,
-    persistProgress,
-    projectId,
-    notifyProjectComplete,
-  ]);
+  }, [persistProgress, projectId, notifyProjectComplete]);
 
   return {
     loaded: loaded && studentReady && !!studentId,
@@ -354,6 +352,7 @@ export function useGameProgress({
     setGameState,
     resetProgress,
     recordAnswer,
+    recordAnswerAndSave,
     save,
     markCompleted,
   };

@@ -69,16 +69,6 @@ function HebrewComprehensionPlay({
       if (qIdx + 1 >= story.questions.length) {
         setFinished(true);
         progress.markCompleted();
-        progress.save({
-          state: {
-            storyIndex: storyIdx,
-            questionIndex: qIdx,
-            finished: true,
-            answered: false,
-            feedback: null,
-          },
-          status: "completed",
-        });
       } else {
         const nextIdx = qIdx + 1;
         setStoryIndex(storyIdx);
@@ -112,30 +102,27 @@ function HebrewComprehensionPlay({
     setAnswered(true);
 
     if (optionIndex === question.correctIndex) {
-      const pts = 10 + progress.streak;
-      progress.setScore((s) => s + pts);
-      progress.setStreak((s) => s + 1);
-      progress.setCorrect((c) => c + 1);
       const fb = { type: "correct" as const, message: t("games.storyCorrect") };
       setFeedback(fb);
-      progress.save({
-        score: progress.score + pts,
-        streak: progress.streak + 1,
-        correct: progress.correct + 1,
-        state: { storyIndex, questionIndex, finished, answered: true, feedback: fb },
+      void progress.recordAnswerAndSave(true, {
+        storyIndex,
+        questionIndex,
+        finished,
+        answered: true,
+        feedback: fb,
       });
     } else {
-      progress.setStreak(0);
-      progress.setWrong((w) => w + 1);
       const fb = {
         type: "wrong" as const,
         message: t("games.storyWrong", { answer: question.options[question.correctIndex] }),
       };
       setFeedback(fb);
-      progress.save({
-        streak: 0,
-        wrong: progress.wrong + 1,
-        state: { storyIndex, questionIndex, finished, answered: true, feedback: fb },
+      void progress.recordAnswerAndSave(false, {
+        storyIndex,
+        questionIndex,
+        finished,
+        answered: true,
+        feedback: fb,
       });
     }
   };
@@ -144,10 +131,6 @@ function HebrewComprehensionPlay({
     if (questionIndex + 1 >= story.questions.length) {
       setFinished(true);
       progress.markCompleted();
-      progress.save({
-        state: { storyIndex, questionIndex, finished: true, answered, feedback },
-        status: "completed",
-      });
       return;
     }
     const nextIdx = questionIndex + 1;

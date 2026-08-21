@@ -278,17 +278,30 @@ export async function fetchGameContentBundle(
   }
 
   if (gameId === "fix-sentence") {
-    const fixItems = items.filter((item) => item.itemType === "fix-sentence");
-    if (fixItems.length < 50) {
-      const pool =
-        difficulty === 1
-          ? FIX_SENTENCES.slice(0, Math.max(1, Math.ceil(FIX_SENTENCES.length / 2)))
-          : FIX_SENTENCES;
-      items = pool.map((q) => ({
-        itemType: "fix-sentence",
+    const pool =
+      difficulty === 1
+        ? FIX_SENTENCES.slice(0, Math.max(1, Math.ceil(FIX_SENTENCES.length / 2)))
+        : FIX_SENTENCES;
+    const configItems = items.filter((item) => item.itemType === "config");
+    items = [
+      ...configItems,
+      ...pool.map((q) => ({
+        itemType: "fix-sentence" as const,
         data: q as unknown as Record<string, unknown>,
-      }));
-    }
+      })),
+    ];
+  }
+
+  if (gameId === "comprehension" && subjectId === "hebrew") {
+    const stories = HEBREW_STORIES_BY_LEVEL[difficulty] ?? [];
+    const configItems = items.filter((item) => item.itemType === "config");
+    items = [
+      ...configItems,
+      ...stories.map((story) => ({
+        itemType: "story" as const,
+        data: story as unknown as Record<string, unknown>,
+      })),
+    ];
   }
 
   if (gameId === "mystery") {

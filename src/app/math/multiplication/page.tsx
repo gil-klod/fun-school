@@ -192,21 +192,27 @@ function MultiplicationPlay({
     setAnswered(true);
 
     if (answer === correct) {
-      progress.recordAnswer(true);
       const fb = { type: "correct" as const, message: t("games.multiplicationCorrect") };
       setFeedback(fb);
-      void progress.save({
-        state: { table, round, answered: true, feedback: fb, questionNum },
+      void progress.recordAnswerAndSave(true, {
+        table,
+        round,
+        answered: true,
+        feedback: fb,
+        questionNum,
       });
     } else {
-      progress.recordAnswer(false);
       const fb = {
         type: "wrong" as const,
         message: t("games.multiplicationWrong", { answer: correct }),
       };
       setFeedback(fb);
-      void progress.save({
-        state: { table, round, answered: true, feedback: fb, questionNum },
+      void progress.recordAnswerAndSave(false, {
+        table,
+        round,
+        answered: true,
+        feedback: fb,
+        questionNum,
       });
     }
   };

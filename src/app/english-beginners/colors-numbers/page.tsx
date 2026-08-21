@@ -282,44 +282,29 @@ function ColorsNumbersPlay({
     setAnswered(true);
 
     if (answer === currentItem.answer) {
-      const pts = 10 + progress.streak;
-      progress.setScore((s) => s + pts);
-      progress.setStreak((s) => s + 1);
-      progress.setCorrect((c) => c + 1);
       const fb = { type: "correct" as const, message: t("games.colorsCorrect") };
       setFeedback(fb);
-      progress.save({
-        score: progress.score + pts,
-        streak: progress.streak + 1,
-        correct: progress.correct + 1,
-        state: {
-          questionNum,
-          currentKey: itemKey(currentItem),
-          usedKeys,
-          options,
-          answered: true,
-          feedback: fb,
-        },
+      void progress.recordAnswerAndSave(true, {
+        questionNum,
+        currentKey: itemKey(currentItem),
+        usedKeys,
+        options,
+        answered: true,
+        feedback: fb,
       });
     } else {
-      progress.setStreak(0);
-      progress.setWrong((w) => w + 1);
       const fb = {
         type: "wrong" as const,
         message: t("games.colorsWrong", { answer: currentItem.answer }),
       };
       setFeedback(fb);
-      progress.save({
-        streak: 0,
-        wrong: progress.wrong + 1,
-        state: {
-          questionNum,
-          currentKey: itemKey(currentItem),
-          usedKeys,
-          options,
-          answered: true,
-          feedback: fb,
-        },
+      void progress.recordAnswerAndSave(false, {
+        questionNum,
+        currentKey: itemKey(currentItem),
+        usedKeys,
+        options,
+        answered: true,
+        feedback: fb,
       });
     }
   };

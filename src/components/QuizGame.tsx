@@ -57,10 +57,6 @@ function QuizGamePlay({
     if (index + 1 >= questions.length) {
       setFinished(true);
       progress.markCompleted();
-      progress.save({
-        state: { index, finished: true, answered: false, feedback: null },
-        status: "completed",
-      });
       return;
     }
     const nextIdx = index + 1;
@@ -89,10 +85,6 @@ function QuizGamePlay({
       if (idx + 1 >= questions.length) {
         setFinished(true);
         progress.markCompleted();
-        progress.save({
-          state: { index: idx, finished: true, answered: false, feedback: null },
-          status: "completed",
-        });
       } else {
         const nextIdx = idx + 1;
         setIndex(nextIdx);
@@ -113,31 +105,26 @@ function QuizGamePlay({
     setAnswered(true);
 
     if (optionIndex === question.correctIndex) {
-      const pts = 10 + progress.streak;
-      progress.setScore((s) => s + pts);
-      progress.setStreak((s) => s + 1);
-      progress.setCorrect((c) => c + 1);
       const fb = { type: "correct" as const, message: t("games.correct") };
       setFeedback(fb);
-      progress.save({
-        score: progress.score + pts,
-        streak: progress.streak + 1,
-        correct: progress.correct + 1,
-        state: { index, answered: true, feedback: fb, finished: false },
+      void progress.recordAnswerAndSave(true, {
+        index,
+        answered: true,
+        feedback: fb,
+        finished: false,
       });
     } else {
-      progress.setStreak(0);
-      progress.setWrong((w) => w + 1);
       const fb = {
         type: "wrong" as const,
         message: t("games.wrongAnswer", { answer: question.options[question.correctIndex] }),
         explanation: question.explanation,
       };
       setFeedback(fb);
-      progress.save({
-        streak: 0,
-        wrong: progress.wrong + 1,
-        state: { index, answered: true, feedback: fb, finished: false },
+      void progress.recordAnswerAndSave(false, {
+        index,
+        answered: true,
+        feedback: fb,
+        finished: false,
       });
     }
   };

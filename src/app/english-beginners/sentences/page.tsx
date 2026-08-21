@@ -353,28 +353,17 @@ function SentencesPlay({
     const answer = selected.map((t) => t.word).join(" ");
 
     if (answer === challenge.correct) {
-      const pts = 10 + progress.streak;
-      progress.setScore((s) => s + pts);
-      progress.setStreak((s) => s + 1);
-      progress.setCorrect((c) => c + 1);
       const fb = { type: "correct" as const, message: t("games.sentenceCorrect") };
       setFeedback(fb);
-      progress.save({
-        score: progress.score + pts,
-        streak: progress.streak + 1,
-        correct: progress.correct + 1,
-        state: {
-          questionNum,
-          challengeKey: challengeKey(challenge),
-          usedKeys,
-          selected,
-          answered: true,
-          feedback: fb,
-        },
+      void progress.recordAnswerAndSave(true, {
+        questionNum,
+        challengeKey: challengeKey(challenge),
+        usedKeys,
+        selected,
+        answered: true,
+        feedback: fb,
       });
     } else {
-      progress.setStreak(0);
-      progress.setWrong((w) => w + 1);
       const fb = {
         type: "wrong" as const,
         message: t("games.sentenceWrong", {
@@ -383,17 +372,13 @@ function SentencesPlay({
         }),
       };
       setFeedback(fb);
-      progress.save({
-        streak: 0,
-        wrong: progress.wrong + 1,
-        state: {
-          questionNum,
-          challengeKey: challengeKey(challenge),
-          usedKeys,
-          selected,
-          answered: true,
-          feedback: fb,
-        },
+      void progress.recordAnswerAndSave(false, {
+        questionNum,
+        challengeKey: challengeKey(challenge),
+        usedKeys,
+        selected,
+        answered: true,
+        feedback: fb,
       });
     }
   };

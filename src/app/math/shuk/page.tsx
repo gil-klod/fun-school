@@ -157,21 +157,15 @@ function ShukPlay({
     setAnswered(true);
 
     if (answer === correct) {
-      const pts = 10 + progress.streak;
-      progress.setScore((s) => s + pts);
-      progress.setStreak((s) => s + 1);
-      progress.setCorrect((c) => c + 1);
       const fb = { type: "correct" as const, message: t("games.shukCorrect") };
       setFeedback(fb);
-      progress.save({
-        score: progress.score + pts,
-        streak: progress.streak + 1,
-        correct: progress.correct + 1,
-        state: { round, answered: true, feedback: fb, questionNum },
+      void progress.recordAnswerAndSave(true, {
+        round,
+        answered: true,
+        feedback: fb,
+        questionNum,
       });
     } else {
-      progress.setStreak(0);
-      progress.setWrong((w) => w + 1);
       const fb = {
         type: "wrong" as const,
         message: t("games.shukWrong", {
@@ -181,10 +175,11 @@ function ShukPlay({
         }),
       };
       setFeedback(fb);
-      progress.save({
-        streak: 0,
-        wrong: progress.wrong + 1,
-        state: { round, answered: true, feedback: fb, questionNum },
+      void progress.recordAnswerAndSave(false, {
+        round,
+        answered: true,
+        feedback: fb,
+        questionNum,
       });
     }
   };
