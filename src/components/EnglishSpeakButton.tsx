@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { speakMixedText, speakText, stopSpeaking, warmSpeechVoices } from "@/components/mascot/speech";
+import { speakLongText, speakMixedText, speakText, stopSpeaking, warmSpeechVoices } from "@/components/mascot/speech";
 import { isMixedLanguageText } from "@/lib/mascot/mixedSpeech";
 import { useLocale } from "@/i18n/LocaleProvider";
 import type { Locale } from "@/i18n/types";
@@ -63,6 +63,62 @@ export function SpeakButton({ text, locale = "en", className = "", size = "md" }
 /** Speak English text aloud (shortcut for SpeakButton with locale="en"). */
 export function EnglishSpeakButton(props: Omit<SpeakButtonProps, "locale">) {
   return <SpeakButton {...props} locale="en" />;
+}
+
+interface StorySpeakButtonProps {
+  title: string;
+  text: string;
+  locale?: Locale;
+  className?: string;
+}
+
+/** Read a full story aloud — plain text only, chunked for TTS limits. */
+export function StorySpeakButton({
+  title,
+  text,
+  locale = "he",
+  className = "",
+}: StorySpeakButtonProps) {
+  const { t } = useLocale();
+  const [speaking, setSpeaking] = useState(false);
+  const speech = `${title}. ${text}`;
+
+  useEffect(() => {
+    warmSpeechVoices();
+    return () => stopSpeaking();
+  }, []);
+
+  const handleClick = useCallback(
+    async (event: React.MouseEvent) => {
+      event.stopPropagation();
+      event.preventDefault();
+      if (!speech.trim()) return;
+      setSpeaking(true);
+      await speakLongText(speech.replace(/"/g, ""), locale, {
+        muted: false,
+        onEnd: () => setSpeaking(false),
+      });
+    },
+    [speech, locale]
+  );
+
+  return (
+    <button
+      type="button"
+      onClick={handleClick}
+      className={`inline-flex shrink-0 items-center justify-center border-2 transition-colors h-10 w-10 rounded-xl ${
+        speaking
+          ? "border-indigo-400 bg-indigo-100 text-indigo-700"
+          : "border-green-200 bg-white text-green-700 hover:bg-green-50 hover:border-green-300"
+      } ${className}`}
+      aria-label={t("games.readStory")}
+      title={t("games.readStory")}
+    >
+      <svg viewBox="0 0 24 24" className="h-5 w-5" aria-hidden="true" fill="currentColor">
+        <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.74 2.5-2.26 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z" />
+      </svg>
+    </button>
+  );
 }
 
 interface WordWithSpeakerProps {

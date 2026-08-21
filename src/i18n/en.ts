@@ -333,5 +333,6 @@ export const en: Dictionary = {
     vocabPromptHeToEn: "What is \"{word}\" in English?",
     vocabPromptEnToHe: "What is \"{word}\" in Hebrew?",
     hearEnglish: "Listen to pronunciation",
+    readStory: "Read the story aloud",
   },
 };

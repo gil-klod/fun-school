@@ -8,8 +8,7 @@ import { GameStatus } from "@/components/GameStatus";
 import { Feedback } from "@/components/Feedback";
 import { GameContentGate } from "@/components/GameContentGate";
 import { SessionComplete } from "@/components/SessionComplete";
-import { SpeakButton } from "@/components/EnglishSpeakButton";
-import { stopSpeaking } from "@/components/mascot/speech";
+import { StorySpeakButton } from "@/components/EnglishSpeakButton";
 import { useLocale } from "@/i18n/LocaleProvider";
 
 interface HebrewStory {
@@ -98,11 +97,6 @@ function HebrewComprehensionPlay({
   const hasNikud = Boolean(story.titleNikud && story.textNikud);
   const displayTitle = showNikud && story.titleNikud ? story.titleNikud : story.title;
   const displayText = showNikud && story.textNikud ? story.textNikud : story.text;
-  const storySpeech = `${displayTitle}. ${displayText}`;
-
-  useEffect(() => {
-    return () => stopSpeaking();
-  }, [storyIndex, difficulty, displayTitle, displayText]);
 
   const handleAnswer = (optionIndex: number) => {
     if (answered) return;
@@ -209,7 +203,7 @@ function HebrewComprehensionPlay({
             <div className="flex flex-wrap items-start justify-between gap-2 mb-3">
               <h2 className="text-xl font-bold text-blue-700">{displayTitle}</h2>
               <div className="flex flex-wrap items-center gap-2 shrink-0">
-                <SpeakButton text={storySpeech} locale="he" />
+                <StorySpeakButton title={story.title} text={story.text} locale="he" />
                 {hasNikud && (
                   <button
                     type="button"

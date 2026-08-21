@@ -536,4 +536,78 @@ export function isSpeaking() {
   return speaking;
 }
 
+const TTS_CHUNK_CHARS = 250;
+
+function splitSpeechChunks(text: string, maxLen = TTS_CHUNK_CHARS): string[] {
+  if (text.length <= maxLen) return [text];
+
+  const sentences = text.split(/(?<=[.!?…])\s+/).filter(Boolean);
+  if (sentences.length === 0) return [text.slice(0, maxLen)];
+
+  const chunks: string[] = [];
+  let buf = "";
+  for (const sentence of sentences) {
+    const next = buf ? `${buf} ${sentence}` : sentence;
+    if (next.length <= maxLen) {
+      buf = next;
+      continue;
+    }
+    if (buf) chunks.push(buf);
+    if (sentence.length <= maxLen) {
+      buf = sentence;
+      continue;
+    }
+    for (let i = 0; i < sentence.length; i += maxLen) {
+      chunks.push(sentence.slice(i, i + maxLen));
+    }
+    buf = "";
+  }
+  if (buf) chunks.push(buf);
+  return chunks;
+}
+
+/** Read longer passages sentence-by-sentence (avoids TTS truncation). */
+export async function speakLongText(
+  text: string,
+  locale: Locale,
+  options: SpeakOptions = {}
+) {
+  if (typeof window === "undefined") return;
+  if (options.muted ?? isMascotMuted()) {
+    options.onEnd?.();
+    return;
+  }
+
+  const spoken = miloSpeechText(text, locale);
+  if (!spoken) {
+    options.onEnd?.();
+    return;
+  }
+
+  stopSpeaking();
+  const gen = speakGeneration;
+  const chunks = splitSpeechChunks(spoken);
+  if (chunks.length === 0) {
+    options.onEnd?.();
+    return;
+  }
+
+  let started = false;
+  for (let i = 0; i < chunks.length; i++) {
+    if (gen !== speakGeneration) return;
+    if (i > 0) await delay(MIXED_SEGMENT_GAP_MS);
+    await speakSegmentOnly(chunks[i]!, locale, {
+      muted: options.muted,
+      onStart: started
+        ? undefined
+        : () => {
+            started = true;
+            options.onStart?.();
+          },
+    });
+  }
+
+  if (gen === speakGeneration) options.onEnd?.();
+}
+
 export { MUTE_KEY };
