@@ -583,35 +583,12 @@ function splitSpeechChunks(text: string, maxLen = TTS_CHUNK_CHARS): string[] {
   return chunks;
 }
 
-/** Read a story aloud — desktop: one browser utterance; otherwise chunked online TTS. */
+/** Read a story aloud — same TTS path as Milo: Google TTS first, chunked if needed. */
 export async function speakStoryText(
   text: string,
   locale: Locale,
   options: SpeakOptions = {}
 ) {
-  if (typeof window === "undefined") return;
-  if (options.muted ?? isMascotMuted()) {
-    options.onEnd?.();
-    return;
-  }
-
-  const spoken = miloSpeechText(text, locale);
-  if (!spoken) {
-    options.onEnd?.();
-    return;
-  }
-
-  stopSpeaking();
-
-  const voices = cachedVoices.length ? cachedVoices : await waitForVoices();
-  const voice = pickVoice(voices, locale);
-  const canUseBrowser = locale === "en" || (locale === "he" && !!voice);
-
-  if (canUseBrowser && !isMobileDevice()) {
-    const browserOk = await speakViaBrowser(spoken, locale, voice, options);
-    if (browserOk) return;
-  }
-
   await speakLongText(text, locale, options);
 }
 
