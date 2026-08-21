@@ -2,7 +2,6 @@ import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { connectDB } from "@/lib/db";
 import { requireOwnedStudent } from "@/lib/students/server";
-import { UserAnalytics } from "@/models/UserAnalytics";
 import { computeAnalytics } from "@/lib/analytics";
 
 export async function GET(request: Request) {
@@ -24,11 +23,7 @@ export async function GET(request: Request) {
 
   await connectDB();
 
-  let analytics = await UserAnalytics.findOne({ studentId });
-  if (!analytics) {
-    analytics = await computeAnalytics(studentId);
-  }
-
+  const analytics = await computeAnalytics(studentId);
   return NextResponse.json({ analytics });
 }
 

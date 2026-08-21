@@ -138,32 +138,54 @@ export function useGameProgress({
     };
   }, [subjectId, gameId, difficulty, studentId, studentReady, resetProgress]);
 
-  const save = useCallback(
-    (overrides?: Partial<ProgressData>) => {
-      if (!loaded || !studentId) return;
+  const persistProgress = useCallback(
+    async (overrides?: Partial<ProgressData>) => {
+      if (!loaded || !studentId) return false;
+
+      if (saveTimer.current) {
+        clearTimeout(saveTimer.current);
+        saveTimer.current = null;
+      }
 
       const data: ProgressData = {
         ...latest.current,
         ...overrides,
         difficulty,
-        status: overrides?.status ?? "in_progress",
+        status: overrides?.status ?? latest.current.status ?? "in_progress",
       };
 
-      if (saveTimer.current) clearTimeout(saveTimer.current);
-      saveTimer.current = setTimeout(async () => {
-        try {
-          await fetch("/api/progress", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ studentId, subjectId, gameId, difficulty, ...data }),
-          });
-        } catch (err) {
-          console.error("Failed to save progress:", err);
-        }
-      }, 500);
+      try {
+        const res = await fetch("/api/progress", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ studentId, subjectId, gameId, difficulty, ...data }),
+        });
+        return res.ok;
+      } catch (err) {
+        console.error("Failed to save progress:", err);
+        return false;
+      }
     },
     [loaded, studentId, subjectId, gameId, difficulty]
   );
+
+  const save = useCallback(
+    (overrides?: Partial<ProgressData>) => {
+      if (!loaded || !studentId) return;
+
+      if (saveTimer.current) clearTimeout(saveTimer.current);
+      saveTimer.current = setTimeout(() => {
+        void persistProgress(overrides);
+      }, 500);
+    },
+    [loaded, studentId, persistProgress]
+  );
+
+  useEffect(() => {
+    return () => {
+      if (saveTimer.current) clearTimeout(saveTimer.current);
+    };
+  }, []);
 
   const notifyProjectComplete = useCallback(async () => {
     if (!projectId || !projectDay || !projectSlot || !studentId) return;
@@ -184,9 +206,9 @@ export function useGameProgress({
   }, [projectId, projectDay, projectSlot, studentId]);
 
   const markCompleted = useCallback(() => {
-    save({ status: "completed" });
+    void persistProgress({ status: "completed" });
     if (projectId) void notifyProjectComplete();
-  }, [save, projectId, notifyProjectComplete]);
+  }, [persistProgress, projectId, notifyProjectComplete]);
 
   return {
     loaded,

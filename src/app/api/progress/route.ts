@@ -91,7 +91,7 @@ export async function POST(request: Request) {
       { upsert: true, new: true }
     );
 
-    computeAnalytics(studentId).catch(console.error);
+    await computeAnalytics(studentId);
 
     return NextResponse.json({ progress });
   } catch (err) {

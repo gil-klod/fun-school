@@ -63,21 +63,47 @@ export default function DashboardPage() {
       return;
     }
 
-    setLoading(true);
-    Promise.all([
-      fetch(`/api/analytics?studentId=${activeStudent.id}`).then(async (res) =>
-        res.ok ? res.json() : null
-      ),
-      fetch(`/api/projects?studentId=${activeStudent.id}`).then(async (res) =>
-        res.ok ? res.json() : null
-      ),
-    ])
-      .then(([analyticsData, projectData]) => {
-        setAnalytics(analyticsData?.analytics ?? null);
-        setProject(projectData?.project ?? null);
-      })
-      .catch(console.error)
-      .finally(() => setLoading(false));
+    const studentId = activeStudent.id;
+    let cancelled = false;
+
+    async function loadDashboard() {
+      setLoading(true);
+      try {
+        const [analyticsData, projectData] = await Promise.all([
+          fetch(`/api/analytics?studentId=${studentId}`).then(async (res) =>
+            res.ok ? res.json() : null
+          ),
+          fetch(`/api/projects?studentId=${studentId}`).then(async (res) =>
+            res.ok ? res.json() : null
+          ),
+        ]);
+        if (!cancelled) {
+          setAnalytics(analyticsData?.analytics ?? null);
+          setProject(projectData?.project ?? null);
+        }
+      } catch (err) {
+        console.error(err);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    }
+
+    void loadDashboard();
+
+    const refreshOnReturn = () => {
+      if (document.visibilityState === "visible") {
+        void loadDashboard();
+      }
+    };
+
+    window.addEventListener("focus", refreshOnReturn);
+    document.addEventListener("visibilitychange", refreshOnReturn);
+
+    return () => {
+      cancelled = true;
+      window.removeEventListener("focus", refreshOnReturn);
+      document.removeEventListener("visibilitychange", refreshOnReturn);
+    };
   }, [activeStudent?.id, studentReady]);
 
   async function refresh() {
