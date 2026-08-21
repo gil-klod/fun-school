@@ -273,26 +273,89 @@ function speakViaBrowser(
   });
 }
 
+async function fetchTtsBlob(text: string, locale: Locale): Promise<Blob | null> {
+  const spoken = miloSpeechText(text, locale);
+  if (!spoken) return null;
+  try {
+    const res = await fetch(`/api/tts?lang=${locale}&text=${encodeURIComponent(spoken)}`);
+    if (!res.ok) return null;
+    return res.blob();
+  } catch {
+    return null;
+  }
+}
+
+function delay(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+const MIXED_SEGMENT_GAP_MS = 120;
+
+/** Play one fetched clip; waits until audio fully finishes. */
+function playTtsBlob(
+  blob: Blob,
+  gen: number,
+  options: Pick<SpeakOptions, "onStart">
+): Promise<boolean> {
+  return new Promise((resolve) => {
+    clearAudio();
+    audioUrl = URL.createObjectURL(blob);
+    currentAudio = new Audio(audioUrl);
+
+    const finish = (ok: boolean) => {
+      if (gen !== speakGeneration) {
+        clearAudio();
+        speaking = false;
+        resolve(false);
+        return;
+      }
+      speaking = false;
+      clearAudio();
+      resolve(ok);
+    };
+
+    if (!currentAudio) {
+      finish(false);
+      return;
+    }
+
+    currentAudio.onplay = () => {
+      speaking = true;
+      options.onStart?.();
+    };
+    currentAudio.onended = () => finish(true);
+    currentAudio.onerror = () => finish(false);
+    currentAudio.play().catch(() => finish(false));
+  });
+}
+
 async function speakSegmentOnly(
   text: string,
   locale: Locale,
-  options: Pick<SpeakOptions, "muted" | "onStart" | "onEnd">
+  options: Pick<SpeakOptions, "muted" | "onStart" | "onEnd">,
+  apiOnly = false
 ): Promise<boolean> {
   const spoken = miloSpeechText(text, locale);
   if (!spoken) return false;
 
-  const voices = cachedVoices.length ? cachedVoices : await waitForVoices();
-  const voice = pickVoice(voices, locale);
-  const tryBrowserFirst = locale === "he" && preferBrowserHebrew() && !!voice;
+  if (!apiOnly) {
+    const voices = cachedVoices.length ? cachedVoices : await waitForVoices();
+    const voice = pickVoice(voices, locale);
+    const tryBrowserFirst = locale === "he" && preferBrowserHebrew() && !!voice;
 
-  if (tryBrowserFirst) {
-    const browserOk = await speakViaBrowser(spoken, locale, voice, options);
-    if (browserOk) return true;
+    if (tryBrowserFirst) {
+      const browserOk = await speakViaBrowser(spoken, locale, voice, options);
+      if (browserOk) return true;
+    }
   }
 
   const apiOk = await speakViaApi(spoken, locale, options);
   if (apiOk) return true;
 
+  if (apiOnly) return false;
+
+  const voices = cachedVoices.length ? cachedVoices : await waitForVoices();
+  const voice = pickVoice(voices, locale);
   const allowBrowser = locale === "en" || (locale === "he" && !!voice);
   if (allowBrowser) {
     return speakViaBrowser(spoken, locale, voice, options);
@@ -326,19 +389,48 @@ export async function speakMixedText(text: string, options: SpeakOptions = {}) {
   const gen = speakGeneration;
   let started = false;
 
+  const blobs = await Promise.all(
+    segments.map((segment) => fetchTtsBlob(segment.text, segment.locale))
+  );
+
+  if (gen !== speakGeneration) return;
+
   for (let i = 0; i < segments.length; i++) {
     if (gen !== speakGeneration) return;
 
+    if (i > 0) {
+      await delay(MIXED_SEGMENT_GAP_MS);
+      if (gen !== speakGeneration) return;
+    }
+
+    const blob = blobs[i];
+    if (blob) {
+      await playTtsBlob(blob, gen, {
+        onStart: started
+          ? undefined
+          : () => {
+              started = true;
+              options.onStart?.();
+            },
+      });
+      continue;
+    }
+
     const { text: segmentText, locale } = segments[i]!;
-    await speakSegmentOnly(segmentText, locale, {
-      muted: options.muted,
-      onStart: started
-        ? undefined
-        : () => {
-            started = true;
-            options.onStart?.();
-          },
-    });
+    await speakSegmentOnly(
+      segmentText,
+      locale,
+      {
+        muted: options.muted,
+        onStart: started
+          ? undefined
+          : () => {
+              started = true;
+              options.onStart?.();
+            },
+      },
+      true
+    );
   }
 
   if (gen === speakGeneration) {
