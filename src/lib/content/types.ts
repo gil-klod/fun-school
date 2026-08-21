@@ -63,6 +63,10 @@ export interface SequencesConfig {
   maxStart: number;
   stepMin: number;
   stepMax: number;
-  /** How many numbers shown before the missing one. */
-  visibleCount: number;
+  /** How many slots appear in the sequence (including gaps). */
+  slotCount: number;
+  /** Chance (0–1) of two missing numbers instead of one. */
+  twoGapChance?: number;
+  /** @deprecated legacy field — use slotCount */
+  visibleCount?: number;
 }

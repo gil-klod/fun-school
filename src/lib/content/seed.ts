@@ -55,9 +55,9 @@ function configs(): SeedDoc[] {
   };
 
   const sequencesConfigs: Record<DifficultyLevel, Record<string, unknown>> = {
-    1: { minStart: 1, maxStart: 10, stepMin: 1, stepMax: 2, visibleCount: 3 },
-    2: { minStart: 1, maxStart: 30, stepMin: 2, stepMax: 5, visibleCount: 4 },
-    3: { minStart: 5, maxStart: 99, stepMin: 3, stepMax: 12, visibleCount: 4 },
+    1: { minStart: 1, maxStart: 10, stepMin: 1, stepMax: 2, slotCount: 4, twoGapChance: 0.25 },
+    2: { minStart: 1, maxStart: 30, stepMin: 2, stepMax: 5, slotCount: 5, twoGapChance: 0.35 },
+    3: { minStart: 5, maxStart: 99, stepMin: 3, stepMax: 12, slotCount: 6, twoGapChance: 0.45 },
   };
 
   const configByGame: Record<string, Record<DifficultyLevel, Record<string, unknown>>> = {

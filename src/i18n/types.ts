@@ -273,6 +273,8 @@ export interface Dictionary {
     sequencesCorrect: string;
     sequencesWrong: string;
     nextSequence: string;
+    sequencesFillOne: string;
+    sequencesFillTwo: string;
     whatComesNext: string;
     scrambleCorrect: string;
     scrambleWrong: string;

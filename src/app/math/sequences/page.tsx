@@ -13,7 +13,12 @@ import { useLocale } from "@/i18n/LocaleProvider";
 import { useProjectGame } from "@/hooks/useProjectGame";
 import { ProjectSlotDone } from "@/components/projects/ProjectSlotDone";
 import { SessionComplete } from "@/components/SessionComplete";
-import { newSequenceRound } from "@/lib/content/generators";
+import {
+  formatSequenceDisplay,
+  formatSequenceAnswers,
+  newSequenceRound,
+  sequenceRoundCorrectAnswer,
+} from "@/lib/content/generators";
 import type { SequencesConfig } from "@/lib/content/types";
 
 function SequencesPlay({
@@ -36,7 +41,7 @@ function SequencesPlay({
   const [slotDone, setSlotDone] = useState(false);
   const [sessionComplete, setSessionComplete] = useState(false);
   const [round, setRound] = useState(() => newSequenceRound(config));
-  const { question, options } = round;
+  const { question, options, optionKind } = round;
   const [feedback, setFeedback] = useState<{
     type: "correct" | "wrong";
     message: string;
@@ -90,7 +95,7 @@ function SequencesPlay({
     }
   );
 
-  const correct = question.answer;
+  const correct = sequenceRoundCorrectAnswer(round);
 
   const nextQuestion = useCallback(() => {
     const result = project.handleSessionNext(
@@ -138,9 +143,10 @@ function SequencesPlay({
     });
   }, [progress, config, resetQuestionNum]);
 
-  const handleAnswer = (answer: number) => {
+  const handleAnswer = (answer: number | string) => {
     if (answered) return;
     setAnswered(true);
+    const answerText = formatSequenceAnswers(question.answers);
 
     if (answer === correct) {
       const fb = { type: "correct" as const, message: t("games.sequencesCorrect") };
@@ -154,7 +160,7 @@ function SequencesPlay({
     } else {
       const fb = {
         type: "wrong" as const,
-        message: t("games.sequencesWrong", { answer: correct }),
+        message: t("games.sequencesWrong", { answer: answerText }),
       };
       setFeedback(fb);
       void progress.recordAnswerAndSave(false, {
@@ -187,18 +193,20 @@ function SequencesPlay({
           <>
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4 items-center">
               <div className="bg-white/90 rounded-2xl p-6 shadow border-2 border-amber-100 text-center">
-                <p className="text-lg font-semibold text-gray-700 mb-4">{t("games.whatComesNext")}</p>
+                <p className="text-lg font-semibold text-gray-700 mb-4">
+                  {question.mode === "two"
+                    ? t("games.sequencesFillTwo")
+                    : t("games.sequencesFillOne")}
+                </p>
                 <p className="text-3xl sm:text-4xl font-bold text-amber-900 tracking-wide">
-                  <MathLtr>
-                    {question.numbers.join(", ")}, ?
-                  </MathLtr>
+                  <MathLtr>{formatSequenceDisplay(question.display)}</MathLtr>
                 </p>
               </div>
 
               <GameOptionsGrid>
                 {options.map((opt) => (
                   <button
-                    key={opt}
+                    key={String(opt)}
                     onClick={() => handleAnswer(opt)}
                     disabled={answered}
                     className={`game-btn-option text-2xl py-5 ${answered && opt === correct ? "correct" : ""} ${answered && opt !== correct ? "opacity-50" : ""}`}

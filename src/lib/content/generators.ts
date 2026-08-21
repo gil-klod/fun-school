@@ -176,9 +176,9 @@ export const CLOCK_CONFIGS: Record<DifficultyLevel, ClockConfig> = {
 };
 
 export const SEQUENCES_CONFIGS: Record<DifficultyLevel, SequencesConfig> = {
-  1: { minStart: 1, maxStart: 10, stepMin: 1, stepMax: 2, visibleCount: 3 },
-  2: { minStart: 1, maxStart: 30, stepMin: 2, stepMax: 5, visibleCount: 4 },
-  3: { minStart: 5, maxStart: 99, stepMin: 3, stepMax: 12, visibleCount: 4 },
+  1: { minStart: 1, maxStart: 10, stepMin: 1, stepMax: 2, slotCount: 4, twoGapChance: 0.25 },
+  2: { minStart: 1, maxStart: 30, stepMin: 2, stepMax: 5, slotCount: 5, twoGapChance: 0.35 },
+  3: { minStart: 5, maxStart: 99, stepMin: 3, stepMax: 12, slotCount: 6, twoGapChance: 0.45 },
 };
 
 export interface ClockQuestion {
@@ -188,8 +188,10 @@ export interface ClockQuestion {
 }
 
 export interface SequenceQuestion {
-  numbers: number[];
-  answer: number;
+  display: (number | null)[];
+  answers: number[];
+  step: number;
+  mode: "one" | "two";
 }
 
 export function formatClockTime(hour: number, minute: number): string {
@@ -218,18 +220,67 @@ export function buildTimeOptions(hour: number, minute: number, minuteStep: numbe
   return shuffleArray([correct, ...Array.from(wrong)]);
 }
 
+export function formatSequenceDisplay(display: (number | null)[]): string {
+  return display.map((n) => (n === null ? "?" : String(n))).join(", ");
+}
+
+export function formatSequenceAnswers(answers: number[]): string {
+  return answers.join(", ");
+}
+
+function sequencePairKey(a: number, b: number): string {
+  return `${a}, ${b}`;
+}
+
+function pickMissingIndices(length: number, count: 1 | 2): number[] {
+  if (length < 3) return [length - 1];
+  const maxMissing = Math.min(count, length - 2);
+  const indices = shuffleArray(Array.from({ length }, (_, i) => i));
+  return indices.slice(0, maxMissing).sort((a, b) => a - b);
+}
+
 export function generateSequence(config: SequencesConfig): SequenceQuestion {
+  const slotCount = config.slotCount ?? (config.visibleCount ?? 3) + 1;
   const step =
     Math.floor(Math.random() * (config.stepMax - config.stepMin + 1)) + config.stepMin;
   const span = config.maxStart - config.minStart;
-  const start =
-    config.minStart + Math.floor(Math.random() * (span + 1));
-  const numbers: number[] = [];
-  for (let i = 0; i < config.visibleCount; i++) {
-    numbers.push(start + step * i);
+  const start = config.minStart + Math.floor(Math.random() * (span + 1));
+  const full = Array.from({ length: slotCount }, (_, i) => start + step * i);
+
+  const wantTwo = Math.random() < (config.twoGapChance ?? 0.3);
+  const missingCount: 1 | 2 = wantTwo && slotCount >= 4 ? 2 : 1;
+  const missingIndices = pickMissingIndices(slotCount, missingCount);
+  const display = full.map((value, index) =>
+    missingIndices.includes(index) ? null : value
+  );
+  const answers = missingIndices.map((index) => full[index]);
+
+  return {
+    display,
+    answers,
+    step,
+    mode: missingCount === 2 ? "two" : "one",
+  };
+}
+
+export function buildSequencePairOptions(a: number, b: number, step: number): string[] {
+  const correct = sequencePairKey(a, b);
+  const wrong = new Set<string>();
+  let guard = 0;
+  while (wrong.size < 3 && guard < 50) {
+    guard += 1;
+    const offsetA = (Math.floor(Math.random() * 3) + 1) * step * (Math.random() > 0.5 ? 1 : -1);
+    const offsetB = (Math.floor(Math.random() * 3) + 1) * step * (Math.random() > 0.5 ? 1 : -1);
+    const candidate = sequencePairKey(
+      Math.max(1, a + offsetA),
+      Math.max(1, b + offsetB)
+    );
+    if (candidate !== correct) wrong.add(candidate);
   }
-  const answer = start + step * config.visibleCount;
-  return { numbers, answer };
+  while (wrong.size < 3) {
+    wrong.add(sequencePairKey(a + wrong.size + step, b));
+  }
+  return shuffleArray([correct, ...Array.from(wrong)]);
 }
 
 export function buildSequenceOptions(correct: number, step: number): number[] {
@@ -258,14 +309,31 @@ export function newClockRound(config: ClockConfig) {
 
 export function newSequenceRound(config: SequencesConfig) {
   const question = generateSequence(config);
-  const step =
-    question.numbers.length >= 2
-      ? question.numbers[1] - question.numbers[0]
-      : config.stepMin;
+  if (question.mode === "two") {
+    return {
+      question,
+      optionKind: "pair" as const,
+      options: buildSequencePairOptions(
+        question.answers[0],
+        question.answers[1],
+        question.step
+      ),
+    };
+  }
   return {
     question,
-    options: buildSequenceOptions(question.answer, Math.max(1, step)),
+    optionKind: "number" as const,
+    options: buildSequenceOptions(question.answers[0], question.step),
   };
+}
+
+export function sequenceRoundCorrectAnswer(
+  round: ReturnType<typeof newSequenceRound>
+): number | string {
+  if (round.optionKind === "pair") {
+    return sequencePairKey(round.question.answers[0], round.question.answers[1]);
+  }
+  return round.question.answers[0];
 }
 
 export function normalizeShukChallenge(raw: unknown): ShukChallenge | null {
