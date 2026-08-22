@@ -102,6 +102,10 @@ export function SideMenu({ open, onClose, userName, isAdmin }: SideMenuProps) {
                 <span className="text-xl" aria-hidden>🎒</span>
                 Milo texts
               </Link>
+              <Link href="/admin/colors-numbers" onClick={onClose} className={navLinkClass}>
+                <span className="text-xl" aria-hidden>🌈</span>
+                Colors QA
+              </Link>
             </>
           )}
         </nav>
