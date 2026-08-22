@@ -102,8 +102,8 @@ export const MASCOT_LINES: Record<
       "מספרים ברצף, — כמו צעדי ריקוד!",
     ]),
     "game.math.division": genderLines([
-      "חלוקה שווה! כמו פיצה ביום הולדת — לכולם אותו חתיכה.",
-      "חלק לקבוצות, — שום אחד לא נשאר בלי!",
+      "חידת חלוקה! יש לי ממתקים — וחברים רעבים.",
+      "חלק שווה בשווה, — כמו פיצה ביום הולדת!",
       { male: "כמה לכל אחד? זה השאלה!", female: "כמה לכל אחד? זו השאלה!" },
     ]),
     "game.hebrew.scramble": genderLines([
@@ -238,8 +238,8 @@ export const MASCOT_LINES: Record<
       "Numbers in a row — like dance steps!",
     ],
     "game.math.division": [
-      "Fair share! Like birthday pizza — everyone gets the same slice.",
-      "Split into equal groups — nobody left out!",
+      "Story riddle! I have treats — and hungry friends.",
+      "Fair share — like birthday pizza!",
       "How many each? That's the question!",
     ],
     "game.hebrew.scramble": [

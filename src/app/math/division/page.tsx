@@ -15,31 +15,34 @@ import { useProjectGame } from "@/hooks/useProjectGame";
 import { ProjectSlotDone } from "@/components/projects/ProjectSlotDone";
 import { SessionComplete } from "@/components/SessionComplete";
 import {
+  getDivisionStory,
   newDivisionRound,
   normalizeDivisionRound,
+  type DivisionQuestion,
 } from "@/lib/content/generators";
-import type { DivisionConfig } from "@/lib/content/types";
+import { divisionRiddlesForDifficulty, type DivisionRiddle } from "@/lib/data/division-riddles";
+import type { DivisionConfig, DifficultyLevel } from "@/lib/content/types";
 
 function DivisionPlay({
-  config,
-  sessionSize,
+  riddles,
   difficulty,
+  sessionSize,
   changeDifficulty,
   progress,
   lockDifficulty,
 }: {
-  config: DivisionConfig;
+  riddles: DivisionQuestion[];
+  difficulty: DifficultyLevel;
   sessionSize: number;
-  difficulty: ReturnType<typeof useGameSession>["difficulty"];
   changeDifficulty: ReturnType<typeof useGameSession>["changeDifficulty"];
   progress: ReturnType<typeof useGameSession>["progress"];
   lockDifficulty?: boolean;
 }) {
-  const { t, gameTitle } = useLocale();
+  const { t, gameTitle, locale } = useLocale();
   const project = useProjectGame();
   const [slotDone, setSlotDone] = useState(false);
   const [sessionComplete, setSessionComplete] = useState(false);
-  const [round, setRound] = useState(() => newDivisionRound(config));
+  const [round, setRound] = useState(() => newDivisionRound(riddles, difficulty));
   const { question, options } = round;
   const [feedback, setFeedback] = useState<{
     type: "correct" | "wrong";
@@ -50,11 +53,11 @@ function DivisionPlay({
     useQuestionCounter(sessionSize);
 
   useEffect(() => {
-    setRound(newDivisionRound(config));
+    setRound(newDivisionRound(riddles, difficulty));
     setFeedback(null);
     setAnswered(false);
     resetQuestionNum();
-  }, [difficulty, config, resetQuestionNum]);
+  }, [difficulty, riddles, resetQuestionNum]);
 
   useGameResume(
     progress.loaded,
@@ -62,7 +65,7 @@ function DivisionPlay({
     progress.gameState,
     (s) => {
       if (s.round) {
-        setRound(normalizeDivisionRound(s.round, config));
+        setRound(normalizeDivisionRound(s.round, riddles, difficulty));
         setAnswered(!!s.answered);
         if (s.feedback) setFeedback(s.feedback as typeof feedback);
         if (typeof s.questionNum === "number") setQuestionNum(s.questionNum);
@@ -77,7 +80,7 @@ function DivisionPlay({
         return;
       }
       progress.setRound((r) => r + 1);
-      const newR = newDivisionRound(config);
+      const newR = newDivisionRound(riddles, difficulty);
       setRound(newR);
       setFeedback(null);
       setAnswered(false);
@@ -95,20 +98,7 @@ function DivisionPlay({
   );
 
   const correct = question.answer;
-  const promptText =
-    question.mode === "groups"
-      ? t("games.divisionGroups", {
-          total: question.total,
-          emoji: question.emoji,
-          size: question.divisor,
-        })
-      : question.mode === "symbol"
-        ? t("games.divisionSymbol")
-        : t("games.divisionShare", {
-            total: question.total,
-            emoji: question.emoji,
-            groups: question.divisor,
-          });
+  const storyText = getDivisionStory(question, locale);
 
   const nextQuestion = useCallback(() => {
     const result = project.handleSessionNext(
@@ -117,7 +107,7 @@ function DivisionPlay({
       progress.markCompleted,
       () => {
         const nextNum = questionNum + 1;
-        const newR = newDivisionRound(config);
+        const newR = newDivisionRound(riddles, difficulty);
         setRound(newR);
         setFeedback(null);
         setAnswered(false);
@@ -131,12 +121,12 @@ function DivisionPlay({
     );
     if (result === "project") setSlotDone(true);
     if (result === "complete") setSessionComplete(true);
-  }, [project, progress, config, questionNum, sessionSize, advanceQuestionNum]);
+  }, [project, progress, riddles, difficulty, questionNum, sessionSize, advanceQuestionNum]);
 
   const playAgain = useCallback(() => {
     setSessionComplete(false);
     resetQuestionNum();
-    const newR = newDivisionRound(config);
+    const newR = newDivisionRound(riddles, difficulty);
     setRound(newR);
     setFeedback(null);
     setAnswered(false);
@@ -154,7 +144,7 @@ function DivisionPlay({
       status: "in_progress",
       state: { round: newR, answered: false, feedback: null, questionNum: 1 },
     });
-  }, [progress, config, resetQuestionNum]);
+  }, [progress, riddles, difficulty, resetQuestionNum]);
 
   const handleAnswer = (answer: number) => {
     if (answered) return;
@@ -204,26 +194,34 @@ function DivisionPlay({
         {!sessionComplete && !slotDone ? (
           <>
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4 items-start">
-              <div className="bg-white/90 rounded-2xl p-6 sm:p-8 shadow border-2 border-indigo-100 flex flex-col items-center justify-center min-h-[10rem] gap-4">
-                <p className="text-lg font-semibold text-gray-800 text-center leading-relaxed">
-                  {promptText}
+              <div className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-2xl p-6 sm:p-8 shadow border-2 border-amber-200 flex flex-col items-center justify-center min-h-[12rem] gap-4">
+                <p className="text-xs font-bold uppercase tracking-wide text-amber-600">
+                  {t("games.divisionRiddle")}
+                </p>
+                <p className="text-lg sm:text-xl font-semibold text-gray-800 text-center leading-relaxed">
+                  {storyText}
                 </p>
                 <DivisionGroups question={question} />
               </div>
 
-              <GameOptionsGrid>
-                {options.map((opt) => (
-                  <button
-                    key={opt}
-                    type="button"
-                    onClick={() => handleAnswer(opt)}
-                    disabled={answered}
-                    className={`game-btn-option text-xl py-4 ${answered && opt === correct ? "correct" : ""} ${answered && opt !== correct ? "opacity-50" : ""}`}
-                  >
-                    <MathLtr>{opt}</MathLtr>
-                  </button>
-                ))}
-              </GameOptionsGrid>
+              <div>
+                <p className="text-center text-sm font-semibold text-gray-600 mb-3">
+                  {t("games.divisionPickAnswer")}
+                </p>
+                <GameOptionsGrid>
+                  {options.map((opt) => (
+                    <button
+                      key={opt}
+                      type="button"
+                      onClick={() => handleAnswer(opt)}
+                      disabled={answered}
+                      className={`game-btn-option text-xl py-4 ${answered && opt === correct ? "correct" : ""} ${answered && opt !== correct ? "opacity-50" : ""}`}
+                    >
+                      <MathLtr>{opt}</MathLtr>
+                    </button>
+                  ))}
+                </GameOptionsGrid>
+              </div>
             </div>
 
             {feedback && (
@@ -252,6 +250,13 @@ function DivisionPlay({
   );
 }
 
+function parseRiddles(items: { itemType: string; data: Record<string, unknown> }[]): DivisionRiddle[] {
+  return items
+    .filter((item) => item.itemType === "division-riddle")
+    .map((item) => item.data as unknown as DivisionRiddle)
+    .filter((r) => typeof r.answer === "number" && typeof r.textHe === "string");
+}
+
 export default function DivisionPage() {
   const session = useGameSession("math", "division");
   const { ready, content, contentError, difficulty, changeDifficulty, progress, lockDifficulty } =
@@ -261,6 +266,12 @@ export default function DivisionPage() {
     () => (content?.config ?? null) as DivisionConfig | null,
     [content]
   );
+
+  const riddles = useMemo(() => {
+    const fromContent = content ? parseRiddles(content.items) : [];
+    if (fromContent.length > 0) return fromContent;
+    return divisionRiddlesForDifficulty(difficulty);
+  }, [content, difficulty]);
 
   if (!ready || !config) {
     return (
@@ -272,9 +283,9 @@ export default function DivisionPage() {
 
   return (
     <DivisionPlay
-      config={config}
-      sessionSize={content!.sessionSize}
+      riddles={riddles}
       difficulty={difficulty}
+      sessionSize={content!.sessionSize}
       changeDifficulty={changeDifficulty}
       progress={progress}
       lockDifficulty={lockDifficulty}

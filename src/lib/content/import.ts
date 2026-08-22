@@ -11,6 +11,7 @@ const VALID_ITEM_TYPES: ContentItemType[] = [
   "color-number",
   "shuk-item",
   "mystery-template",
+  "division-riddle",
   "config",
 ];
 

@@ -281,6 +281,8 @@ export interface Dictionary {
     divisionShare: string;
     divisionGroups: string;
     divisionSymbol: string;
+    divisionRiddle: string;
+    divisionPickAnswer: string;
     divisionCorrect: string;
     divisionWrong: string;
     nextDivision: string;

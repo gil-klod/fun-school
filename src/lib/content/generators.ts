@@ -8,6 +8,10 @@ import type {
   ShukItem,
   DivisionConfig,
 } from "./types";
+import {
+  divisionRiddlesForDifficulty,
+  type DivisionRiddle,
+} from "@/lib/data/division-riddles";
 
 export type { ShukItem };
 
@@ -462,15 +466,7 @@ export function scrambleWord(word: string): string {
 
 export type DivisionMode = "share" | "groups" | "symbol";
 
-export interface DivisionQuestion {
-  mode: DivisionMode;
-  total: number;
-  divisor: number;
-  answer: number;
-  emoji: string;
-}
-
-const DIVISION_EMOJIS = ["🍪", "🍎", "⭐", "🍬", "🎈"];
+export type DivisionQuestion = DivisionRiddle;
 
 export const DIVISION_CONFIGS: Record<DifficultyLevel, DivisionConfig> = {
   1: { divisors: [2], maxQuotient: 5 },
@@ -478,43 +474,34 @@ export const DIVISION_CONFIGS: Record<DifficultyLevel, DivisionConfig> = {
   3: { divisors: [2, 3, 4, 5], maxQuotient: 6, includeGroupCount: true, includeSymbol: true },
 };
 
-export function generateDivision(config: DivisionConfig): DivisionQuestion {
-  const emoji = DIVISION_EMOJIS[Math.floor(Math.random() * DIVISION_EMOJIS.length)]!;
-  const divisors = config.divisors.length > 0 ? config.divisors : [2, 3, 4];
-
-  const modes: DivisionMode[] = ["share"];
-  if (config.includeGroupCount) modes.push("groups");
-  if (config.includeSymbol) modes.push("symbol");
-  const mode = modes[Math.floor(Math.random() * modes.length)]!;
-
-  if (mode === "groups") {
-    const itemsPerGroup = divisors[Math.floor(Math.random() * divisors.length)]!;
-    const answer = Math.floor(Math.random() * config.maxQuotient) + 1;
-    return { mode, total: itemsPerGroup * answer, divisor: itemsPerGroup, answer, emoji };
-  }
-
-  const divisor = divisors[Math.floor(Math.random() * divisors.length)]!;
-  const answer = Math.floor(Math.random() * config.maxQuotient) + 1;
-  return { mode, total: divisor * answer, divisor, answer, emoji };
+export function getDivisionStory(question: DivisionQuestion, locale: "he" | "en"): string {
+  return locale === "he" ? question.textHe : question.textEn;
 }
 
-export function newDivisionRound(config: DivisionConfig) {
-  const question = generateDivision(config);
+export function newDivisionRound(riddles: DivisionQuestion[], difficulty: DifficultyLevel) {
+  let pool =
+    riddles.length > 0
+      ? riddles.filter((r) => r.minDifficulty <= difficulty)
+      : divisionRiddlesForDifficulty(difficulty);
+  if (pool.length === 0) pool = divisionRiddlesForDifficulty(difficulty);
+  const question = pool[Math.floor(Math.random() * pool.length)]!;
   return { question, options: buildOptions(question.answer) };
 }
 
 export function normalizeDivisionRound(
   saved: unknown,
-  config: DivisionConfig
+  riddles: DivisionQuestion[],
+  difficulty: DifficultyLevel
 ): ReturnType<typeof newDivisionRound> {
   if (
     saved &&
     typeof saved === "object" &&
     "question" in saved &&
     "options" in saved &&
-    typeof (saved as { question: DivisionQuestion }).question?.answer === "number"
+    typeof (saved as { question: DivisionQuestion }).question?.answer === "number" &&
+    typeof (saved as { question: DivisionQuestion }).question?.textHe === "string"
   ) {
     return saved as ReturnType<typeof newDivisionRound>;
   }
-  return newDivisionRound(config);
+  return newDivisionRound(riddles, difficulty);
 }

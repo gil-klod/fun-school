@@ -312,6 +312,8 @@ export const he: Dictionary = {
     divisionShare: "{total} {emoji} · {groups} חברים — כמה לכל אחד?",
     divisionGroups: "{total} {emoji} · {size} בכל קבוצה — כמה קבוצות?",
     divisionSymbol: "מה התשובה?",
+    divisionRiddle: "חידת סיפור",
+    divisionPickAnswer: "בחר/י תשובה:",
     divisionCorrect: "חלוקה מושלמת! לכולם אותו דבר! ➗",
     divisionWrong: "התשובה היא {answer}. נסה בשאלה הבאה!",
     nextDivision: "חלוקה הבאה ←",

@@ -12,6 +12,7 @@ export type ContentItemType =
   | "color-number"
   | "shuk-item"
   | "mystery-template"
+  | "division-riddle"
   | "config";
 
 export interface GameContentItem {

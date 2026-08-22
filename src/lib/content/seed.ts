@@ -10,6 +10,7 @@ import {
 import { HEBREW_WORDS, FIX_SENTENCES } from "@/lib/data/hebrew";
 import { HEBREW_STORIES_BY_LEVEL } from "@/lib/data/hebrew-stories";
 import { SHUK_ITEMS, MYSTERY_TEMPLATES } from "@/lib/data/math";
+import { divisionRiddlesForDifficulty } from "@/lib/data/division-riddles";
 import { CLOCK_CONFIGS, SEQUENCES_CONFIGS, DIVISION_CONFIGS } from "@/lib/content/generators";
 
 type SeedDoc = {
@@ -225,6 +226,17 @@ function buildSeedDocs(): SeedDoc[] {
     }
     );
 
+    divisionRiddlesForDifficulty(difficulty).forEach((riddle, i) => {
+      docs.push({
+        subjectId: "math",
+        gameId: "division",
+        difficulty,
+        itemType: "division-riddle",
+        data: { ...riddle },
+        sortOrder: i + 1,
+      });
+    });
+
   }
 
   return docs;
@@ -365,6 +377,15 @@ export async function fetchGameContentBundle(
   }
   if (gameId === "division") {
     config = { ...DIVISION_CONFIGS[difficulty], ...(config ?? {}) };
+    const pool = divisionRiddlesForDifficulty(difficulty);
+    const configItems = items.filter((item) => item.itemType === "config");
+    items = [
+      ...configItems,
+      ...pool.map((r) => ({
+        itemType: "division-riddle" as const,
+        data: r as unknown as Record<string, unknown>,
+      })),
+    ];
   }
   if (gameId === "analog-clock" && !config) {
     config = CLOCK_CONFIGS[difficulty] as unknown as Record<string, unknown>;

@@ -312,6 +312,8 @@ export const en: Dictionary = {
     divisionShare: "{total} {emoji} · {groups} friends — how many each?",
     divisionGroups: "{total} {emoji} · {size} in each group — how many groups?",
     divisionSymbol: "What is the answer?",
+    divisionRiddle: "Story riddle",
+    divisionPickAnswer: "Pick the answer:",
     divisionCorrect: "Perfect split! Everyone gets the same! ➗",
     divisionWrong: "The answer is {answer}. Try the next one!",
     nextDivision: "Next Share →",
