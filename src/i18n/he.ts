@@ -158,6 +158,7 @@ export const he: Dictionary = {
     resetting: "מאפס...",
     settingsTitle: "הגדרות",
     settingsSubtitle: "ניהול תלמידים בחשבון",
+    account: "חשבון",
     formError: "מלא את כל השדות",
     playingAs: "משחק כ",
   },
@@ -244,7 +245,7 @@ export const he: Dictionary = {
   mascot: {
     name: "מיילו",
     dismiss: "סגור",
-    welcome: "היי! אני מיילו. בחר נושא, ובוא נשחק!",
+    welcome: "היי! אני מיילו. בחר נושא, ונתחיל!",
     toggleOn: "הצג את מיילו",
     toggleOff: "הסתר את מיילו",
     tapMilo: "לחץ על מיילו לטיפ",

@@ -1,7 +1,7 @@
 [
   {
     "filename": "he--mascot.welcome--female.mp3",
-    "text": "היי!, אני מיילו. בחרי נושא,, וואי נשחק!",
+    "text": "היי!, אני מיילו. בחרי נושא,, ונתחיל!",
     "id": "he:mascot.welcome:female"
   },
   {
@@ -56,7 +56,7 @@
   },
   {
     "filename": "he--context--dashboard--female--0.mp3",
-    "text": "הנה ההתקדמות שלך! אני גאה, , כמעט כמו שאמא שלך גאה. כמעט.",
+    "text": "הנה ההתקדמות שלך! ממש מרשים, , כמעט כמו שאמא שלך אומרת. כמעט.",
     "id": "he:context:dashboard:female:0"
   },
   {
@@ -216,12 +216,12 @@
   },
   {
     "filename": "he--context--game.hebrew.comprehension--female--2.mp3",
-    "text": "לא הבנת? קראי שוב. בקול. עובד!",
+    "text": "לא ברור? קראי את הסיפור שוב, בקול גבוה. זה עוזר!",
     "id": "he:context:game.hebrew.comprehension:female:2"
   },
   {
     "filename": "he--context--game.english-beginners.vocabulary--female--0.mp3",
-    "text": "התאמת מילים! חתול באנגלית זה קט. כלב זה,.",
+    "text": "חיבור מילים! תרגום נכון לכל מילה, , ועוד נקודה!",
     "id": "he:context:game.english-beginners.vocabulary:female:0"
   },
   {
@@ -236,7 +236,7 @@
   },
   {
     "filename": "he--context--game.english-beginners.sentences--female--0.mp3",
-    "text": "בני משפט! סדרי את המילים נכון, , אני סומכת עלייך.",
+    "text": "הרכיבי משפט! סדרי את המילים נכון, , אני סומכת עלייך.",
     "id": "he:context:game.english-beginners.sentences:female:0"
   },
   {
@@ -246,7 +246,7 @@
   },
   {
     "filename": "he--context--game.english-beginners.sentences--female--2.mp3",
-    "text": "משפט מושלם שווה נקודות וכבוד!",
+    "text": "משפט נכון שווה נקודות וניצחון!",
     "id": "he:context:game.english-beginners.sentences:female:2"
   },
   {
@@ -316,12 +316,12 @@
   },
   {
     "filename": "he--context--default--female--1.mp3",
-    "text": "אני כאן! לא עושה שיעורי בית במקומך.",
+    "text": "אני כאן בשבילך, , אבל לא עובד במקומך.",
     "id": "he:context:default:female:1"
   },
   {
     "filename": "he--context--default--female--2.mp3",
-    "text": "בואי נשחק! המוח שלך מודה לי.",
+    "text": "יאללה, נתחיל! המוח שלך מודה לי.",
     "id": "he:context:default:female:2"
   }
 ]

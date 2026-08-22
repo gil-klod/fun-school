@@ -169,6 +169,7 @@ export interface Dictionary {
     resetting: string;
     settingsTitle: string;
     settingsSubtitle: string;
+    account: string;
     formError: string;
     playingAs: string;
   };

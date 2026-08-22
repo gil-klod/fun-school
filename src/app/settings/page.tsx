@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useSession } from "next-auth/react";
 import { useLocale } from "@/i18n/LocaleProvider";
 import { APP_CONTAINER } from "@/lib/layout";
 import { getAvatarEmoji } from "@/lib/students/avatars";
@@ -12,6 +13,7 @@ import type { EnglishSubjectId } from "@/lib/projects/types";
 
 export default function SettingsPage() {
   const { t } = useLocale();
+  const { data: session } = useSession();
   const { students, deleteStudent, createStudent, updateStudentEnglishTrack, ready } = useStudent();
   const [showForm, setShowForm] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
@@ -70,6 +72,16 @@ export default function SettingsPage() {
       )}
       {success && (
         <p className="text-emerald-700 text-sm text-center mb-4">{success}</p>
+      )}
+
+      {session?.user?.email && (
+        <section className="bg-white/90 border-2 border-indigo-100 rounded-3xl p-5 sm:p-6 mb-6">
+          <h2 className="font-bold text-lg text-gray-800 mb-3">{t("students.account")}</h2>
+          <p className="text-sm text-gray-500">{t("auth.email")}</p>
+          <p className="font-semibold text-gray-800 break-all" dir="ltr">
+            {session.user.email}
+          </p>
+        </section>
       )}
 
       <section className="bg-white/90 border-2 border-indigo-100 rounded-3xl p-5 sm:p-6 mb-6">

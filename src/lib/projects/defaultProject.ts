@@ -8,7 +8,7 @@ export const DEFAULT_PROJECT_DIFFICULTY: DifficultyLevel = 3;
 
 export const DEFAULT_PROJECT_NAME = {
   en: "10 days before school starts",
-  he: "10 ימים לפני תחילת הלימודים",
+  he: "תרגול יומי - הכנה לכיתה ג'",
 };
 
 export function defaultProjectName(locale: "en" | "he"): string {

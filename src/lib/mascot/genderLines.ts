@@ -7,8 +7,8 @@ import { MASCOT_LINES, resolveMascotContext } from "./lines";
 /** Hebrew Milo speech with masculine / feminine second-person forms. */
 export const MASCOT_SPEECH_HE: Record<string, Record<UserGender, string>> = {
   "mascot.welcome": {
-    male: "היי! אני מיילו. בחר נושא, ובוא נשחק!",
-    female: "היי! אני מיילו. בחרי נושא, ובואי נשחק!",
+    male: "היי! אני מיילו. בחר נושא, ונתחיל!",
+    female: "היי! אני מיילו. בחרי נושא, ונתחיל!",
   },
   "mascot.correct0": {
     male: "מדהים! כפיים, כפיים!",

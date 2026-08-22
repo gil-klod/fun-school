@@ -158,6 +158,7 @@ export const en: Dictionary = {
     resetting: "Resetting...",
     settingsTitle: "Settings",
     settingsSubtitle: "Manage students on this account",
+    account: "Account",
     formError: "Please fill in all fields",
     playingAs: "Playing as",
   },
