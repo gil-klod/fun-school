@@ -167,9 +167,9 @@ export const en: Dictionary = {
     edit: "Edit plan",
     dayComplete: "Today's tasks complete — great job!",
     dayCompleteTitle: "You finished today's daily task! 🎉",
-    dayCompleteProgress: "{name} · finished day {day} — see you tomorrow!",
+    dayCompleteProgress: "{name} · finished day {day} — next tasks unlock in 8 hours!",
     dayCompleteSecret:
-      "See you tomorrow! You can keep playing if you want — but don't tell anyone. It's our little secret 🤫",
+      "Come back in 8 hours for the next daily tasks! You can keep playing other games if you want — but don't tell anyone. It's our little secret 🤫",
     calendarTitle: "Day calendar",
     calendarDayHint: "Day {day} · {done}/3 done",
     projectCompleteTitle: "Amazing job, {name}! You finished everything!",

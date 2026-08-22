@@ -5,7 +5,7 @@ import { DirectionalArrow } from "@/components/DirectionalArrow";
 import { DailyProjectCalendar } from "@/components/projects/DailyProjectCalendar";
 import { useLocale } from "@/i18n/LocaleProvider";
 import { getGameTitle, translate } from "@/i18n";
-import { daySlotsDone, isDayFullyComplete, slotComplete } from "@/lib/projects/dayProgress";
+import { daySlotsDone, isWaitingForNextDay, slotComplete } from "@/lib/projects/dayProgress";
 import { projectGameHref } from "@/lib/projects/links";
 import { projectSlotContentLocale } from "@/lib/subjectLocale";
 import type { DailyProjectPayload, ProjectSlot } from "@/lib/projects/types";
@@ -41,13 +41,8 @@ export function DailyProjectBanner({
   if (!day) return null;
 
   const doneCount = daySlotsDone(day);
-  const prevDay =
-    project.currentDay > 1
-      ? project.days.find((d) => d.dayNumber === project.currentDay - 1)
-      : undefined;
-  const todayComplete =
-    doneCount === PROJECT_SLOTS.length ||
-    (!!prevDay && isDayFullyComplete(prevDay) && doneCount === 0);
+  const waitingForNextDay = isWaitingForNextDay(project.days, project.currentDay);
+  const todayComplete = doneCount === PROJECT_SLOTS.length || waitingForNextDay;
 
   return (
     <section className="mb-6 bg-gradient-to-br from-violet-50 to-indigo-50 border-2 border-indigo-200 rounded-3xl p-4 sm:p-5 shadow-sm">
@@ -58,7 +53,7 @@ export function DailyProjectBanner({
           </p>
           <h2 className="text-lg sm:text-xl font-bold text-gray-800">{project.name}</h2>
           <p className="text-sm text-gray-600">
-            {todayComplete && doneCount === 0
+            {waitingForNextDay
               ? t("projects.dayCompleteProgress", {
                   name: studentName,
                   day: project.currentDay - 1,

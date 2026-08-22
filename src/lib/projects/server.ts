@@ -8,6 +8,10 @@ import {
   buildProjectDays,
   defaultProjectName,
 } from "@/lib/projects/defaultProject";
+import {
+  daySlotsDone,
+  isWaitingForNextDay,
+} from "@/lib/projects/dayProgress";
 import type { EnglishSubjectId, ProjectDay, ProjectSlot } from "@/lib/projects/types";
 import { PROJECT_SLOTS } from "@/lib/projects/types";
 
@@ -85,6 +89,24 @@ export async function completeProjectSlot(
 
   const day = project.days.find((d: IProjectDay) => d.dayNumber === dayNumber);
   if (!day) return null;
+
+  const projectDays = project.days.map((d: IProjectDay) => ({
+    dayNumber: d.dayNumber,
+    math: d.math,
+    hebrew: d.hebrew,
+    english: d.english,
+    mathCompletedAt: d.mathCompletedAt?.toISOString() ?? null,
+    hebrewCompletedAt: d.hebrewCompletedAt?.toISOString() ?? null,
+    englishCompletedAt: d.englishCompletedAt?.toISOString() ?? null,
+  }));
+
+  if (
+    dayNumber === project.currentDay &&
+    daySlotsDone(projectDays.find((d: ProjectDay) => d.dayNumber === dayNumber)!) === 0 &&
+    isWaitingForNextDay(projectDays, project.currentDay)
+  ) {
+    return null;
+  }
 
   const now = new Date();
   if (slot === "math" && !day.mathCompletedAt) day.mathCompletedAt = now;

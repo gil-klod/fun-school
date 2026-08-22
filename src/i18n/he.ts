@@ -167,9 +167,9 @@ export const he: Dictionary = {
     edit: "עריכת תוכנית",
     dayComplete: "סיימת את משימות היום — כל הכבוד!",
     dayCompleteTitle: "סיימת את המשימה היומית! 🎉",
-    dayCompleteProgress: "{name} · סיים/ה את יום {day} — נתראה מחר!",
+    dayCompleteProgress: "{name} · סיים/ה את יום {day} — המשימות הבאות נפתחות בעוד 8 שעות!",
     dayCompleteSecret:
-      "נתראה מחר! אפשר להמשיך לשחק אם בא לך — אבל זה סוד קטן בינינו, אל תספר/י לאף אחד 🤫",
+      "חזרו בעוד 8 שעות למשימות היומיות הבאות! אפשר להמשיך לשחק משחקים אחרים אם בא לך — אבל זה סוד קטן בינינו, אל תספר/י לאף אחד 🤫",
     calendarTitle: "לוח ימים",
     calendarDayHint: "יום {day} · {done}/3 הושלמו",
     projectCompleteTitle: "כל הכבוד {name}! סיימת את כל המשימות!",
