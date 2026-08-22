@@ -308,17 +308,14 @@ export async function fetchGameContentBundle(
     }));
 
   if (gameId === "colors-numbers") {
-    const colorItems = items.filter((item) => item.itemType === "color-number");
-    if (colorItems.length < 50) {
-      const pool =
-        difficulty === 1
-          ? COLORS_NUMBERS.slice(0, Math.max(1, Math.ceil(COLORS_NUMBERS.length / 2)))
-          : COLORS_NUMBERS;
-      items = pool.map((q) => ({
-        itemType: "color-number",
-        data: q as unknown as Record<string, unknown>,
-      }));
-    }
+    const pool =
+      difficulty === 1
+        ? COLORS_NUMBERS.slice(0, Math.max(1, Math.ceil(COLORS_NUMBERS.length / 2)))
+        : COLORS_NUMBERS;
+    items = pool.map((q) => ({
+      itemType: "color-number",
+      data: q as unknown as Record<string, unknown>,
+    }));
   }
 
   if (gameId === "sentences") {

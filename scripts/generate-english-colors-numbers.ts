@@ -86,7 +86,7 @@ const RAW: ItemDef[] = [
   { type: "shape", answer: "Rectangle", emoji: "▭" },
   { type: "shape", answer: "Star", emoji: "⭐" },
   { type: "shape", answer: "Heart", emoji: "❤️" },
-  { type: "shape", answer: "Oval", emoji: "🥚" },
+  { type: "shape", answer: "Oval", emoji: "🏈" },
   { type: "shape", answer: "Diamond", emoji: "♦️" },
   { type: "shape", answer: "Pentagon", emoji: "⬟" },
   { type: "shape", answer: "Hexagon", emoji: "⬡" },
@@ -150,7 +150,7 @@ const RAW: ItemDef[] = [
   { type: "body", answer: "Arm", emoji: "💪" },
   { type: "body", answer: "Leg", emoji: "🦵" },
   { type: "body", answer: "Finger", emoji: "👆" },
-  { type: "body", answer: "Knee", emoji: "🦿" },
+  { type: "body", answer: "Thumb", emoji: "👍" },
 
   // clothing (12)
   { type: "clothing", answer: "Shirt", emoji: "👕" },
@@ -171,8 +171,8 @@ const RAW: ItemDef[] = [
   { type: "school", answer: "Pen", emoji: "🖊️" },
   { type: "school", answer: "Pencil", emoji: "✏️" },
   { type: "school", answer: "Paper", emoji: "📄" },
-  { type: "school", answer: "Desk", emoji: "🪑" },
-  { type: "school", answer: "Chair", emoji: "💺" },
+  { type: "school", answer: "Chair", emoji: "🪑" },
+  { type: "school", answer: "Scissors", emoji: "✂️" },
   { type: "school", answer: "Backpack", emoji: "🎒" },
   { type: "school", answer: "Eraser", emoji: "🧽" },
   { type: "school", answer: "Ruler", emoji: "📏" },
@@ -200,7 +200,7 @@ const RAW: ItemDef[] = [
   { type: "home", answer: "Door", emoji: "🚪" },
   { type: "home", answer: "Window", emoji: "🪟" },
   { type: "home", answer: "Bed", emoji: "🛏️" },
-  { type: "home", answer: "Table", emoji: "🪑" },
+  { type: "home", answer: "Table", emoji: "🍽️" },
   { type: "home", answer: "Kitchen", emoji: "🍳" },
   { type: "home", answer: "Sofa", emoji: "🛋️" },
   { type: "home", answer: "Lamp", emoji: "💡" },
@@ -210,7 +210,7 @@ const RAW: ItemDef[] = [
   { type: "home", answer: "Garden", emoji: "🌻" },
 
   // sport (12)
-  { type: "sport", answer: "Ball", emoji: "⚽" },
+  { type: "sport", answer: "Ball", emoji: "🎱" },
   { type: "sport", answer: "Soccer", emoji: "⚽" },
   { type: "sport", answer: "Basketball", emoji: "🏀" },
   { type: "sport", answer: "Tennis", emoji: "🎾" },
@@ -330,6 +330,19 @@ function buildItems(raw: ItemDef[]): GeneratedItem[] {
   });
 }
 
+function validateRawEmojis(raw: ItemDef[]): void {
+  const emojiToAnswer = new Map<string, string>();
+  for (const item of raw) {
+    const existing = emojiToAnswer.get(item.emoji);
+    if (existing && existing !== item.answer) {
+      throw new Error(
+        `Emoji ${item.emoji} is used for both "${existing}" and "${item.answer}" — pick a unique emoji per word.`,
+      );
+    }
+    emojiToAnswer.set(item.emoji, item.answer);
+  }
+}
+
 function validate(items: GeneratedItem[]): void {
   if (items.length !== EXPECTED_COUNT) {
     throw new Error(`Expected ${EXPECTED_COUNT} items, got ${items.length}`);
@@ -380,6 +393,7 @@ ${lines.join("\n")}
 }
 
 function main(): void {
+  validateRawEmojis(RAW);
   const items = buildItems(RAW);
   validate(items);
 
