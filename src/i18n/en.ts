@@ -86,6 +86,7 @@ export const en: Dictionary = {
     verifying: "Verifying your email...",
     redirecting: "Redirecting to login...",
     tryAgain: "Try Again",
+    rememberMe: "Remember me on this device",
     invalidCredentials: "Invalid email or password. Make sure your email is verified.",
     emailVerifiedBanner: "Email verified! You can log in now.",
     checkEmail: "Registration successful! Check your email to verify your account.",

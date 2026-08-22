@@ -14,6 +14,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       credentials: {
         email: { label: "Email", type: "email" },
         password: { label: "Password", type: "password" },
+        rememberMe: { label: "Remember Me", type: "text" },
       },
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) return null;
@@ -26,12 +27,19 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         if (!valid) return null;
 
         const isAdmin = await ensureAdminFlag(user);
+        const rememberRaw = credentials.rememberMe;
+        const rememberMe =
+          rememberRaw === undefined ||
+          rememberRaw === null ||
+          String(rememberRaw) === "true" ||
+          String(rememberRaw) === "1";
 
         return {
           id: user._id.toString(),
           name: user.name,
           email: user.email,
           isAdmin,
+          rememberMe,
         };
       },
     }),

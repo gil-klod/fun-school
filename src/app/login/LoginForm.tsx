@@ -16,6 +16,7 @@ export default function LoginForm() {
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [rememberMe, setRememberMe] = useState(true);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -27,6 +28,7 @@ export default function LoginForm() {
     const result = await signIn("credentials", {
       email,
       password,
+      rememberMe: rememberMe ? "true" : "false",
       redirect: false,
     });
 
@@ -80,6 +82,16 @@ export default function LoginForm() {
               className="w-full px-4 py-3 rounded-xl border-2 border-indigo-100 focus:border-indigo-400 focus:outline-none"
             />
           </div>
+
+          <label className="flex items-center gap-2 cursor-pointer select-none">
+            <input
+              type="checkbox"
+              checked={rememberMe}
+              onChange={(e) => setRememberMe(e.target.checked)}
+              className="h-4 w-4 rounded border-indigo-200 text-indigo-600 focus:ring-indigo-400"
+            />
+            <span className="text-sm text-gray-700">{t("auth.rememberMe")}</span>
+          </label>
 
           {error && <p className="text-red-600 text-sm text-center">{error}</p>}
 

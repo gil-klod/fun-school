@@ -1,4 +1,8 @@
 import type { NextAuthConfig } from "next-auth";
+import { decode, encode } from "@auth/core/jwt";
+
+const THIRTY_DAYS = 30 * 24 * 60 * 60;
+const ONE_DAY = 24 * 60 * 60;
 
 export const authConfig: NextAuthConfig = {
   secret: process.env.AUTH_SECRET,
@@ -8,6 +12,16 @@ export const authConfig: NextAuthConfig = {
   },
   session: {
     strategy: "jwt",
+    maxAge: THIRTY_DAYS,
+  },
+  jwt: {
+    maxAge: THIRTY_DAYS,
+    async encode(params) {
+      const remember = params.token?.rememberMe !== false;
+      const maxAge = remember ? THIRTY_DAYS : ONE_DAY;
+      return encode({ ...params, maxAge });
+    },
+    decode,
   },
   providers: [],
   callbacks: {
@@ -15,6 +29,7 @@ export const authConfig: NextAuthConfig = {
       if (user) {
         token.id = user.id;
         token.isAdmin = user.isAdmin;
+        token.rememberMe = user.rememberMe !== false;
       }
       return token;
     },

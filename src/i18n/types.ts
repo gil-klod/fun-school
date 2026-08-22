@@ -100,6 +100,7 @@ export interface Dictionary {
     verifying: string;
     redirecting: string;
     tryAgain: string;
+    rememberMe: string;
     invalidCredentials: string;
     emailVerifiedBanner: string;
     checkEmail: string;

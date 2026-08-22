@@ -1,6 +1,7 @@
 declare module "next-auth" {
   interface User {
     isAdmin?: boolean;
+    rememberMe?: boolean;
   }
 
   interface Session {
@@ -17,6 +18,7 @@ declare module "@auth/core/jwt" {
   interface JWT {
     id?: string;
     isAdmin?: boolean;
+    rememberMe?: boolean;
   }
 }
 

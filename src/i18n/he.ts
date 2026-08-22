@@ -86,6 +86,7 @@ export const he: Dictionary = {
     verifying: "מאמת את האימייל...",
     redirecting: "מעביר להתחברות...",
     tryAgain: "נסה שוב",
+    rememberMe: "זכור אותי במכשיר הזה",
     invalidCredentials: "אימייל או סיסמה שגויים. ודא שהאימייל אומת.",
     emailVerifiedBanner: "האימייל אומת! אפשר להתחבר עכשיו.",
     checkEmail: "ההרשמה הצליחה! בדוק את האימייל לאימות החשבון.",
