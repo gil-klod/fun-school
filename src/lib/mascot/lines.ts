@@ -86,6 +86,11 @@ export const MASCOT_LINES: Record<
       "מצא את הדפוס, — ואז תעוף!",
       "מספרים ברצף, — כמו צעדי ריקוד!",
     ]),
+    "game.math.division": genderLines([
+      "חלוקה שווה! כמו פיצה ביום הולדת — לכולם אותו חתיכה.",
+      "חלק לקבוצות, — שום אחד לא נשאר בלי!",
+      { male: "כמה לכל אחד? זה השאלה!", female: "כמה לכל אחד? זו השאלה!" },
+    ]),
     "game.hebrew.scramble": genderLines([
       "ערבוב אותיות! מ-כ-ח-ו-ל ל... משהו כחול. כנראה.",
       "אותיות מבולבלות? אני מרגיש בבית.",
@@ -204,6 +209,11 @@ export const MASCOT_LINES: Record<
       "Number sequences! 2, 4, 6 — what comes next?",
       "Spot the pattern, then fly!",
       "Numbers in a row — like dance steps!",
+    ],
+    "game.math.division": [
+      "Fair share! Like birthday pizza — everyone gets the same slice.",
+      "Split into equal groups — nobody left out!",
+      "How many each? That's the question!",
     ],
     "game.hebrew.scramble": [
       "Scrambled letters! Mixed up? I feel right at home.",

@@ -70,3 +70,12 @@ export interface SequencesConfig {
   /** @deprecated legacy field — use slotCount */
   visibleCount?: number;
 }
+
+export interface DivisionConfig {
+  divisors: number[];
+  maxQuotient: number;
+  /** Ask "how many groups?" (inverse). */
+  includeGroupCount?: boolean;
+  /** Show ÷ symbol questions. */
+  includeSymbol?: boolean;
+}

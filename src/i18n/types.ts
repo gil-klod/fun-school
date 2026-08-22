@@ -278,6 +278,12 @@ export interface Dictionary {
     sequencesFillOne: string;
     sequencesFillTwo: string;
     whatComesNext: string;
+    divisionShare: string;
+    divisionGroups: string;
+    divisionSymbol: string;
+    divisionCorrect: string;
+    divisionWrong: string;
+    nextDivision: string;
     scrambleCorrect: string;
     scrambleWrong: string;
     fixCorrect: string;

@@ -10,7 +10,7 @@ import {
 import { HEBREW_WORDS, FIX_SENTENCES } from "@/lib/data/hebrew";
 import { HEBREW_STORIES_BY_LEVEL } from "@/lib/data/hebrew-stories";
 import { SHUK_ITEMS, MYSTERY_TEMPLATES } from "@/lib/data/math";
-import { CLOCK_CONFIGS, SEQUENCES_CONFIGS } from "@/lib/content/generators";
+import { CLOCK_CONFIGS, SEQUENCES_CONFIGS, DIVISION_CONFIGS } from "@/lib/content/generators";
 
 type SeedDoc = {
   subjectId: string;
@@ -28,6 +28,7 @@ function configs(): SeedDoc[] {
     { subjectId: "math", gameId: "mystery" },
     { subjectId: "math", gameId: "analog-clock" },
     { subjectId: "math", gameId: "sequences" },
+    { subjectId: "math", gameId: "division" },
   ];
 
   const multConfigs: Record<DifficultyLevel, Record<string, unknown>> = {
@@ -60,12 +61,19 @@ function configs(): SeedDoc[] {
     3: { minStart: 5, maxStart: 99, stepMin: 3, stepMax: 12, slotCount: 6, twoGapChance: 0.45 },
   };
 
+  const divisionConfigs: Record<DifficultyLevel, Record<string, unknown>> = {
+    1: DIVISION_CONFIGS[1] as unknown as Record<string, unknown>,
+    2: DIVISION_CONFIGS[2] as unknown as Record<string, unknown>,
+    3: DIVISION_CONFIGS[3] as unknown as Record<string, unknown>,
+  };
+
   const configByGame: Record<string, Record<DifficultyLevel, Record<string, unknown>>> = {
     multiplication: multConfigs,
     shuk: shukConfigs,
     mystery: mysteryConfigs,
     "analog-clock": clockConfigs,
     sequences: sequencesConfigs,
+    division: divisionConfigs,
   };
 
   const docs: SeedDoc[] = [];
@@ -355,6 +363,9 @@ export async function fetchGameContentBundle(
   if (gameId === "sequences") {
     config = { ...SEQUENCES_CONFIGS[difficulty], ...(config ?? {}) };
   }
+  if (gameId === "division") {
+    config = { ...DIVISION_CONFIGS[difficulty], ...(config ?? {}) };
+  }
   if (gameId === "analog-clock" && !config) {
     config = CLOCK_CONFIGS[difficulty] as unknown as Record<string, unknown>;
   }
@@ -365,6 +376,7 @@ export async function fetchGameContentBundle(
     gameId === "mystery" ||
     gameId === "analog-clock" ||
     gameId === "sequences" ||
+    gameId === "division" ||
     gameId === "scramble" ||
     gameId === "fix-sentence" ||
     gameId === "vocabulary" ||

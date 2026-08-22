@@ -50,6 +50,14 @@ export const subjects: SubjectInfo[] = [
         emoji: "🔢",
         href: "/math/sequences",
       },
+      {
+        id: "division",
+        title: "Fair Share",
+        titleHe: "חלוקה לקבוצות",
+        description: "Split into equal groups!",
+        emoji: "➗",
+        href: "/math/division",
+      },
     ],
   },
   {

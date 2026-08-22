@@ -205,13 +205,14 @@ export const he: Dictionary = {
   subjects: {
     math: {
       title: "חשבון",
-      description: "טבלאות כפל, שעון, סדרות וחידות מספרים",
+      description: "טבלאות כפל, חלוקה, שעון, סדרות וחידות מספרים",
       games: {
         multiplication: { title: "בוס הכפל", description: "הבס את טבלאות הכפל!" },
         shuk: { title: "אתגר השוק", description: "קנה בשוק וחשב עודף!" },
         mystery: { title: "מספר מסתורי", description: "מצא את המספר הנסתר!" },
         "analog-clock": { title: "שעון מחוגים", description: "קרא את השעון ובחר את השעה!" },
         sequences: { title: "סדרות מספרים", description: "איזה מספר בא אחר כך?" },
+        division: { title: "חלוקה לקבוצות", description: "חלק לקבוצות שוות!" },
       },
     },
     hebrew: {
@@ -308,6 +309,12 @@ export const he: Dictionary = {
     sequencesFillOne: "מצא את המספר החסר",
     sequencesFillTwo: "מצא את שני המספרים החסרים (בחר את הזוג)",
     whatComesNext: "איזה מספר בא אחר כך?",
+    divisionShare: "{total} {emoji} · {groups} חברים — כמה לכל אחד?",
+    divisionGroups: "{total} {emoji} · {size} בכל קבוצה — כמה קבוצות?",
+    divisionSymbol: "מה התשובה?",
+    divisionCorrect: "חלוקה מושלמת! לכולם אותו דבר! ➗",
+    divisionWrong: "התשובה היא {answer}. נסה בשאלה הבאה!",
+    nextDivision: "חלוקה הבאה ←",
     scrambleCorrect: "מצוין!",
     scrambleWrong: "המילה הייתה: {word}",
     fixCorrect: "נכון!",

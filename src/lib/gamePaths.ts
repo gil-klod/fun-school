@@ -6,7 +6,7 @@ export const SUBJECT_BASE: Record<string, string> = {
 };
 
 export const GAME_PATHS: Record<string, Record<string, string>> = {
-  math: { multiplication: "/multiplication", shuk: "/shuk", mystery: "/mystery", "analog-clock": "/analog-clock", sequences: "/sequences" },
+  math: { multiplication: "/multiplication", shuk: "/shuk", mystery: "/mystery", "analog-clock": "/analog-clock", sequences: "/sequences", division: "/division" },
   hebrew: { scramble: "/scramble", "fix-sentence": "/fix-sentence", comprehension: "/comprehension" },
   "english-beginners": { vocabulary: "/vocabulary", sentences: "/sentences", "colors-numbers": "/colors-numbers" },
   "english-natives": { grammar: "/grammar", vocabulary: "/vocabulary", comprehension: "/comprehension" },
