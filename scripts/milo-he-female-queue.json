@@ -1,7 +1,7 @@
 [
   {
     "filename": "he--mascot.welcome--female.mp3",
-    "text": "היי!, אני מיילו. בחרי נושא,, ונתחיל!",
+    "text": "היי!, אני מיילו. קדימה, נושא,, ונתחיל!",
     "id": "he:mascot.welcome:female"
   },
   {
@@ -41,7 +41,7 @@
   },
   {
     "filename": "he--context--home--female--0.mp3",
-    "text": "אני מיילו! בחרי נושא, , אני כבר מחזיקה את התשובות. סתם, לא באמת.",
+    "text": "אני מיילו! קדימה, נושא, , אני כבר מחזיקה את התשובות. סתם, לא באמת.",
     "id": "he:context:home:female:0"
   },
   {
@@ -51,12 +51,12 @@
   },
   {
     "filename": "he--context--home--female--2.mp3",
-    "text": "טיפ מיילו: התחל מחשבון, , שם המספרים לא מתווכחים. בניגוד לי.",
+    "text": "טיפ מיילו: התחילי מחשבון, , שם המספרים לא מתווכחים. בניגוד לי.",
     "id": "he:context:home:female:2"
   },
   {
     "filename": "he--context--dashboard--female--0.mp3",
-    "text": "הנה ההתקדמות שלך! ממש מרשים, , כמעט כמו שאמא שלך אומרת. כמעט.",
+    "text": "הנה ההתקדמות! עבודה יפה, , כך ממשיכים!",
     "id": "he:context:dashboard:female:0"
   },
   {
@@ -66,7 +66,7 @@
   },
   {
     "filename": "he--context--dashboard--female--2.mp3",
-    "text": "אם המספרים נמוכים, , זה רק כי לא שיחקת עדיין היום!",
+    "text": "מספרים נמוכים? אולי פשוט לא התחלת לשחק היום!",
     "id": "he:context:dashboard:female:2"
   },
   {
@@ -76,12 +76,12 @@
   },
   {
     "filename": "he--context--subject.math--female--1.mp3",
-    "text": "כפל, שוק וחידות, , מי אמר שמתמטיקה לא יכולה להיות כיפית?",
+    "text": "כפל, שוק וחידות, , מתמטיקה יכולה להיות כיף!",
     "id": "he:context:subject.math:female:1"
   },
   {
     "filename": "he--context--subject.math--female--2.mp3",
-    "text": "בואי, נראה אם הכפל יכול לעמוד בקצב שלך!",
+    "text": "בואי, נראה אם הכפל יכול לעמוד בקצב!",
     "id": "he:context:subject.math:female:2"
   },
   {
@@ -101,7 +101,7 @@
   },
   {
     "filename": "he--context--subject.english-beginners--female--0.mp3",
-    "text": "זמן אנגלית! אל תדאג, , גם אני מתבלבל לפעמים.",
+    "text": "זמן אנגלית! אין לחץ, , גם אני מתבלבל לפעמים.",
     "id": "he:context:subject.english-beginners:female:0"
   },
   {
@@ -131,7 +131,7 @@
   },
   {
     "filename": "he--context--game.math.multiplication--female--0.mp3",
-    "text": "טבלאות כפל! כמו לחץ, אבל עם מספרים.",
+    "text": "טבלאות כפל! מספרים שחוזרים שוב ושוב.",
     "id": "he:context:game.math.multiplication:female:0"
   },
   {
@@ -141,12 +141,12 @@
   },
   {
     "filename": "he--context--game.math.multiplication--female--2.mp3",
-    "text": "שבע כפול שמונה? קל. שש כפול שבע? תני לי שנייה, את קודם!",
+    "text": "שבע כפול שמונה? קל. שש כפול שבע? קודם את, רגע אחד!",
     "id": "he:context:game.math.multiplication:female:2"
   },
   {
     "filename": "he--context--game.math.shuk--female--0.mp3",
-    "text": "שוק! קנה, שלם, קבל עודף, , ואל תשכח לחייך לירקן.",
+    "text": "שוק! קניות, תשלום, עודף, , ותמיד חיוך לירקן!",
     "id": "he:context:game.math.shuk:female:0"
   },
   {
@@ -186,7 +186,7 @@
   },
   {
     "filename": "he--context--game.hebrew.scramble--female--2.mp3",
-    "text": "אם נראה לך שזה כלב, , בדקי שוב!",
+    "text": "אם זה נראה כמו כלב, , תבדקי שוב!",
     "id": "he:context:game.hebrew.scramble:female:2"
   },
   {
@@ -196,7 +196,7 @@
   },
   {
     "filename": "he--context--game.hebrew.fix-sentence--female--1.mp3",
-    "text": "תקני את המשפט, , המורה תגיד וואו. אולי.",
+    "text": "מצאי את הטעות, , המורה תהיה מרוצה. אולי.",
     "id": "he:context:game.hebrew.fix-sentence:female:1"
   },
   {
@@ -221,7 +221,7 @@
   },
   {
     "filename": "he--context--game.english-beginners.vocabulary--female--0.mp3",
-    "text": "חיבור מילים! תרגום נכון לכל מילה, , ועוד נקודה!",
+    "text": "חיבור מילים! תרגום מדויק לכל מילה, , ועוד נקודה!",
     "id": "he:context:game.english-beginners.vocabulary:female:0"
   },
   {
@@ -236,7 +236,7 @@
   },
   {
     "filename": "he--context--game.english-beginners.sentences--female--0.mp3",
-    "text": "הרכיבי משפט! סדרי את המילים נכון, , אני סומכת עלייך.",
+    "text": "סדרי מילים למשפט! , אני בטוחה שתצליחי!",
     "id": "he:context:game.english-beginners.sentences:female:0"
   },
   {
@@ -246,7 +246,7 @@
   },
   {
     "filename": "he--context--game.english-beginners.sentences--female--2.mp3",
-    "text": "משפט נכון שווה נקודות וניצחון!",
+    "text": "משפט מסודר , נקודות וניצחון!",
     "id": "he:context:game.english-beginners.sentences:female:2"
   },
   {
@@ -316,12 +316,12 @@
   },
   {
     "filename": "he--context--default--female--1.mp3",
-    "text": "אני כאן בשבילך, , אבל לא עובד במקומך.",
+    "text": "אני כאן לעזור, , אבל את עושה את העבודה!",
     "id": "he:context:default:female:1"
   },
   {
     "filename": "he--context--default--female--2.mp3",
-    "text": "יאללה, נתחיל! המוח שלך מודה לי.",
+    "text": "קדימה, נתחיל! המוח מודה!",
     "id": "he:context:default:female:2"
   }
 ]

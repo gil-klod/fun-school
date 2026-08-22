@@ -8,7 +8,7 @@ import { MASCOT_LINES, resolveMascotContext } from "./lines";
 export const MASCOT_SPEECH_HE: Record<string, Record<UserGender, string>> = {
   "mascot.welcome": {
     male: "היי! אני מיילו. בחר נושא, ונתחיל!",
-    female: "היי! אני מיילו. בחרי נושא, ונתחיל!",
+    female: "היי! אני מיילו. קדימה, נושא, ונתחיל!",
   },
   "mascot.correct0": {
     male: "מדהים! כפיים, כפיים!",
