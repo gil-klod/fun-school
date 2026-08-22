@@ -90,7 +90,7 @@ const RAW: ItemDef[] = [
   { type: "shape", answer: "Diamond", emoji: "♦️" },
   { type: "shape", answer: "Pentagon", emoji: "⬟" },
   { type: "shape", answer: "Hexagon", emoji: "⬡" },
-  { type: "shape", answer: "Crescent", emoji: "🌘" },
+  { type: "shape", answer: "Crescent", emoji: "🌙" },
   { type: "shape", answer: "Cross", emoji: "✖️" },
 
   // food (13)
@@ -155,30 +155,30 @@ const RAW: ItemDef[] = [
   // clothing (12)
   { type: "clothing", answer: "Shirt", emoji: "👕" },
   { type: "clothing", answer: "Pants", emoji: "👖" },
-  { type: "clothing", answer: "Dress", emoji: "👗" },
+  { type: "clothing", answer: "Dress", emoji: "👘" },
   { type: "clothing", answer: "Shoes", emoji: "👟" },
   { type: "clothing", answer: "Hat", emoji: "🎩" },
   { type: "clothing", answer: "Coat", emoji: "🧥" },
   { type: "clothing", answer: "Socks", emoji: "🧦" },
-  { type: "clothing", answer: "Skirt", emoji: "👚" },
+  { type: "clothing", answer: "Skirt", emoji: "👗" },
   { type: "clothing", answer: "Gloves", emoji: "🧤" },
   { type: "clothing", answer: "Glasses", emoji: "👓" },
   { type: "clothing", answer: "Scarf", emoji: "🧣" },
   { type: "clothing", answer: "Boots", emoji: "🥾" },
 
   // school (13)
-  { type: "school", answer: "Book", emoji: "📚" },
+  { type: "school", answer: "Book", emoji: "📖" },
   { type: "school", answer: "Pen", emoji: "🖊️" },
   { type: "school", answer: "Pencil", emoji: "✏️" },
   { type: "school", answer: "Paper", emoji: "📄" },
-  { type: "school", answer: "Chair", emoji: "🪑" },
+  { type: "school", answer: "Chair", emoji: "💺" },
   { type: "school", answer: "Scissors", emoji: "✂️" },
   { type: "school", answer: "Backpack", emoji: "🎒" },
-  { type: "school", answer: "Eraser", emoji: "🧽" },
+  { type: "school", answer: "Eraser", emoji: "◻️" },
   { type: "school", answer: "Ruler", emoji: "📏" },
   { type: "school", answer: "Notebook", emoji: "📓" },
-  { type: "school", answer: "Library", emoji: "📖" },
-  { type: "school", answer: "Homework", emoji: "📝" },
+  { type: "school", answer: "Library", emoji: "📚" },
+  { type: "school", answer: "Homework", emoji: "✍️" },
   { type: "school", answer: "School", emoji: "🏫" },
 
   // weather (12)
@@ -193,21 +193,21 @@ const RAW: ItemDef[] = [
   { type: "weather", answer: "Lightning", emoji: "⚡" },
   { type: "weather", answer: "Fog", emoji: "🌫️" },
   { type: "weather", answer: "Thunder", emoji: "🌩️" },
-  { type: "weather", answer: "Hail", emoji: "🧊" },
+  { type: "weather", answer: "Hail", emoji: "🌨️" },
 
   // home (13)
   { type: "home", answer: "House", emoji: "🏠" },
   { type: "home", answer: "Door", emoji: "🚪" },
   { type: "home", answer: "Window", emoji: "🪟" },
   { type: "home", answer: "Bed", emoji: "🛏️" },
-  { type: "home", answer: "Table", emoji: "🍽️" },
-  { type: "home", answer: "Kitchen", emoji: "🍳" },
+  { type: "home", answer: "Table", emoji: "🪑" },
+  { type: "home", answer: "Kitchen", emoji: "🍲" },
   { type: "home", answer: "Sofa", emoji: "🛋️" },
   { type: "home", answer: "Lamp", emoji: "💡" },
   { type: "home", answer: "Clock", emoji: "🕐" },
   { type: "home", answer: "Key", emoji: "🔑" },
   { type: "home", answer: "Phone", emoji: "📱" },
-  { type: "home", answer: "Garden", emoji: "🌻" },
+  { type: "home", answer: "Garden", emoji: "🏡" },
 
   // sport (12)
   { type: "sport", answer: "Ball", emoji: "🎱" },
