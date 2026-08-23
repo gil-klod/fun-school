@@ -11,6 +11,7 @@ import {
   type HebrewStoriesReviewMap,
   type HebrewStoriesReviewStatus,
   type HebrewStoryLevel,
+  type HebrewStoryReviewEntry,
 } from "@/lib/content/hebrewStoriesReview";
 
 type ReviewFilter = "all" | "unchecked" | "bad" | "good" | "notes";
@@ -38,40 +39,48 @@ export default function AdminHebrewStoriesPage() {
     setReviews(loadReviews());
   }, []);
 
-  const persistReviews = useCallback((next: HebrewStoriesReviewMap) => {
-    setReviews(next);
-    localStorage.setItem(HEBREW_STORIES_REVIEW_STORAGE_KEY, JSON.stringify(next));
-  }, []);
+  const updateReviewEntry = useCallback(
+    (
+      key: string,
+      updater: (current: HebrewStoryReviewEntry) => HebrewStoryReviewEntry | null
+    ) => {
+      setReviews((prev) => {
+        const current = prev[key] ?? {};
+        const updated = updater(current);
+        const next = { ...prev };
+        const hasIssue = Boolean(updated?.issue?.trim());
+        if (!updated || (!updated.status && !hasIssue)) {
+          delete next[key];
+        } else {
+          next[key] = updated;
+        }
+        localStorage.setItem(HEBREW_STORIES_REVIEW_STORAGE_KEY, JSON.stringify(next));
+        return next;
+      });
+    },
+    []
+  );
 
   const mark = useCallback(
     (key: string, status: HebrewStoriesReviewStatus | null) => {
-      const current = reviews[key] ?? {};
-      const next = { ...reviews };
-      if (status) {
-        next[key] = { ...current, status };
-      } else {
+      updateReviewEntry(key, (current) => {
+        if (status) return { ...current, status };
         const { status: _removed, ...rest } = current;
-        if (rest.issue?.trim()) next[key] = rest;
-        else delete next[key];
-      }
-      persistReviews(next);
+        if (rest.issue?.trim()) return rest;
+        return null;
+      });
     },
-    [reviews, persistReviews]
+    [updateReviewEntry]
   );
 
   const setIssue = useCallback(
     (key: string, issue: string) => {
-      const current = reviews[key] ?? {};
-      const next = { ...reviews };
-      const trimmed = issue.trim();
-      if (trimmed || current.status) {
-        next[key] = { ...current, issue: trimmed || undefined };
-      } else {
-        delete next[key];
-      }
-      persistReviews(next);
+      updateReviewEntry(key, (current) => {
+        if (!issue && !current.status) return null;
+        return { ...current, issue: issue || undefined };
+      });
     },
-    [reviews, persistReviews]
+    [updateReviewEntry]
   );
 
   const stats = useMemo(() => {
@@ -112,7 +121,8 @@ export default function AdminHebrewStoriesPage() {
 
   function clearAllReviews() {
     if (!confirm("Clear all marks and issue notes on this browser?")) return;
-    persistReviews({});
+    setReviews({});
+    localStorage.removeItem(HEBREW_STORIES_REVIEW_STORAGE_KEY);
   }
 
   return (
@@ -278,9 +288,11 @@ export default function AdminHebrewStoriesPage() {
                     <textarea
                       value={issue}
                       onChange={(e) => setIssue(row.key, e.target.value)}
+                      onKeyDown={(e) => e.stopPropagation()}
                       placeholder="e.g. שגיאת כתיב בפסקה 2, תשובה לא נכונה בשאלה 3…"
                       rows={3}
                       dir="auto"
+                      spellCheck
                       className="w-full rounded-xl border-2 border-amber-200 bg-amber-50/50 px-3 py-2 text-sm text-gray-800 placeholder:text-gray-400 focus:border-amber-400 focus:outline-none"
                     />
                   </label>
