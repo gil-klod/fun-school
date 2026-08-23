@@ -7,6 +7,22 @@ export const HEBREW_STORIES_REVIEW_STORAGE_KEY = "fun-school-hebrew-stories-revi
 
 export type HebrewStoryLevel = 1 | 2 | 3;
 
+export interface HebrewStoryReviewEntry {
+  status?: HebrewStoriesReviewStatus;
+  issue?: string;
+}
+
+export type HebrewStoriesReviewMap = Record<string, HebrewStoryReviewEntry>;
+
+export interface HebrewStoryExportItem {
+  key: string;
+  level: HebrewStoryLevel;
+  index: number;
+  title: string;
+  status?: HebrewStoriesReviewStatus;
+  issue: string;
+}
+
 export function hebrewStoryKey(level: HebrewStoryLevel, title: string): string {
   return `${level}::${title}`;
 }
@@ -40,9 +56,50 @@ export function getHebrewStoriesReviewRows(): HebrewStoriesReviewRow[] {
   return rows;
 }
 
-export function exportBadStories(
+/** Supports legacy storage where values were plain "good" | "bad". */
+export function parseHebrewStoriesReviewMap(raw: string | null): HebrewStoriesReviewMap {
+  if (!raw) return {};
+  try {
+    const parsed = JSON.parse(raw) as Record<string, unknown>;
+    const map: HebrewStoriesReviewMap = {};
+    for (const [key, value] of Object.entries(parsed)) {
+      if (value === "good" || value === "bad") {
+        map[key] = { status: value };
+        continue;
+      }
+      if (value && typeof value === "object") {
+        const entry = value as HebrewStoryReviewEntry;
+        map[key] = {
+          status: entry.status,
+          issue: typeof entry.issue === "string" ? entry.issue : undefined,
+        };
+      }
+    }
+    return map;
+  } catch {
+    return {};
+  }
+}
+
+export function exportStoriesForFix(
   rows: HebrewStoriesReviewRow[],
-  reviews: Record<string, HebrewStoriesReviewStatus>
-): HebrewStoriesReviewRow[] {
-  return rows.filter((row) => reviews[row.key] === "bad");
+  reviews: HebrewStoriesReviewMap
+): HebrewStoryExportItem[] {
+  return rows
+    .filter((row) => {
+      const entry = reviews[row.key];
+      const issue = entry?.issue?.trim() ?? "";
+      return entry?.status === "bad" || issue.length > 0;
+    })
+    .map((row) => {
+      const entry = reviews[row.key];
+      return {
+        key: row.key,
+        level: row.level,
+        index: row.index,
+        title: row.title,
+        status: entry?.status,
+        issue: entry?.issue?.trim() ?? "",
+      };
+    });
 }
