@@ -106,6 +106,10 @@ export function SideMenu({ open, onClose, userName, isAdmin }: SideMenuProps) {
                 <span className="text-xl" aria-hidden>🌈</span>
                 Colors QA
               </Link>
+              <Link href="/admin/hebrew-stories" onClick={onClose} className={navLinkClass}>
+                <span className="text-xl" aria-hidden>📖</span>
+                Stories QA
+              </Link>
             </>
           )}
         </nav>

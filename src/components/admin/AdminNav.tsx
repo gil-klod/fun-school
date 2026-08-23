@@ -7,6 +7,7 @@ const LINKS = [
   { href: "/admin", label: "Overview" },
   { href: "/admin/content", label: "Game content" },
   { href: "/admin/colors-numbers", label: "Colors QA" },
+  { href: "/admin/hebrew-stories", label: "Stories QA" },
   { href: "/admin/milo", label: "Milo texts" },
 ];
 
