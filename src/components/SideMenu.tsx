@@ -94,6 +94,10 @@ export function SideMenu({ open, onClose, userName, isAdmin }: SideMenuProps) {
                 <span className="text-xl" aria-hidden>🛠️</span>
                 Admin overview
               </Link>
+              <Link href="/admin/students" onClick={onClose} className={navLinkClass}>
+                <span className="text-xl" aria-hidden>👧</span>
+                Students
+              </Link>
               <Link href="/admin/content" onClick={onClose} className={navLinkClass}>
                 <span className="text-xl" aria-hidden>📦</span>
                 Game content
