@@ -8,14 +8,6 @@ import type { AdminStudentRow, AdminStudentStatsSummary } from "@/lib/admin/stud
 
 type Filter = "all" | "active" | "inactive" | "never";
 
-function formatLastPlayed(iso: string | null, daysSince: number | null) {
-  if (!iso || daysSince === null) return "Never";
-  if (daysSince === 0) return "Today";
-  if (daysSince === 1) return "Yesterday";
-  if (daysSince < 7) return `${daysSince}d ago`;
-  return new Date(iso).toLocaleDateString();
-}
-
 function formatDate(iso: string | null) {
   if (!iso) return "—";
   return new Date(iso).toLocaleDateString();
@@ -212,7 +204,16 @@ export default function AdminStudentsPage() {
                         </td>
                         <td className="py-3 pr-3">{activityBadge(row)}</td>
                         <td className="py-3 pr-3 text-gray-700">
-                          {formatLastPlayed(row.lastPlayedAt, row.daysSinceLastPlay)}
+                          {row.hasPlayed && row.lastPlayedLabel ? (
+                            <>
+                              <p>{row.lastPlayedLabel}</p>
+                              {row.lastPlayedDetail && (
+                                <p className="text-xs text-gray-400">{row.lastPlayedDetail}</p>
+                              )}
+                            </>
+                          ) : (
+                            "Never"
+                          )}
                         </td>
                         <td className="py-3 pr-3 text-gray-700">
                           {row.hasPlayed ? (
